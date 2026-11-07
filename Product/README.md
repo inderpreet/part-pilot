@@ -1,0 +1,94 @@
+# Inventory Tracker — Product
+
+Self-hosted inventory tracking for a small business with a **single stock location**. Distributed as one
+executable: run it, open the browser, sign in. Data lives in a single SQLite file next to the executable.
+
+- Technical design: [architecture.md](architecture.md)
+- Feature specs: [Features/](Features/)
+- Work items: [work-items/](work-items/)
+- Templates: [templates/](templates/)
+
+## Users and roles
+
+| Role | Can do |
+|---|---|
+| **Admin** | Everything, plus user management, settings, audit log, backups, imports |
+| **Staff** | Create/edit products, suppliers, POs; record stock movements; receive POs; export |
+| **Viewer** | Read-only access to catalog, stock, POs, dashboard, reports |
+
+## Features
+
+| ID | Feature | Summary | Depends on | Status |
+|---|---|---|---|---|
+| [F00](Features/F00-platform-foundation.md) | Platform foundation | Project skeleton, SQLite + EF Core, layout, settings, single-file publish | — | Planned |
+| [F01](Features/F01-users-auth.md) | Users & authentication | Login, roles, first-run admin setup, user management | F00 | Planned |
+| [F02](Features/F02-product-catalog.md) | Product catalog | Products (SKU, unit, bin, reorder point, cost) and categories | F01 | Planned |
+| [F03](Features/F03-stock-tracking.md) | Stock tracking | Stock ledger: receive, issue, adjust, count; on-hand quantity | F02 | Planned |
+| [F04](Features/F04-suppliers.md) | Suppliers | Supplier directory and product–supplier pricing | F02 | Planned |
+| [F05](Features/F05-purchase-orders.md) | Purchase orders & receiving | PO lifecycle, receiving into stock | F03, F04 | Planned |
+| [F06](Features/F06-dashboard-alerts-reports.md) | Dashboard, alerts & reports | KPIs, low-stock alerts, reorder suggestions, reports | F03, F05 | Planned |
+| [F07](Features/F07-data-import-export.md) | Data import/export & backup | CSV import/export, opening stock, DB backup download | F03, F04 | Planned |
+| [F08](Features/F08-audit-log.md) | Audit log | Who changed what and when; sign-in events | F01 | Planned |
+
+Suggested build order: F00 → F01 → F02 → F03 → F04 → F05 → F08 → F06 → F07.
+
+## Work items
+
+Each feature is split into three work items, done in order: **1 DB schema → 2 API (services + endpoints) → 3 Frontend**.
+F00 has an extra packaging item.
+
+| ID | Title | Status |
+|---|---|---|
+| [WI-00-1](work-items/F00-platform-foundation/WI-00-1-db-schema.md) | Foundation — DbContext, SQLite config, settings table | Planned |
+| [WI-00-2](work-items/F00-platform-foundation/WI-00-2-api.md) | Foundation — host, DI, config, errors, embedded assets | Planned |
+| [WI-00-3](work-items/F00-platform-foundation/WI-00-3-frontend.md) | Foundation — layout, HTMX conventions, shared partials | Planned |
+| [WI-00-4](work-items/F00-platform-foundation/WI-00-4-packaging.md) | Foundation — single-file publish script | Planned |
+| [WI-01-1](work-items/F01-users-auth/WI-01-1-db-schema.md) | Users — Identity schema, role seed | Planned |
+| [WI-01-2](work-items/F01-users-auth/WI-01-2-api.md) | Users — auth config, policies, UserService | Planned |
+| [WI-01-3](work-items/F01-users-auth/WI-01-3-frontend.md) | Users — login, setup, user admin, settings pages | Planned |
+| [WI-02-1](work-items/F02-product-catalog/WI-02-1-db-schema.md) | Catalog — Product, Category schema | Planned |
+| [WI-02-2](work-items/F02-product-catalog/WI-02-2-api.md) | Catalog — ProductService, CategoryService | Planned |
+| [WI-02-3](work-items/F02-product-catalog/WI-02-3-frontend.md) | Catalog — product list/detail/edit, categories | Planned |
+| [WI-03-1](work-items/F03-stock-tracking/WI-03-1-db-schema.md) | Stock — StockTransaction ledger | Planned |
+| [WI-03-2](work-items/F03-stock-tracking/WI-03-2-api.md) | Stock — StockService | Planned |
+| [WI-03-3](work-items/F03-stock-tracking/WI-03-3-frontend.md) | Stock — movements, history, stock count | Planned |
+| [WI-04-1](work-items/F04-suppliers/WI-04-1-db-schema.md) | Suppliers — Supplier, ProductSupplier schema | Planned |
+| [WI-04-2](work-items/F04-suppliers/WI-04-2-api.md) | Suppliers — SupplierService | Planned |
+| [WI-04-3](work-items/F04-suppliers/WI-04-3-frontend.md) | Suppliers — list/detail/edit, product links | Planned |
+| [WI-05-1](work-items/F05-purchase-orders/WI-05-1-db-schema.md) | POs — PurchaseOrder, PurchaseOrderLine schema | Planned |
+| [WI-05-2](work-items/F05-purchase-orders/WI-05-2-api.md) | POs — PurchaseOrderService, receiving | Planned |
+| [WI-05-3](work-items/F05-purchase-orders/WI-05-3-frontend.md) | POs — list, editor, receive, print view | Planned |
+| [WI-06-1](work-items/F06-dashboard-alerts-reports/WI-06-1-db-schema.md) | Dashboard — query indexes, reporting queries | Planned |
+| [WI-06-2](work-items/F06-dashboard-alerts-reports/WI-06-2-api.md) | Dashboard — ReportService, reorder suggestions | Planned |
+| [WI-06-3](work-items/F06-dashboard-alerts-reports/WI-06-3-frontend.md) | Dashboard — dashboard, low-stock, reports pages | Planned |
+| [WI-07-1](work-items/F07-data-import-export/WI-07-1-db-schema.md) | Import/export — ImportBatch schema, CSV formats | Planned |
+| [WI-07-2](work-items/F07-data-import-export/WI-07-2-api.md) | Import/export — Import/Export/Backup services | Planned |
+| [WI-07-3](work-items/F07-data-import-export/WI-07-3-frontend.md) | Import/export — upload, preview, export, backup pages | Planned |
+| [WI-08-1](work-items/F08-audit-log/WI-08-1-db-schema.md) | Audit — AuditEntry schema | Planned |
+| [WI-08-2](work-items/F08-audit-log/WI-08-2-api.md) | Audit — SaveChanges interceptor, AuditService | Planned |
+| [WI-08-3](work-items/F08-audit-log/WI-08-3-frontend.md) | Audit — audit log viewer, entity history | Planned |
+
+## Non-functional requirements
+
+- Runs on Windows, Linux, macOS from a single executable; no installer, no runtime prerequisites.
+- Handles ~10k products, ~1M stock transactions, ~10 concurrent users on modest hardware.
+- Page responses < 300 ms for list/search at that scale.
+- Works in current evergreen browsers; usable on a tablet (receiving at the dock).
+- All data in one SQLite file; backup = copy/download that file.
+
+## Out of scope (v1)
+
+- Multiple warehouses/locations and transfers between them
+- Sales orders, invoicing, customers, POS
+- Multi-tenant hosting
+- Barcode scanner hardware integration beyond keyboard-wedge input into search fields
+- Public JSON API (see architecture open questions)
+- Email/SMS notifications (alerts are in-app only)
+
+## Glossary
+
+- **SKU** — unique product code chosen by the business.
+- **On hand** — quantity physically in stock (`Product.QuantityOnHand`).
+- **On order** — quantity on submitted, not-yet-received PO lines.
+- **Reorder point** — when on hand + on order falls to or below this, the product is "low stock".
+- **Stock transaction** — immutable ledger row recording a change in on-hand quantity.

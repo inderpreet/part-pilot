@@ -1,0 +1,14 @@
+bin/
+obj/
+publish/
+artifacts/
+*.user
+*.suo
+.vs/
+.idea/
+TestResults/
+*.db
+*.db-shm
+*.db-wal
+appsettings.Development.local.json
+.claude/settings.local.json
