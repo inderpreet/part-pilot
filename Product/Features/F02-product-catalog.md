@@ -1,6 +1,6 @@
 # F02 — Product catalog
 
-- **Status:** Planned
+- **Status:** Done
 - **Depends on:** F01
 - **Roles:** Admin/Staff create and edit; Viewer reads
 
@@ -48,7 +48,7 @@ where it lives (bin location), how it is counted (unit), its cost, and reorder t
 | `/Products/Edit/{id?}` | Create/edit | CanEdit |
 | `/Products/{id}?handler=Archive` (POST) | Archive/restore | CanEdit |
 | `/Products/Lookup?q=` | HTMX picker partial reused by other features | CanView |
-| `/Categories`, `/Categories/Edit/{id?}` | Categories | CanView / CanEdit |
+| `/Categories` | Category list; inline create/edit/archive via handlers `New`, `Edit`, `Row`, `Save`, `SetActive` (the data-changing ones re-check `CanEdit`) | CanView (handlers: CanEdit) |
 
 ## Out of scope
 
@@ -58,9 +58,9 @@ where it lives (bin location), how it is counted (unit), its cost, and reorder t
 
 | ID | Title | Status |
 |---|---|---|
-| [WI-02-1](../work-items/F02-product-catalog/WI-02-1-db-schema.md) | Product, Category schema | Planned |
-| [WI-02-2](../work-items/F02-product-catalog/WI-02-2-api.md) | ProductService, CategoryService | Planned |
-| [WI-02-3](../work-items/F02-product-catalog/WI-02-3-frontend.md) | Product list/detail/edit, categories | Planned |
+| [WI-02-1](../work-items/F02-product-catalog/WI-02-1-db-schema.md) | Product, Category schema | Done |
+| [WI-02-2](../work-items/F02-product-catalog/WI-02-2-api.md) | ProductService, CategoryService | Done |
+| [WI-02-3](../work-items/F02-product-catalog/WI-02-3-frontend.md) | Product list/detail/edit, categories | Done |
 
 ## Open questions
 

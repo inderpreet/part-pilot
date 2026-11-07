@@ -1,0 +1,67 @@
+@model InventoryTracker.Pages.Products.IndexModel
+@if (Model.Products.TotalCount == 0)
+{
+    if (Model.IsFiltered)
+    {
+        <partial name="_EmptyState" model="@(new EmptyStateModel("No products match", "Try a different search, or change the category and status filters."))" />
+    }
+    else if (Model.CanEdit)
+    {
+        <partial name="_EmptyState" model="@(new EmptyStateModel("No products yet", "Add your first product to start tracking it.", "New product", "/Products/Edit"))" />
+    }
+    else
+    {
+        <partial name="_EmptyState" model="@(new EmptyStateModel("No products yet", "Ask an Admin or Staff user to add products."))" />
+    }
+}
+else
+{
+    <div class="table-wrap">
+        <table class="striped">
+            <thead>
+                <tr>
+                    <partial name="_SortHeader" model="@(new SortHeaderModel("sku", "SKU", Model.Query))" />
+                    <partial name="_SortHeader" model="@(new SortHeaderModel("name", "Name", Model.Query))" />
+                    <partial name="_SortHeader" model="@(new SortHeaderModel("category", "Category", Model.Query))" />
+                    <th scope="col">Bin</th>
+                    <partial name="_SortHeader" model="@(new SortHeaderModel("onhand", "On hand", Model.Query))" />
+                    <th scope="col" class="num">Unit cost</th>
+                    @if (Model.CanEdit)
+                    {
+                        <th scope="col"><span class="visually-hidden">Actions</span></th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var product in Model.Products.Items)
+                {
+                    <tr class="@(product.IsActive ? null : "row-archived")">
+                        <td><a asp-page="/Products/Detail" asp-route-id="@product.Id">@product.Sku</a></td>
+                        <td>
+                            @product.Name
+                            @if (!product.IsActive)
+                            {
+                                <span class="badge badge-inactive">Archived</span>
+                            }
+                        </td>
+                        <td>@(product.CategoryName ?? "—")</td>
+                        <td>@(product.BinLocation ?? "—")</td>
+                        <td class="num">
+                            @product.QuantityOnHand <small class="muted">@product.Unit</small>
+                            @if (product.IsLowStock)
+                            {
+                                <span class="badge badge-low">Low</span>
+                            }
+                        </td>
+                        <td class="num">@Html.Money(product.UnitCostCents)</td>
+                        @if (Model.CanEdit)
+                        {
+                            <td><a asp-page="/Products/Edit" asp-route-id="@product.Id">Edit</a></td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <partial name="_Pager" model="@PagerModel.From(Model.Products)" />
+}

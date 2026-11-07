@@ -1,0 +1,47 @@
+@page
+@model InventoryTracker.Pages.Products.IndexModel
+@using InventoryTracker.Services
+@{
+    ViewData["Title"] = "Products";
+}
+
+@* A plain GET form, so Enter submits normally (with go=true -> open an exact SKU/barcode match). The controls also
+   update #results live through htmx; the form itself deliberately has no hx-* attributes. *@
+<form method="get" action="/Products" class="toolbar product-filters" role="search">
+    <input type="search" name="search" value="@Model.Query.Search" placeholder="Search SKU, name or barcode…" aria-label="Search products"
+           autofocus autocomplete="off" enterkeyhint="search"
+           hx-get="/Products" hx-trigger="input changed delay:300ms" hx-target="#results" hx-push-url="true" hx-include="closest form" />
+
+    <select name="categoryId" aria-label="Category"
+            hx-get="/Products" hx-trigger="change" hx-target="#results" hx-push-url="true" hx-include="closest form">
+        <option value="">All categories</option>
+        @foreach (var category in Model.Categories)
+        {
+            <option value="@category.Id" selected="@(Model.Query.CategoryId == category.Id)">@category.Name@(category.IsActive ? "" : " (archived)")</option>
+        }
+    </select>
+
+    <select name="status" aria-label="Status"
+            hx-get="/Products" hx-trigger="change" hx-target="#results" hx-push-url="true" hx-include="closest form">
+        <option value="@ProductStatus.Active" selected="@(Model.Query.Status == ProductStatus.Active)">Active</option>
+        <option value="@ProductStatus.Archived" selected="@(Model.Query.Status == ProductStatus.Archived)">Archived</option>
+        <option value="@ProductStatus.All" selected="@(Model.Query.Status == ProductStatus.All)">All</option>
+    </select>
+
+    <button type="submit" name="go" value="true" class="visually-hidden" tabindex="-1">Open exact match</button>
+
+    @if (Model.CanEdit)
+    {
+        <a role="button" asp-page="Edit">New product</a>
+    }
+    <a role="button" class="secondary outline" asp-page="/Categories/Index">Categories</a>
+</form>
+
+@if (Model.UnmatchedCode is { } code)
+{
+    <p class="muted" role="status">No product has the exact SKU or barcode “@code”. Showing partial matches instead.</p>
+}
+
+<div id="results">
+    <partial name="_ProductRows" model="Model" />
+</div>

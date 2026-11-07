@@ -1,0 +1,20 @@
+@model InventoryTracker.Pages.Categories.CategoryFormModel
+<article>
+    <form hx-post="/Categories?handler=Save" hx-target="closest article" hx-swap="outerHTML">
+        <partial name="_ValidationSummary" model="ViewData.ModelState" />
+        <div class="grid">
+            <label>
+                Name
+                <input name="name" value="@Model.Name" maxlength="100" required autofocus autocomplete="off" />
+            </label>
+            <label>
+                Description <small>(optional)</small>
+                <input name="description" value="@Model.Description" maxlength="500" autocomplete="off" />
+            </label>
+        </div>
+        <div class="form-actions">
+            <button type="submit">Create category</button>
+            <button type="button" class="secondary" onclick="this.closest('article').remove()">Cancel</button>
+        </div>
+    </form>
+</article>

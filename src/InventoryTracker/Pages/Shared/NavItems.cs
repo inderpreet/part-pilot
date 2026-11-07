@@ -20,7 +20,7 @@ public static class NavItems
     public static IReadOnlyList<NavItem> All { get; } =
     [
         new("Dashboard", "/", Policies.CanView),
-        new("Products", "/Products", Policies.CanView, Available: false),
+        new("Products", "/Products", Policies.CanView),
         new("Stock", "/Stock", Policies.CanView, Available: false),
         new("Suppliers", "/Suppliers", Policies.CanView, Available: false),
         new("Purchase Orders", "/PurchaseOrders", Policies.CanView, Available: false),

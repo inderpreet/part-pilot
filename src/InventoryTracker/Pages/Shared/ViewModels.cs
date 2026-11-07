@@ -17,6 +17,33 @@ public sealed record SortHeaderModel(string Column, string Label, ListQuery Quer
 /// <summary>Model for the <c>_EmptyState</c> partial.</summary>
 public sealed record EmptyStateModel(string Title, string? Message = null, string? ActionText = null, string? ActionUrl = null);
 
+/// <summary>
+/// Model for the <c>_ProductPicker</c> partial: a search-as-you-type product chooser that posts the chosen product id
+/// as <paramref name="FieldName"/> (e.g. <c>Input.ProductId</c>). <paramref name="SelectedId"/>/<paramref name="SelectedLabel"/>
+/// pre-fill it when editing.
+/// </summary>
+public sealed record ProductPickerModel(
+    string FieldName,
+    int? SelectedId = null,
+    string? SelectedLabel = null,
+    bool ActiveOnly = true,
+    string Label = "Product",
+    bool Required = true)
+{
+    /// <summary>Unique-per-field id fragment so several pickers can share a page.</summary>
+    public string DomId => FieldName.Replace('.', '-').Replace('[', '-').Replace(']', '-').ToLowerInvariant();
+}
+
+/// <summary>Model for the <c>_ProductPickerResults</c> partial (the dropdown rows).</summary>
+public sealed record ProductPickerResultsModel(IReadOnlyList<ProductLookupItem> Items, string? Query)
+{
+    /// <summary>True when the typed text is exactly this item's SKU or barcode, i.e. a scanned code.</summary>
+    public bool IsExact(ProductLookupItem item)
+        => !string.IsNullOrEmpty(Query)
+           && (string.Equals(item.Sku, Query, StringComparison.OrdinalIgnoreCase)
+               || (item.Barcode is not null && string.Equals(item.Barcode, Query, StringComparison.OrdinalIgnoreCase)));
+}
+
 /// <summary>Model for the <c>_ConfirmButton</c> partial: a button that asks for confirmation, then <c>hx-post</c>s.</summary>
 public sealed record ConfirmButtonModel(
     string Text,

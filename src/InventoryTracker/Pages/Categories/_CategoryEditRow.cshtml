@@ -1,0 +1,24 @@
+@model InventoryTracker.Pages.Categories.CategoryFormModel
+<tr id="category-row-@Model.Id" class="inline-edit">
+    <td colspan="5">
+        <form hx-post="/Categories?handler=Save" hx-target="#category-row-@Model.Id" hx-swap="outerHTML">
+            <partial name="_ValidationSummary" model="ViewData.ModelState" />
+            <input type="hidden" name="id" value="@Model.Id" />
+            <div class="grid">
+                <label>
+                    Name
+                    <input name="name" value="@Model.Name" maxlength="100" required autofocus autocomplete="off" />
+                </label>
+                <label>
+                    Description <small>(optional)</small>
+                    <input name="description" value="@Model.Description" maxlength="500" autocomplete="off" />
+                </label>
+            </div>
+            <div class="form-actions">
+                <button type="submit">Save</button>
+                <button type="button" class="secondary" hx-get="/Categories?handler=Row&amp;id=@Model.Id"
+                        hx-target="#category-row-@Model.Id" hx-swap="outerHTML">Cancel</button>
+            </div>
+        </form>
+    </td>
+</tr>

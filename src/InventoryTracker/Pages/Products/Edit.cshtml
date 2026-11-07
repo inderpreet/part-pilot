@@ -1,0 +1,123 @@
+@page "{id:int?}"
+@model InventoryTracker.Pages.Products.EditModel
+@using InventoryTracker.Data
+@using InventoryTracker.Data.Entities
+@inject ISettingsService Settings
+@{
+    ViewData["Title"] = Model.IsEdit ? $"Edit product: {Model.Existing!.Sku}" : "New product";
+    var skuLocked = Model.Existing?.SkuLocked == true;
+    var currency = await Settings.GetStringAsync(SettingKeys.CurrencySymbol);
+}
+
+<form method="post" novalidate class="form-narrow">
+    <partial name="_ValidationSummary" model="ViewData.ModelState" />
+
+    @if (Model.Conflict)
+    {
+        <p role="alert">
+            Someone else saved this product while you were editing.
+            <a asp-page="Edit" asp-route-id="@Model.Existing!.Id">Reload the latest version</a> (your unsaved changes will be lost).
+        </p>
+    }
+
+    <input type="hidden" name="Input.RowVersion" value="@Model.Input.RowVersion" />
+
+    <div class="grid">
+        <label>
+            SKU
+            <input name="Input.Sku" value="@Model.Input.Sku" maxlength="@Product.SkuMaxLength" required autocomplete="off" autocapitalize="characters" spellcheck="false"
+                   autofocus="@(!skuLocked)" readonly="@skuLocked" aria-invalid="@Html.AriaInvalid("Input.Sku")" />
+            @if (skuLocked)
+            {
+                <small>The SKU cannot be changed because this product has stock history.</small>
+            }
+        </label>
+        <label>
+            Barcode <small>(optional)</small>
+            <input name="Input.Barcode" value="@Model.Input.Barcode" maxlength="@Product.BarcodeMaxLength" autocomplete="off" spellcheck="false"
+                   aria-invalid="@Html.AriaInvalid("Input.Barcode")" />
+        </label>
+    </div>
+
+    <label>
+        Name
+        <input name="Input.Name" value="@Model.Input.Name" maxlength="@Product.NameMaxLength" required aria-invalid="@Html.AriaInvalid("Input.Name")" />
+    </label>
+
+    <label>
+        Description <small>(optional)</small>
+        <textarea name="Input.Description" rows="3" maxlength="@Product.DescriptionMaxLength" aria-invalid="@Html.AriaInvalid("Input.Description")">@Model.Input.Description</textarea>
+    </label>
+
+    <div class="grid">
+        <label>
+            Category <small>(optional)</small>
+            <select name="Input.CategoryId" aria-invalid="@Html.AriaInvalid("Input.CategoryId")">
+                <option value="">— None —</option>
+                @foreach (var category in Model.CategoryOptions)
+                {
+                    <option value="@category.Id" selected="@(Model.Input.CategoryId == category.Id)">@category.Name@(category.IsActive ? "" : " (archived)")</option>
+                }
+            </select>
+        </label>
+        <label>
+            Unit
+            <input name="Input.Unit" value="@Model.Input.Unit" maxlength="@Product.UnitMaxLength" list="unit-suggestions" autocomplete="off"
+                   aria-invalid="@Html.AriaInvalid("Input.Unit")" />
+            <datalist id="unit-suggestions">
+                <option value="each"></option>
+                <option value="box"></option>
+                <option value="pack"></option>
+                <option value="pair"></option>
+                <option value="kg"></option>
+                <option value="m"></option>
+                <option value="litre"></option>
+            </datalist>
+        </label>
+    </div>
+
+    <div class="grid">
+        <label>
+            Bin location <small>(optional)</small>
+            <input name="Input.BinLocation" value="@Model.Input.BinLocation" maxlength="@Product.BinLocationMaxLength" autocomplete="off"
+                   aria-invalid="@Html.AriaInvalid("Input.BinLocation")" />
+        </label>
+        <label>
+            Unit cost (@currency)
+            <input name="Input.UnitCost" value="@Model.Input.UnitCost" inputmode="decimal" autocomplete="off" placeholder="0.00"
+                   aria-invalid="@Html.AriaInvalid("Input.UnitCost")" />
+        </label>
+    </div>
+
+    <div class="grid">
+        <label>
+            Reorder point
+            <input name="Input.ReorderPoint" value="@Model.Input.ReorderPoint" type="number" inputmode="numeric" min="0" step="1" placeholder="0"
+                   aria-invalid="@Html.AriaInvalid("Input.ReorderPoint")" />
+            <small>Flagged as low stock when on hand falls to this number or below. 0 turns the alert off.</small>
+        </label>
+        <label>
+            Reorder quantity
+            <input name="Input.ReorderQuantity" value="@Model.Input.ReorderQuantity" type="number" inputmode="numeric" min="0" step="1" placeholder="0"
+                   aria-invalid="@Html.AriaInvalid("Input.ReorderQuantity")" />
+            <small>How many to order when restocking.</small>
+        </label>
+    </div>
+
+    @if (Model.IsEdit)
+    {
+        <p><small class="muted">On hand: <strong>@Model.Existing!.QuantityOnHand</strong> @Model.Existing.Unit. Quantity changes through stock movements, not here.</small></p>
+    }
+
+    <div class="form-actions">
+        <button type="submit">@(Model.IsEdit ? "Save changes" : "Create product")</button>
+        @if (Model.IsEdit)
+        {
+            <a role="button" class="secondary" asp-page="Detail" asp-route-id="@Model.Existing!.Id">Cancel</a>
+        }
+        else
+        {
+            <a role="button" class="secondary" asp-page="Index">Cancel</a>
+        }
+    </div>
+</form>

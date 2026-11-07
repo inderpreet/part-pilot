@@ -1,0 +1,41 @@
+@model InventoryTracker.Pages.Categories.IndexModel
+@using InventoryTracker.Pages.Categories
+@if (Model.CanEdit)
+{
+    <div class="toolbar">
+        <span></span>
+        <button type="button" hx-get="/Categories?handler=New" hx-target="#category-new" hx-swap="innerHTML">New category</button>
+    </div>
+}
+
+<div id="category-new"></div>
+
+@if (Model.Items.Count == 0)
+{
+    <partial name="_EmptyState" model="@(new EmptyStateModel("No categories yet", Model.CanEdit ? "Use “New category” to add one." : "Ask an Admin or Staff user to add categories."))" />
+}
+else
+{
+    <div class="table-wrap">
+        <table class="striped">
+            <thead>
+                <tr>
+                    <th scope="col">Name</th>
+                    <th scope="col">Description</th>
+                    <th scope="col" class="num">Products</th>
+                    <th scope="col">Status</th>
+                    @if (Model.CanEdit)
+                    {
+                        <th scope="col"><span class="visually-hidden">Actions</span></th>
+                    }
+                </tr>
+            </thead>
+            <tbody id="category-rows">
+                @foreach (var item in Model.Items)
+                {
+                    <partial name="_CategoryRow" model="@(new CategoryRowModel(item, Model.CanEdit))" />
+                }
+            </tbody>
+        </table>
+    </div>
+}

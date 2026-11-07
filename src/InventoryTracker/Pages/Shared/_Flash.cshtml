@@ -4,4 +4,8 @@
     {
         <article class="flash flash-success">@message</article>
     }
+    @if (TempData[PageExtensions.FlashErrorKey] is string error && error.Length > 0)
+    {
+        <article class="flash flash-error" role="alert">@error</article>
+    }
 </div>

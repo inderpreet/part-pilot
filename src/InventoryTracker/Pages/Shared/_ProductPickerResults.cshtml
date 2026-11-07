@@ -1,0 +1,24 @@
+@model ProductPickerResultsModel
+@if (Model.Items.Count == 0)
+{
+    <p class="picker-empty muted" role="status">No matching products.</p>
+}
+else
+{
+    <ul role="listbox" class="picker-list">
+        @foreach (var item in Model.Items)
+        {
+            <li role="option">
+                <button type="button" class="picker-item" data-picker-select
+                        data-id="@item.Id" data-label="@item.Sku — @item.Name" data-exact="@(Model.IsExact(item) ? "true" : "false")">
+                    <strong>@item.Sku</strong> <span>@item.Name</span>
+                    <small class="muted">@item.QuantityOnHand @item.Unit on hand</small>
+                    @if (!item.IsActive)
+                    {
+                        <span class="badge badge-inactive">Archived</span>
+                    }
+                </button>
+            </li>
+        }
+    </ul>
+}

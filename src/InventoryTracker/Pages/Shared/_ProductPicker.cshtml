@@ -1,0 +1,15 @@
+@model ProductPickerModel
+@* Reusable product chooser (F02). Type or scan a SKU/barcode: results load from /Products/Lookup; picking a row (click, or
+   Enter when there is a single/exact match) fills the hidden value input. site.js wires the behaviour via data-* attributes. *@
+<div class="product-picker" data-product-picker>
+    <label for="picker-@Model.DomId">@Model.Label</label>
+    <input type="search" id="picker-@Model.DomId" name="q" value="@Model.SelectedLabel"
+           autocomplete="off" spellcheck="false" enterkeyhint="go" placeholder="Search or scan SKU, name or barcode…"
+           role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="picker-results-@Model.DomId"
+           required="@Model.Required"
+           data-picker-input
+           hx-get="/Products/Lookup" hx-trigger="input changed delay:250ms, focus, lookup-now" hx-target="#picker-results-@Model.DomId"
+           hx-vals='{"activeOnly": "@(Model.ActiveOnly ? "true" : "false")"}' hx-swap="innerHTML" hx-sync="this:replace" />
+    <input type="hidden" name="@Model.FieldName" value="@Model.SelectedId" data-picker-value />
+    <div id="picker-results-@Model.DomId" class="picker-results" data-picker-results></div>
+</div>

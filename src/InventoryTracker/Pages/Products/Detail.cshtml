@@ -1,0 +1,109 @@
+@page "/Products/{id:int}"
+@model InventoryTracker.Pages.Products.DetailModel
+@{
+    var p = Model.Product;
+    ViewData["Title"] = $"{p.Sku} · {p.Name}";
+}
+
+<div class="toolbar">
+    <p class="muted">
+        <a asp-page="Index">‹ All products</a>
+        @if (!p.IsActive)
+        {
+            <span class="badge badge-inactive">Archived</span>
+        }
+        @if (p.IsLowStock)
+        {
+            <span class="badge badge-low">Low stock</span>
+        }
+    </p>
+
+    @if (Model.CanEdit)
+    {
+        <div class="form-actions">
+            <a role="button" asp-page="Edit" asp-route-id="@p.Id">Edit</a>
+            <form method="post" asp-page-handler="Archive" asp-route-id="@p.Id">
+                <input type="hidden" name="active" value="@(p.IsActive ? "false" : "true")" />
+                <input type="hidden" name="rowVersion" value="@p.RowVersion" />
+                @if (p.IsActive)
+                {
+                    <button type="submit" class="secondary outline"
+                            hx-post="@Url.Page("Detail", "Archive", new { id = p.Id })"
+                            hx-confirm="Archive @p.Sku? It will be hidden from pickers and the default list, and its history is kept.">Archive</button>
+                }
+                else
+                {
+                    <button type="submit" class="secondary outline"
+                            hx-post="@Url.Page("Detail", "Archive", new { id = p.Id })"
+                            hx-confirm="Restore @p.Sku so it can be used again?">Restore</button>
+                }
+            </form>
+        </div>
+    }
+</div>
+
+<div class="detail-layout">
+    <article class="on-hand-card" aria-label="Quantity on hand">
+        <small class="muted">On hand</small>
+        <p class="on-hand-number">@p.QuantityOnHand</p>
+        <small class="muted">@p.Unit</small>
+        @if (p.ReorderPoint > 0)
+        {
+            <small class="muted">Reorder at @p.ReorderPoint</small>
+        }
+    </article>
+
+    <article>
+        <dl class="detail-grid">
+            <dt>SKU</dt>
+            <dd>@p.Sku</dd>
+            <dt>Name</dt>
+            <dd>@p.Name</dd>
+            <dt>Description</dt>
+            <dd>@(string.IsNullOrWhiteSpace(p.Description) ? "—" : p.Description)</dd>
+            <dt>Category</dt>
+            <dd>
+                @if (p.CategoryId is not null)
+                {
+                    <a asp-page="Index" asp-route-categoryId="@p.CategoryId" asp-route-status="All">@p.CategoryName</a>
+                    @if (!p.CategoryIsActive)
+                    {
+                        <small class="muted">(archived)</small>
+                    }
+                }
+                else
+                {
+                    <span>—</span>
+                }
+            </dd>
+            <dt>Unit</dt>
+            <dd>@p.Unit</dd>
+            <dt>Barcode</dt>
+            <dd>@(p.Barcode ?? "—")</dd>
+            <dt>Bin location</dt>
+            <dd>@(p.BinLocation ?? "—")</dd>
+            <dt>Reorder point</dt>
+            <dd>@p.ReorderPoint</dd>
+            <dt>Reorder quantity</dt>
+            <dd>@p.ReorderQuantity</dd>
+            <dt>Unit cost</dt>
+            <dd>@Html.Money(p.UnitCostCents)</dd>
+            <dt>Stock value</dt>
+            <dd>@Html.Money(Model.StockValueCents)</dd>
+            <dt>Added</dt>
+            <dd>@Html.LocalTime(p.CreatedAt)</dd>
+            <dt>Last changed</dt>
+            <dd>@Html.LocalTime(p.UpdatedAt)</dd>
+        </dl>
+    </article>
+</div>
+
+@* Tab area: each tab is switched on by the feature that fills it (History: F03, Suppliers: F04, Purchase orders: F05, Audit: F08). *@
+<nav class="tabs-soon" aria-label="More about this product">
+    <ul>
+        <li><span aria-disabled="true" title="Coming soon">History</span></li>
+        <li><span aria-disabled="true" title="Coming soon">Suppliers</span></li>
+        <li><span aria-disabled="true" title="Coming soon">Purchase orders</span></li>
+        <li><span aria-disabled="true" title="Coming soon">Audit</span></li>
+    </ul>
+</nav>

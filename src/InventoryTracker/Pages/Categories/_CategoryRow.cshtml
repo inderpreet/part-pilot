@@ -1,0 +1,47 @@
+@model InventoryTracker.Pages.Categories.CategoryRowModel
+@{
+    var item = Model.Item;
+}
+<tr id="category-row-@item.Id" class="@(item.IsActive ? null : "row-archived")">
+    <td>@item.Name</td>
+    <td>@(string.IsNullOrWhiteSpace(item.Description) ? "—" : item.Description)</td>
+    <td class="num">
+        @if (item.ProductCount > 0)
+        {
+            <a href="/Products?categoryId=@item.Id&amp;status=All">@item.ProductCount</a>
+        }
+        else
+        {
+            <span>0</span>
+        }
+    </td>
+    <td>
+        @if (item.IsActive)
+        {
+            <span class="badge badge-ok">Active</span>
+        }
+        else
+        {
+            <span class="badge badge-inactive">Archived</span>
+        }
+    </td>
+    @if (Model.CanEdit)
+    {
+        <td class="row-actions">
+            <button type="button" class="secondary outline" hx-get="/Categories?handler=Edit&amp;id=@item.Id"
+                    hx-target="#category-row-@item.Id" hx-swap="outerHTML">Edit</button>
+            @if (item.IsActive)
+            {
+                <partial name="_ConfirmButton" model="@(new ConfirmButtonModel("Archive",
+                    $"Archive category '{item.Name}'? Products keep it, but it can no longer be chosen for new ones.",
+                    $"/Categories?handler=SetActive&id={item.Id}&active=false", $"#category-row-{item.Id}", "outerHTML", "secondary outline"))" />
+            }
+            else
+            {
+                <partial name="_ConfirmButton" model="@(new ConfirmButtonModel("Restore",
+                    $"Restore category '{item.Name}'?",
+                    $"/Categories?handler=SetActive&id={item.Id}&active=true", $"#category-row-{item.Id}", "outerHTML", "secondary outline"))" />
+            }
+        </td>
+    }
+</tr>

@@ -80,5 +80,13 @@
 
 <section>
     <h2>Empty state</h2>
-    <partial name="_EmptyState" model="@(new EmptyStateModel("No products yet", "Add your first product to get started.", "Add product", "/Products/Create"))" />
+    <partial name="_EmptyState" model="@(new EmptyStateModel("No products yet", "Add your first product to get started.", "Add product", "/Products/Edit"))" />
+</section>
+
+<section>
+    <h2>Product picker</h2>
+    <p class="muted">Type or scan a SKU, name or barcode. Enter picks a single or exact match.</p>
+    <form onsubmit="return false">
+        <partial name="_ProductPicker" model="@(new ProductPickerModel("Input.ProductId"))" />
+    </form>
 </section>

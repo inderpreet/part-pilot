@@ -4,6 +4,7 @@
 //  - loading content into #modal opens it; Escape / backdrop click / [data-close-modal] close it
 //  - 4xx/5xx handling so server error partials and 422 validation responses are actually shown
 //  - <time data-local> is upgraded to the browser's local time zone
+//  - product picker ([data-product-picker]): select a result, scanner-style Enter, keyboard navigation
 (() => {
   'use strict';
 
@@ -121,6 +122,110 @@
       el.dataset.localDone = '1';
     });
   }
+
+  // ---------- Product picker (_ProductPicker) ----------
+  // Markup: [data-product-picker] > input[data-picker-input] + input[data-picker-value] + [data-picker-results].
+  // Picking a row stores its id in the hidden input and its label in the text input. Typing again clears the stored
+  // id, so a stale selection can never be submitted. Enter (what a barcode scanner sends after the code) forces an
+  // immediate lookup and picks the match when there is exactly one, or the first one is an exact SKU/barcode hit.
+  const pickFirstFor = new WeakSet();
+
+  function pickerParts(picker) {
+    return {
+      input: picker.querySelector('[data-picker-input]'),
+      value: picker.querySelector('[data-picker-value]'),
+      results: picker.querySelector('[data-picker-results]'),
+    };
+  }
+
+  function choose(button) {
+    const picker = button.closest('[data-product-picker]');
+    if (!picker) return;
+    const { input, value, results } = pickerParts(picker);
+    value.value = button.dataset.id;
+    input.value = button.dataset.label;
+    input.setAttribute('aria-expanded', 'false');
+    results.innerHTML = '';
+    value.dispatchEvent(new Event('change', { bubbles: true }));
+  }
+
+  document.addEventListener('click', event => {
+    const button = event.target.closest?.('[data-picker-select]');
+    if (button) {
+      choose(button);
+      return;
+    }
+    // Click elsewhere closes any open dropdown.
+    document.querySelectorAll('[data-product-picker]').forEach(picker => {
+      if (!picker.contains(event.target)) {
+        const { input, results } = pickerParts(picker);
+        results.innerHTML = '';
+        input.setAttribute('aria-expanded', 'false');
+      }
+    });
+  });
+
+  document.addEventListener('input', event => {
+    const input = event.target.closest?.('[data-picker-input]');
+    if (!input) return;
+    const { value } = pickerParts(input.closest('[data-product-picker]'));
+    if (value.value !== '') {
+      value.value = '';
+      value.dispatchEvent(new Event('change', { bubbles: true }));
+    }
+  });
+
+  document.addEventListener('keydown', event => {
+    const input = event.target.closest?.('[data-picker-input]');
+    if (!input) return;
+    const picker = input.closest('[data-product-picker]');
+    const { results } = pickerParts(picker);
+
+    if (event.key === 'Enter') {
+      event.preventDefault(); // never submit the surrounding form from the picker
+      if (!input.value.trim()) return;
+      pickFirstFor.add(picker);
+      if (window.htmx) window.htmx.trigger(input, 'lookup-now');
+    } else if (event.key === 'Escape') {
+      results.innerHTML = '';
+      input.setAttribute('aria-expanded', 'false');
+    } else if (event.key === 'ArrowDown') {
+      results.querySelector('[data-picker-select]')?.focus();
+      event.preventDefault();
+    }
+  });
+
+  // Arrow keys / Escape while focus is inside the results list.
+  document.addEventListener('keydown', event => {
+    const item = event.target.closest?.('[data-picker-select]');
+    if (!item) return;
+    const picker = item.closest('[data-product-picker]');
+    const { input } = pickerParts(picker);
+    const row = item.closest('li');
+    if (event.key === 'ArrowDown') {
+      row?.nextElementSibling?.querySelector('[data-picker-select]')?.focus();
+      event.preventDefault();
+    } else if (event.key === 'ArrowUp') {
+      const previous = row?.previousElementSibling?.querySelector('[data-picker-select]');
+      (previous ?? input).focus();
+      event.preventDefault();
+    } else if (event.key === 'Escape') {
+      input.focus();
+    }
+  });
+
+  document.addEventListener('htmx:afterSwap', event => {
+    const results = event.detail.target;
+    if (!results?.matches?.('[data-picker-results]')) return;
+    const picker = results.closest('[data-product-picker]');
+    const { input } = pickerParts(picker);
+    const items = results.querySelectorAll('[data-picker-select]');
+    input.setAttribute('aria-expanded', items.length > 0 ? 'true' : 'false');
+
+    if (pickFirstFor.delete(picker) && items.length > 0 && (items.length === 1 || items[0].dataset.exact === 'true')) {
+      choose(items[0]);
+    }
+  });
 
   // ---------- Boot ----------
   function init() {

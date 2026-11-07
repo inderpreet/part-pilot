@@ -1,0 +1,11 @@
+@page "/Categories"
+@model InventoryTracker.Pages.Categories.IndexModel
+@{
+    ViewData["Title"] = "Categories";
+}
+
+<p class="muted"><a href="/Products">‹ All products</a></p>
+
+<div id="category-section">
+    <partial name="_CategorySection" model="Model" />
+</div>
