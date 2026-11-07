@@ -1,0 +1,3 @@
+@model ConfirmButtonModel
+<button type="button" class="@Model.CssClass" hx-post="@Model.PostUrl" hx-confirm="@Model.Confirm"
+        hx-target="@(Model.Target ?? "this")" hx-swap="@(Model.Swap ?? "outerHTML")">@Model.Text</button>

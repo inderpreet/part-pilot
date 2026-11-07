@@ -1,0 +1,28 @@
+@page "/Account/Login"
+@model LoginModel
+@{
+    ViewData["Title"] = "Sign in";
+}
+
+<article class="auth-card">
+    <form method="post" novalidate>
+        <input type="hidden" name="ReturnUrl" value="@Model.ReturnUrl" />
+        <partial name="_ValidationSummary" model="ViewData.ModelState" />
+
+        <label>
+            User name
+            <input name="Input.UserName" value="@Model.Input.UserName" autocomplete="username" autocapitalize="none" spellcheck="false"
+                   autofocus required aria-invalid="@Html.AriaInvalid("Input.UserName")" />
+        </label>
+        <label>
+            Password
+            <input name="Input.Password" type="password" autocomplete="current-password" required aria-invalid="@Html.AriaInvalid("Input.Password")" />
+        </label>
+        <label>
+            <input type="checkbox" name="Input.RememberMe" value="true" role="switch" checked="@Model.Input.RememberMe" />
+            Keep me signed in on this device
+        </label>
+
+        <button type="submit">Sign in</button>
+    </form>
+</article>

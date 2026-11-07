@@ -1,0 +1,8 @@
+@model ErrorModel
+<article role="alert" class="flash flash-error">
+    <strong>@Model.Title</strong> — @Model.Message
+    @if (Model.RequestId is not null)
+    {
+        <small>(ref @Model.RequestId)</small>
+    }
+</article>

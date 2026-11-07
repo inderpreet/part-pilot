@@ -1,6 +1,6 @@
 # F01 — Users & authentication
 
-- **Status:** Planned
+- **Status:** Done
 - **Depends on:** F00
 - **Roles:** Admin manages users and settings; all users can sign in/out and change own password
 
@@ -46,7 +46,7 @@ Identity tables; `ApplicationUser : IdentityUser` adds `DisplayName`, `IsActive`
 | Route | Purpose | Policy |
 |---|---|---|
 | `/Account/Setup` | First-run admin creation | Anonymous (only when no users) |
-| `/Account/Login`, `/Account/Logout` | Sign in/out | Anonymous / CanView |
+| `/Account/Login`, `/Account/Logout` | Sign in/out | Anonymous / Anonymous (POST only, antiforgery-protected; so a deactivated user can still sign out) |
 | `/Account/ChangePassword` | Own password | CanView |
 | `/Admin/Users`, `/Admin/Users/Edit/{id?}` | User management | RequireAdmin |
 | `/Admin/Settings` | Business settings | RequireAdmin |
@@ -60,9 +60,9 @@ Identity tables; `ApplicationUser : IdentityUser` adds `DisplayName`, `IsActive`
 
 | ID | Title | Status |
 |---|---|---|
-| [WI-01-1](../work-items/F01-users-auth/WI-01-1-db-schema.md) | Identity schema, role seed | Planned |
-| [WI-01-2](../work-items/F01-users-auth/WI-01-2-api.md) | Auth config, policies, UserService | Planned |
-| [WI-01-3](../work-items/F01-users-auth/WI-01-3-frontend.md) | Login, setup, user admin, settings pages | Planned |
+| [WI-01-1](../work-items/F01-users-auth/WI-01-1-db-schema.md) | Identity schema, role seed | Done |
+| [WI-01-2](../work-items/F01-users-auth/WI-01-2-api.md) | Auth config, policies, UserService | Done |
+| [WI-01-3](../work-items/F01-users-auth/WI-01-3-frontend.md) | Login, setup, user admin, settings pages | Done |
 
 ## Open questions
 

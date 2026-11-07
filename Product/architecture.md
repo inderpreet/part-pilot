@@ -134,23 +134,52 @@ PartiallyReceived POs; **stock value** = Σ(QuantityOnHand × UnitCostCents); **
 
 ## 8. Authentication and authorization
 
-- ASP.NET Core Identity with EF stores, cookie auth, sliding 8 h expiry, lockout after 5 failed attempts for 15 min.
-- First run: if no users exist, every request redirects to `/Account/Setup` to create the first Admin.
-- Policies: `RequireAdmin` (Admin), `CanEdit` (Admin, Staff), `CanView` (any authenticated active user).
-  Applied with `[Authorize(Policy = ...)]` on page models; a fallback policy requires authentication everywhere.
-- Deactivated users are signed out on next request (security stamp validation interval 1 min).
+- ASP.NET Core Identity (`AddIdentityCore` + EF stores + `SignInManager`) with cookie auth. The cookie scheme is registered
+  with `AddIdentityCookies`: the security-stamp validator signs out of Identity's other schemes when it rejects a session,
+  so all of them must exist (registering only the application cookie turns a rejected session into a 500).
+- Passwords: min 8, max 128, no complexity rules. Lockout after 5 failed attempts for 15 min. Usernames unique, case-insensitive.
+- Cookie `.Inventory.Auth`: `HttpOnly`, `SameSite=Lax`, `SecurePolicy=SameAsRequest` (the app speaks HTTP; see open questions),
+  8 h sliding. "Remember me" gives a persistent 14-day sliding cookie; otherwise it is a session cookie.
+- First run: if no users exist, every request except static files, `/Account/Setup`, `/health` and `/Error*` redirects to
+  `/Account/Setup` (`HX-Redirect` for htmx). The "users exist" answer is cached once true. After the first Admin exists the page is 404.
+- Policies: `RequireAdmin` (Admin), `CanEdit` (Admin, Staff), `CanView` (any authenticated active user). Every policy **and**
+  the fallback policy require an authenticated user carrying the `inv:active` claim. Applied with
+  `[Authorize(Policy = ...)]` on page models; a page that names a policy is not evaluated against the fallback, so each policy
+  repeats the active check.
+- Sessions are re-validated every `Auth:ValidationIntervalSeconds` (default 60). `ActiveUserSecurityStampValidator` rejects
+  deactivated users. The security stamp rotates on role change, deactivation and any password change/reset, which ends other sessions.
+- Business rules live in `UserService` (last active Admin cannot be demoted/deactivated; one role per user). Admin-affecting
+  mutations and first-run setup are serialised by a static semaphore so concurrent requests cannot race past the last-admin guard.
+- htmx and expired sessions: a request with `HX-Request` and no valid session gets `401` + `HX-Redirect` to
+  `/Account/Login?ReturnUrl=<page being viewed>` (same-host `HX-Current-URL` only); an authenticated user lacking the role gets `403`, no redirect.
+  `ReturnUrl` is honoured only if it is a local path and not a login URL.
+- Sign out is POST-only and antiforgery-protected. It is `[AllowAnonymous]` so a deactivated user can still sign out.
+- Sign-in events are published through `IUserEvents` (fan-out publisher that logs handler failures) for the F08 audit log.
 - No self-registration; Admin creates users and sets initial passwords.
-
+- Data-protection keys persist to `<db dir>/keys` (D12) so sign-in cookies and antiforgery tokens survive restarts.
+  The keys are not encrypted at rest (ASP.NET logs a warning); protect the folder like the database.
+- Code layout: `Auth/` (claims, validators, policies, `ICurrentUser`, first-run), `Services/UserService`, `Services/SignInService`.
 ## 9. Configuration and CLI
 
 | Setting | Source | Default |
 |---|---|---|
-| Listen URL | `--urls`, `ASPNETCORE_URLS` | `http://localhost:5080` |
-| DB path | `--db`, `ConnectionStrings__Default` | `<exe dir>/inventory.db` |
+| Who can connect | `--bind`, `INVENTORY_BIND` | `localhost` (loopback only). `all` / `lan` / `0.0.0.0` = every interface (tablets on the LAN); or a specific IP |
+| Port | `--port`, `INVENTORY_PORT` | `5080` |
+| Listen URL (full override of bind + port) | `--urls`, `ASPNETCORE_URLS` | derived: `http://<bind>:<port>` |
+| DB path | `--db`, `INVENTORY_DB`, `ConnectionStrings__Default` | `<exe dir>/inventory.db` |
 | Open browser on start | `--open` | off |
+| File logging | `Logging__File__Enabled`, `Logging__File__Directory` | on, `<db dir>/logs/` |
+| Session re-validation interval | `Auth__ValidationIntervalSeconds` | `60` |
+| Data-protection keys | derived from DB path | `<db dir>/keys/` |
 | Business settings (company name, currency, allow negative stock, PO number prefix) | `AppSetting` table via Admin → Settings | see F00 |
 
-`appsettings.json` is embedded; an optional `appsettings.json` beside the executable overrides it.
+**Precedence** (highest first): command line › real environment variables › `.env` file › optional `appsettings.json`
+beside the executable › built-in defaults. The built-in defaults live in code (nothing needs to sit beside the executable).
+
+**`.env` file**: simple `KEY=VALUE` lines, read from the working directory and then from the executable's directory
+(first file wins; real environment variables are never overridden). See `.env.example` at the repo root. To let
+tablets on the LAN connect, set `INVENTORY_BIND=all` (and allow the port through the OS firewall). The app logs a
+warning at startup whenever it is bound beyond loopback, because the app speaks plain HTTP (see HTTPS open question).
 
 ## 10. Packaging (single binary)
 
@@ -164,7 +193,9 @@ dotnet publish src/InventoryTracker -c Release -r <rid> --self-contained true
 - Razor views are compiled into the assembly. `wwwroot` is included as embedded resources and served with
   `ManifestEmbeddedFileProvider` (`GenerateEmbeddedFilesManifest=true`), so no loose files are needed.
 - SQLite native library (`e_sqlite3`) is bundled and self-extracted.
-- Trimming and Native AOT are **disabled** (EF Core/Razor reflection). Expected size ~60–90 MB compressed.
+- Trimming and Native AOT are **disabled** (EF Core/Razor reflection). Measured single-file sizes (compressed, v0.1.0): win-x64 **51.1 MB**, linux-x64 52.1 MB, linux-arm64 49.6 MB, osx-arm64 49.1 MB.
+- StaticWebAssetsEnabled=false and IsTransformWebConfigDisabled=true keep publish from emitting loose manifest/web.config files; scripts/publish.ps1 fails unless the output folder holds exactly one file. scripts/smoke.ps1 runs the exe alone against a temp DB.
+- Default logging config and AllowedHosts are built into the code (lowest-priority in-memory source); there is no ppsettings.json.
 - Optional: run as Windows Service / systemd unit (`UseWindowsService()` / `UseSystemd()` enabled; docs only).
 
 ## 11. Error handling and logging
@@ -189,6 +220,13 @@ dotnet publish src/InventoryTracker -c Release -r <rid> --self-contained true
 | D4 | Cached `QuantityOnHand` + immutable ledger | Fast reads, full history, verifiable |
 | D5 | Single location, `BinLocation` as free text on Product | v1 scope; multi-location would add `Location` + per-location stock table |
 | D6 | No trimming/AOT | EF Core and Razor Pages not AOT-compatible |
+| D7 | Listen address configured via `.env`/env vars/CLI (`INVENTORY_BIND`, default `localhost`) | Safe-by-default; one switch to open the app to LAN devices without rebuilding |
+| D8 | NuGet: `Microsoft.Extensions.FileProviders.Embedded` | Generates the embedded-files manifest so `wwwroot` is served from inside the executable |
+| D9 | NuGet: `Microsoft.Extensions.Hosting.WindowsServices`, `Microsoft.Extensions.Hosting.Systemd` | Run as a Windows Service / systemd unit; both are no-ops when launched normally |
+| D10 | NuGet (tests only): `Microsoft.AspNetCore.Mvc.Testing` | `WebApplicationFactory` for page/host smoke tests |
+| D11 | Vendored front-end assets pinned: htmx **2.0.11**, Pico CSS **2.1.1** (`wwwroot/lib/`, copied from the npm packages via jsDelivr) | No Node build; versions recorded here so upgrades are deliberate. htmx runs with `allowEval=false` / `selfRequestsOnly=true` |
+| D12 | Data-protection keys persisted to `<db dir>/keys` (file system, unencrypted) | Without a persisted key ring every restart invalidates sign-in cookies and antiforgery tokens (and a single-file app has no stable default location). Same trust boundary as the DB file: whoever can read the folder already owns the data |
+| D13 | NuGet: `Microsoft.AspNetCore.Identity.EntityFrameworkCore` (+ `Microsoft.EntityFrameworkCore.Design`, build-time only, `PrivateAssets=all`) | Identity stores on EF Core; Design is only for `dotnet ef migrations` |
 
 ## 14. Open questions
 

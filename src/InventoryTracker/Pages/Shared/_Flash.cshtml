@@ -1,0 +1,7 @@
+@* Toast area. htmx targets it (#flash) for error partials and `flash` triggers; TempData carries messages across redirects. *@
+<div id="flash" role="status" aria-live="polite">
+    @if (TempData[PageExtensions.FlashKey] is string message && message.Length > 0)
+    {
+        <article class="flash flash-success">@message</article>
+    }
+</div>

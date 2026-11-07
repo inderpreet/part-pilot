@@ -1,0 +1,163 @@
+/* Inventory Tracker — layered on top of Pico.css (semantic HTML first, classes only where Pico has none). */
+
+:root {
+  --it-badge-radius: 999px;
+  --it-toast-width: min(26rem, calc(100vw - 2rem));
+  --it-ok: #1b7f4b;
+  --it-warn: #b45309;
+  --it-danger: #b42318;
+  --it-info: #2563a6;
+  --it-muted: #6b7280;
+}
+
+/* Never let the page itself scroll sideways; wide content scrolls inside its own container. */
+html, body { overflow-x: hidden; }
+
+/* ---------- Header / navigation ---------- */
+.app-header {
+  border-bottom: 1px solid var(--pico-muted-border-color);
+  background: var(--pico-card-background-color);
+  margin-bottom: var(--pico-spacing);
+}
+.app-header nav { margin-bottom: 0; }
+.app-bar .brand { text-decoration: none; }
+.main-nav {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+}
+.main-nav ul { flex-wrap: nowrap; white-space: nowrap; margin-left: calc(var(--pico-nav-element-spacing-horizontal) * -1); }
+.main-nav a[aria-current="page"] { font-weight: 600; border-bottom: 2px solid var(--pico-primary); border-radius: 0; }
+
+/* Features that are not built yet: visible so the product shape is clear, but not links (they would 404). */
+.main-nav .nav-soon { color: var(--it-muted); cursor: not-allowed; padding: var(--pico-nav-link-spacing-vertical) var(--pico-nav-link-spacing-horizontal); }
+
+/* User menu (display name -> change password / sign out) */
+.user-menu details.dropdown { margin-bottom: 0; }
+.user-menu details.dropdown summary { white-space: nowrap; }
+.user-menu form { margin: 0; }
+.role-label { color: var(--it-muted); }
+button.linklike {
+  display: block;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  background: none;
+  border: 0;
+  color: var(--pico-primary);
+  text-align: inherit;
+  cursor: pointer;
+}
+button.linklike:hover { text-decoration: underline; }
+
+/* Sign-in, setup, change password: a centred narrow card; admin forms: a readable column. */
+.auth-card { max-width: 28rem; margin: 2rem auto; }
+.form-narrow { max-width: 36rem; }
+.form-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; }
+.form-actions > button, .form-actions > a[role="button"] { width: auto; margin: 0; }
+
+/* List page toolbar: search box + primary action */
+.toolbar { display: flex; flex-wrap: wrap; gap: 0.75rem; align-items: center; justify-content: space-between; margin-bottom: var(--pico-spacing); }
+.toolbar input[type="search"] { flex: 1 1 14rem; max-width: 24rem; margin: 0; }
+.toolbar > a[role="button"] { width: auto; margin: 0; }
+
+.muted { color: var(--it-muted); }
+.visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+
+.page-title { margin-bottom: var(--pico-spacing); }
+.app-footer { padding-block: var(--pico-spacing); color: var(--it-muted); }
+
+/* ---------- Toasts (#flash) ---------- */
+#flash {
+  position: fixed;
+  top: 0.75rem;
+  right: 0.75rem;
+  z-index: 1000;
+  width: var(--it-toast-width);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  pointer-events: none;
+}
+#flash:empty { display: none; }
+.flash {
+  pointer-events: auto;
+  margin: 0;
+  padding: 0.75rem 1rem;
+  border-left: 4px solid var(--it-info);
+  box-shadow: var(--pico-card-box-shadow);
+  cursor: pointer;
+  transition: opacity 0.3s ease, transform 0.3s ease;
+}
+.flash-success { border-left-color: var(--it-ok); }
+.flash-error { border-left-color: var(--it-danger); }
+.flash-leaving { opacity: 0; transform: translateX(1rem); }
+
+/* ---------- Validation summary ---------- */
+.validation-summary {
+  border-left: 4px solid var(--it-danger);
+  padding: 0.75rem 1rem;
+}
+.validation-summary ul { margin: 0.25rem 0 0; }
+
+/* ---------- Modal (<dialog id="modal">) ---------- */
+#modal article { max-width: 36rem; width: 100%; }
+#modal footer { display: flex; gap: 0.5rem; justify-content: flex-end; }
+#modal footer button { width: auto; margin: 0; }
+
+/* ---------- Tables ---------- */
+.table-wrap { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: var(--pico-spacing); }
+.table-wrap table { margin-bottom: 0; }
+table.compact th, table.compact td { padding: 0.35rem 0.6rem; }
+table .num { text-align: right; font-variant-numeric: tabular-nums; }
+.sort-link { text-decoration: none; white-space: nowrap; }
+.sort-indicator { margin-left: 0.25rem; font-size: 0.75em; }
+
+/* ---------- Pager ---------- */
+.pager { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.pager ul { flex-wrap: wrap; margin: 0; }
+.pager li { padding: 0 0.1rem; }
+.pager a { margin: 0; } /* Pico gives nav links negative margins, which makes neighbours overlap */
+.pager a[aria-current="page"] { font-weight: 700; text-decoration: none; background: var(--pico-primary-background); color: var(--pico-primary-inverse); border-radius: var(--pico-border-radius); }
+.pager a, .pager span { padding: 0.25rem 0.6rem; }
+.pager span[aria-disabled="true"] { color: var(--it-muted); }
+
+/* ---------- Empty state / error page ---------- */
+.empty-state { text-align: center; padding: 3rem 1rem; color: var(--it-muted); }
+.empty-state h3 { color: var(--pico-color); }
+.error-page { text-align: center; }
+.error-code { font-size: 4rem; font-weight: 700; line-height: 1; margin-bottom: 0.5rem; color: var(--it-muted); }
+
+/* ---------- Badges (low stock, PO status, ...) ---------- */
+.badge {
+  display: inline-block;
+  padding: 0.1rem 0.55rem;
+  border-radius: var(--it-badge-radius);
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.5;
+  white-space: nowrap;
+  color: #fff;
+  background: var(--it-muted);
+}
+.badge-low, .badge-partial { background: var(--it-warn); }
+.badge-ok, .badge-received { background: var(--it-ok); }
+.badge-out, .badge-cancelled { background: var(--it-danger); }
+.badge-submitted { background: var(--it-info); }
+.badge-draft, .badge-inactive { background: var(--it-muted); }
+
+/* ---------- Small screens ---------- */
+@media (max-width: 576px) {
+  #flash { left: 1rem; right: 1rem; width: auto; }
+  .page-title { font-size: 1.5rem; }
+  .pager { justify-content: center; }
+}
+
+/* ---------- Print (PO print view, reports) ---------- */
+@media print {
+  .app-header, .app-footer, #flash, #modal, .no-print, .pager, button, [role="button"] { display: none !important; }
+  body { background: #fff; color: #000; }
+  main.container { max-width: none; padding: 0; }
+  .table-wrap { overflow: visible; }
+  a { color: inherit; text-decoration: none; }
+}

@@ -1,0 +1,12 @@
+@model EmptyStateModel
+<div class="empty-state">
+    <h3>@Model.Title</h3>
+    @if (!string.IsNullOrEmpty(Model.Message))
+    {
+        <p>@Model.Message</p>
+    }
+    @if (!string.IsNullOrEmpty(Model.ActionText) && !string.IsNullOrEmpty(Model.ActionUrl))
+    {
+        <a role="button" href="@Model.ActionUrl">@Model.ActionText</a>
+    }
+</div>

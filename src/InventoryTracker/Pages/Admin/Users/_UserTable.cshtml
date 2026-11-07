@@ -1,0 +1,62 @@
+@model InventoryTracker.Pages.Admin.Users.IndexModel
+@if (Model.Users.TotalCount == 0)
+{
+    <partial name="_EmptyState" model="@(new EmptyStateModel(
+        Model.Query.SearchTerm is null ? "No users yet" : "No users match your search",
+        Model.Query.SearchTerm is null ? "Create the first user to get started." : "Try a different name or clear the search."))" />
+}
+else
+{
+    <div class="table-wrap">
+        <table class="striped">
+            <thead>
+                <tr>
+                    <partial name="_SortHeader" model="@(new SortHeaderModel("username", "User name", Model.Query))" />
+                    <partial name="_SortHeader" model="@(new SortHeaderModel("name", "Name", Model.Query))" />
+                    <partial name="_SortHeader" model="@(new SortHeaderModel("role", "Role", Model.Query))" />
+                    <partial name="_SortHeader" model="@(new SortHeaderModel("active", "Status", Model.Query))" />
+                    <partial name="_SortHeader" model="@(new SortHeaderModel("signin", "Last sign-in", Model.Query))" />
+                    <th scope="col"><span class="visually-hidden">Actions</span></th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var user in Model.Users.Items)
+                {
+                    <tr>
+                        <td>
+                            @user.UserName
+                            @if (user.Id == Model.CurrentUserId)
+                            {
+                                <small class="role-label">(you)</small>
+                            }
+                        </td>
+                        <td>@user.DisplayName</td>
+                        <td>@(user.Role ?? "—")</td>
+                        <td>
+                            @if (user.IsActive)
+                            {
+                                <span class="badge badge-ok">Active</span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-inactive">Inactive</span>
+                            }
+                        </td>
+                        <td>
+                            @if (user.LastSignInAt is { } lastSignIn)
+                            {
+                                @Html.LocalTime(lastSignIn)
+                            }
+                            else
+                            {
+                                <span class="muted">Never</span>
+                            }
+                        </td>
+                        <td><a asp-page="/Admin/Users/Edit" asp-route-id="@user.Id">Edit</a></td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <partial name="_Pager" model="@PagerModel.From(Model.Users)" />
+}

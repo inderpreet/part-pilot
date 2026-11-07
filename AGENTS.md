@@ -29,6 +29,9 @@ Read `Product/architecture.md` before writing code. Read the relevant feature sp
 
 ## Commands
 
+Dev helper (PowerShell): `./scripts/dev.ps1 [run|watch|test|build|migrate|reset-db|help]` — e.g. `./scripts/dev.ps1 run -Lan -Open`,
+`./scripts/dev.ps1 test -Filter "FullyQualifiedName~Settings"`, `./scripts/dev.ps1 migrate -Name AddProducts`.
+
 ```bash
 dotnet build
 dotnet test
@@ -61,7 +64,9 @@ dotnet ef migrations add <Name> --project src/InventoryTracker --output-dir Data
 - **Authorization**: policies `RequireAdmin`, `CanEdit` (Admin, Staff), `CanView` (all signed-in). Every page has `[Authorize(Policy = ...)]`.
 - **Validation**: DataAnnotations on input models + service-level rule checks returning `Result`/errors rendered in forms.
 - Nullable reference types on; warnings as errors; file-scoped namespaces; `async` all the way for DB calls.
-- No new NuGet packages or JS libraries without noting it in `Product/architecture.md` → Decisions.
+- No new NuGet packages or JS libraries without noting it in Product/architecture.md → Decisions.
+- **Navigation**: sections whose pages do not exist yet are listed in Pages/Shared/NavItems.cs with Available: false (rendered as inert labels, never links). The work item that adds a section's first page flips it to 	rue.
+- **Auth in tests**: use AppFactory (X-Test-Role header selects Admin/Staff/Viewer without signing in); use CreateAnonymousClient() + WebForms.LoginAsync when the real cookie flow matters (session rejection, lockout, ReturnUrl).
 
 ## Definition of done
 

@@ -1,0 +1,8 @@
+@page "/"
+@model IndexModel
+@{
+    ViewData["Title"] = "Dashboard";
+}
+<partial name="_EmptyState" model="@(new EmptyStateModel(
+    "Dashboard coming in F06",
+    "Stock levels, low-stock alerts and reorder suggestions will appear here."))" />

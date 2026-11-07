@@ -12,3 +12,19 @@ TestResults/
 *.db-wal
 appsettings.Development.local.json
 .claude/settings.local.json
+
+# Automatic pre-migration DB backups
+*.db.bak-*
+
+# Local runtime configuration (see .env.example)
+.env
+logs/
+
+# Local dev database + logs created by scripts/dev.ps1
+.data/
+
+# Single-file publish output (scripts/publish.ps1)
+publish/
+
+# Data-protection key ring written beside the DB when running from the repo
+keys/

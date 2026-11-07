@@ -1,0 +1,64 @@
+@using Microsoft.AspNetCore.WebUtilities
+@model PagerModel
+@{
+    var path = Context.Request.Path.Value ?? "/";
+    var carried = Context.Request.Query
+        .Where(q => !q.Key.Equals("page", StringComparison.OrdinalIgnoreCase))
+        .SelectMany(q => q.Value.Select(v => KeyValuePair.Create(q.Key, v)))
+        .ToList();
+
+    string Link(int page)
+        => QueryHelpers.AddQueryString(path, carried.Append(KeyValuePair.Create("page", (string?)page.ToString())));
+
+    var total = Model.TotalPages;
+    var first = Model.TotalCount == 0 ? 0 : ((Model.Page - 1) * Model.PageSize) + 1;
+    var last = Math.Min(Model.Page * Model.PageSize, Model.TotalCount);
+
+    // 1 … (current-2 .. current+2) … last
+    var pages = Enumerable.Range(1, total)
+        .Where(p => p == 1 || p == total || Math.Abs(p - Model.Page) <= 2)
+        .ToList();
+}
+@if (Model.TotalCount > 0)
+{
+    <nav class="pager" aria-label="Pagination">
+        <small>Showing @first–@last of @Model.TotalCount</small>
+        @if (total > 1)
+        {
+            <ul>
+                <li>
+                    @if (Model.Page > 1)
+                    {
+                        <a href="@Link(Model.Page - 1)" hx-get="@Link(Model.Page - 1)" hx-target="@Model.Target" hx-push-url="true" rel="prev">‹ Prev</a>
+                    }
+                    else
+                    {
+                        <span aria-disabled="true">‹ Prev</span>
+                    }
+                </li>
+                @for (var i = 0; i < pages.Count; i++)
+                {
+                    var p = pages[i];
+                    if (i > 0 && p - pages[i - 1] > 1)
+                    {
+                        <li><span aria-hidden="true">…</span></li>
+                    }
+                    <li>
+                        <a href="@Link(p)" hx-get="@Link(p)" hx-target="@Model.Target" hx-push-url="true"
+                           aria-current="@(p == Model.Page ? "page" : null)" aria-label="Page @p">@p</a>
+                    </li>
+                }
+                <li>
+                    @if (Model.Page < total)
+                    {
+                        <a href="@Link(Model.Page + 1)" hx-get="@Link(Model.Page + 1)" hx-target="@Model.Target" hx-push-url="true" rel="next">Next ›</a>
+                    }
+                    else
+                    {
+                        <span aria-disabled="true">Next ›</span>
+                    }
+                </li>
+            </ul>
+        }
+    </nav>
+}

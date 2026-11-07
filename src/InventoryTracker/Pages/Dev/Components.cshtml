@@ -1,0 +1,84 @@
+@page "/Dev/Components"
+@model InventoryTracker.Pages.Dev.ComponentsModel
+@{
+    ViewData["Title"] = "Component style guide";
+}
+
+<section>
+    <h2>Flash / toast</h2>
+    <div class="grid">
+        <button hx-post="?handler=Echo" hx-swap="none" class="secondary">Server flash (HX-Trigger)</button>
+        <button type="button" class="secondary" onclick="document.dispatchEvent(new CustomEvent('flash', { detail: { value: 'Client-side success' } }))">Success</button>
+        <button type="button" class="secondary" onclick="document.dispatchEvent(new CustomEvent('flash', { detail: { value: 'Something failed', level: 'error' } }))">Error</button>
+    </div>
+</section>
+
+<section>
+    <h2>Modal</h2>
+    <button hx-get="?handler=Modal" hx-target="#modal">Open modal</button>
+</section>
+
+<section>
+    <h2>Validation summary (HTTP 422 swapped in place)</h2>
+    <div id="validation-demo"></div>
+    <button class="secondary" hx-post="?handler=Invalid" hx-target="#validation-demo">Trigger service errors</button>
+</section>
+
+<section>
+    <h2>Badges</h2>
+    <p>
+        <span class="badge badge-low">Low stock</span>
+        <span class="badge badge-ok">In stock</span>
+        <span class="badge badge-out">Out of stock</span>
+        <span class="badge badge-inactive">Inactive</span>
+    </p>
+    <p>
+        <span class="badge badge-draft">Draft</span>
+        <span class="badge badge-submitted">Submitted</span>
+        <span class="badge badge-partial">Partially received</span>
+        <span class="badge badge-received">Received</span>
+        <span class="badge badge-cancelled">Cancelled</span>
+    </p>
+</section>
+
+<section>
+    <h2>Money &amp; time helpers</h2>
+    <p>
+        @Html.Money(123456) · @Html.Money(5) · @Html.Money(-250099) · @Html.Money((long?)null)<br />
+        @Html.LocalTime(DateTime.UtcNow) · @Html.LocalDate(DateTime.UtcNow)
+    </p>
+</section>
+
+<section>
+    <h2>Sortable table, pager, confirm button</h2>
+    <div id="results">
+        <div class="table-wrap">
+            <table class="compact striped">
+                <thead>
+                    <tr>
+                        <partial name="_SortHeader" model="@(new SortHeaderModel("sku", "SKU", Model.Query))" />
+                        <partial name="_SortHeader" model="@(new SortHeaderModel("name", "Name", Model.Query))" />
+                        <th scope="col" class="num">On hand</th>
+                        <th scope="col"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>ABC-1</td>
+                        <td>Widget</td>
+                        <td class="num">3 <span class="badge badge-low">Low</span></td>
+                        <td>
+                            <partial name="_ConfirmButton" model="@(new ConfirmButtonModel("Deactivate", "Deactivate this product?", "?handler=Echo", Swap: "none"))" />
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+        <partial name="_Pager" model="Model.Pager" />
+    </div>
+</section>
+
+<section>
+    <h2>Empty state</h2>
+    <partial name="_EmptyState" model="@(new EmptyStateModel("No products yet", "Add your first product to get started.", "Add product", "/Products/Create"))" />
+</section>

@@ -20,8 +20,8 @@ executable: run it, open the browser, sign in. Data lives in a single SQLite fil
 
 | ID | Feature | Summary | Depends on | Status |
 |---|---|---|---|---|
-| [F00](Features/F00-platform-foundation.md) | Platform foundation | Project skeleton, SQLite + EF Core, layout, settings, single-file publish | — | Planned |
-| [F01](Features/F01-users-auth.md) | Users & authentication | Login, roles, first-run admin setup, user management | F00 | Planned |
+| [F00](Features/F00-platform-foundation.md) | Platform foundation | Project skeleton, SQLite + EF Core, layout, settings, single-file publish | — | Done |
+| [F01](Features/F01-users-auth.md) | Users & authentication | Login, roles, first-run admin setup, user management | F00 | Done |
 | [F02](Features/F02-product-catalog.md) | Product catalog | Products (SKU, unit, bin, reorder point, cost) and categories | F01 | Planned |
 | [F03](Features/F03-stock-tracking.md) | Stock tracking | Stock ledger: receive, issue, adjust, count; on-hand quantity | F02 | Planned |
 | [F04](Features/F04-suppliers.md) | Suppliers | Supplier directory and product–supplier pricing | F02 | Planned |
@@ -39,13 +39,13 @@ F00 has an extra packaging item.
 
 | ID | Title | Status |
 |---|---|---|
-| [WI-00-1](work-items/F00-platform-foundation/WI-00-1-db-schema.md) | Foundation — DbContext, SQLite config, settings table | Planned |
-| [WI-00-2](work-items/F00-platform-foundation/WI-00-2-api.md) | Foundation — host, DI, config, errors, embedded assets | Planned |
-| [WI-00-3](work-items/F00-platform-foundation/WI-00-3-frontend.md) | Foundation — layout, HTMX conventions, shared partials | Planned |
-| [WI-00-4](work-items/F00-platform-foundation/WI-00-4-packaging.md) | Foundation — single-file publish script | Planned |
-| [WI-01-1](work-items/F01-users-auth/WI-01-1-db-schema.md) | Users — Identity schema, role seed | Planned |
-| [WI-01-2](work-items/F01-users-auth/WI-01-2-api.md) | Users — auth config, policies, UserService | Planned |
-| [WI-01-3](work-items/F01-users-auth/WI-01-3-frontend.md) | Users — login, setup, user admin, settings pages | Planned |
+| [WI-00-1](work-items/F00-platform-foundation/WI-00-1-db-schema.md) | Foundation — DbContext, SQLite config, settings table | Done |
+| [WI-00-2](work-items/F00-platform-foundation/WI-00-2-api.md) | Foundation — host, DI, config, errors, embedded assets | Done |
+| [WI-00-3](work-items/F00-platform-foundation/WI-00-3-frontend.md) | Foundation — layout, HTMX conventions, shared partials | Done |
+| [WI-00-4](work-items/F00-platform-foundation/WI-00-4-packaging.md) | Foundation — single-file publish script | Done |
+| [WI-01-1](work-items/F01-users-auth/WI-01-1-db-schema.md) | Users — Identity schema, role seed | Done |
+| [WI-01-2](work-items/F01-users-auth/WI-01-2-api.md) | Users — auth config, policies, UserService | Done |
+| [WI-01-3](work-items/F01-users-auth/WI-01-3-frontend.md) | Users — login, setup, user admin, settings pages | Done |
 | [WI-02-1](work-items/F02-product-catalog/WI-02-1-db-schema.md) | Catalog — Product, Category schema | Planned |
 | [WI-02-2](work-items/F02-product-catalog/WI-02-2-api.md) | Catalog — ProductService, CategoryService | Planned |
 | [WI-02-3](work-items/F02-product-catalog/WI-02-3-frontend.md) | Catalog — product list/detail/edit, categories | Planned |

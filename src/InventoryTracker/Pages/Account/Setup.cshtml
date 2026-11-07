@@ -1,0 +1,43 @@
+@page "/Account/Setup"
+@model SetupModel
+@{
+    ViewData["Title"] = "Set up Inventory Tracker";
+}
+
+<article class="auth-card">
+    <header>
+        <p>Welcome! Create the administrator account to get started. You can add more users afterwards.</p>
+    </header>
+
+    <form method="post" novalidate>
+        <partial name="_ValidationSummary" model="ViewData.ModelState" />
+
+        <label>
+            Company name
+            <input asp-for="Input.CompanyName" autocomplete="organization" aria-invalid="@Html.AriaInvalid("Input.CompanyName")" required />
+        </label>
+        <label>
+            Admin user name
+            <input asp-for="Input.UserName" autocomplete="username" autocapitalize="none" spellcheck="false" autofocus aria-invalid="@Html.AriaInvalid("Input.UserName")" required />
+        </label>
+        <label>
+            Your name
+            <input asp-for="Input.DisplayName" autocomplete="name" aria-invalid="@Html.AriaInvalid("Input.DisplayName")" required />
+        </label>
+        <label>
+            Email <small>(optional)</small>
+            <input asp-for="Input.Email" type="email" autocomplete="email" aria-invalid="@Html.AriaInvalid("Input.Email")" />
+        </label>
+        <label>
+            Password
+            <input name="Input.Password" type="password" autocomplete="new-password" minlength="8" aria-invalid="@Html.AriaInvalid("Input.Password")" aria-describedby="pw-help" required />
+            <small id="pw-help">At least 8 characters.</small>
+        </label>
+        <label>
+            Confirm password
+            <input name="Input.ConfirmPassword" type="password" autocomplete="new-password" aria-invalid="@Html.AriaInvalid("Input.ConfirmPassword")" required />
+        </label>
+
+        <button type="submit">Create admin account</button>
+    </form>
+</article>

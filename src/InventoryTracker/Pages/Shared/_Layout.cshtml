@@ -1,0 +1,109 @@
+@using InventoryTracker.Auth
+@using InventoryTracker.Data
+@using Microsoft.AspNetCore.Antiforgery
+@using Microsoft.AspNetCore.Authorization
+@inject ISettingsService Settings
+@inject IAntiforgery Antiforgery
+@inject IAuthorizationService Authorization
+@inject ICurrentUser CurrentUser
+@{
+    // Antiforgery token for every htmx request, sent as a header (configured as "RequestVerificationToken").
+    var token = Antiforgery.GetAndStoreTokens(Context).RequestToken;
+
+    // The error page renders with this layout too, so a broken database must not break it.
+    string company;
+    try
+    {
+        company = await Settings.GetStringAsync(SettingKeys.CompanyName);
+    }
+    catch (Exception)
+    {
+        company = "Inventory Tracker";
+    }
+
+    var pageTitle = ViewData["Title"] as string;
+    var path = Context.Request.Path.Value ?? "/";
+
+    // Only what this user may use is shown; anonymous pages (login, setup, errors) get no navigation at all.
+    var navItems = await NavItems.VisibleToAsync(Authorization, User);
+}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="htmx-config" content='{"allowEval":false,"selfRequestsOnly":true}' />
+    <title>@(string.IsNullOrEmpty(pageTitle) ? company : $"{pageTitle} · {company}")</title>
+    <link rel="stylesheet" href="~/lib/pico.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" />
+    <script src="~/lib/htmx.min.js" defer></script>
+    <script src="~/js/site.js" defer></script>
+</head>
+<body hx-headers='{"RequestVerificationToken": "@token"}'>
+    <header class="app-header">
+        <div class="container">
+            <nav class="app-bar" aria-label="Account">
+                <ul>
+                    <li><a class="brand" href="~/"><strong>@company</strong></a></li>
+                </ul>
+                @if (CurrentUser.IsAuthenticated)
+                {
+                    <ul class="user-menu">
+                        <li>
+                            <details class="dropdown">
+                                <summary>@CurrentUser.DisplayName <small class="role-label">(@(CurrentUser.Role ?? "no role"))</small></summary>
+                                <ul dir="rtl">
+                                    <li><a asp-page="/Account/ChangePassword">Change password</a></li>
+                                    <li>
+                                        <form method="post" asp-page="/Account/Logout">
+                                            <button type="submit" class="linklike">Sign out</button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </details>
+                        </li>
+                    </ul>
+                }
+            </nav>
+            @if (navItems.Count > 0)
+            {
+                <nav class="main-nav" aria-label="Main">
+                    <ul>
+                        @foreach (var item in navItems)
+                        {
+                            <li>
+                                @if (item.Available)
+                                {
+                                    <a href="@item.Href" aria-current="@(NavItems.IsCurrent(item, path) ? "page" : null)">@item.Label</a>
+                                }
+                                else
+                                {
+                                    <span class="nav-soon" aria-disabled="true" title="Coming soon">@item.Label</span>
+                                }
+                            </li>
+                        }
+                    </ul>
+                </nav>
+            }
+        </div>
+    </header>
+
+    <partial name="_Flash" />
+
+    <main class="container">
+        @if (!string.IsNullOrEmpty(pageTitle))
+        {
+            <h1 class="page-title">@pageTitle</h1>
+        }
+        @RenderBody()
+    </main>
+
+    <footer class="container app-footer">
+        <small>@company · Inventory Tracker v@(HealthEndpoint.Version)</small>
+    </footer>
+
+    <dialog id="modal" aria-label="Dialog"></dialog>
+
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

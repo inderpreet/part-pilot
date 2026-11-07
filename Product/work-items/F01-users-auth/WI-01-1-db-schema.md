@@ -1,7 +1,7 @@
 # WI-01-1 — Identity schema, role seed
 
 - **Feature:** [F01 — Users & authentication](../../Features/F01-users-auth.md)
-- **Status:** Planned
+- **Status:** Done
 - **Depends on:** WI-00-1
 - **Estimate:** S
 
@@ -16,18 +16,18 @@ Identity tables exist in the SQLite DB with an extended user entity and the thre
 
 ## Tasks
 
-- [ ] Add `Microsoft.AspNetCore.Identity.EntityFrameworkCore`.
-- [ ] `ApplicationUser : IdentityUser` with `DisplayName` (required, max 100), `IsActive` (default true), `LastSignInAt` (UTC, nullable).
-- [ ] `AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole, string>`.
-- [ ] `Roles` static class: `Admin`, `Staff`, `Viewer` constants.
-- [ ] Seed roles via `HasData` with fixed IDs and concurrency stamps.
-- [ ] `NormalizedUserName` unique index (Identity default) — confirm case-insensitive behaviour.
-- [ ] Migration `AddIdentity`.
+- [x] Add `Microsoft.AspNetCore.Identity.EntityFrameworkCore`.
+- [x] `ApplicationUser : IdentityUser` with `DisplayName` (required, max 100), `IsActive` (default true), `LastSignInAt` (UTC, nullable).
+- [x] `AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole, string>`.
+- [x] `Roles` static class: `Admin`, `Staff`, `Viewer` constants.
+- [x] Seed roles via `HasData` with fixed IDs and concurrency stamps.
+- [x] `NormalizedUserName` unique index (Identity default) — confirm case-insensitive behaviour.
+- [x] Migration `AddIdentity`.
 
 ## Acceptance criteria
 
-- [ ] Fresh DB has `AspNetUsers`, `AspNetRoles` (3 rows), `AspNetUserRoles`, etc.
-- [ ] Migration applies cleanly on top of the WI-00-1 schema.
+- [x] Fresh DB has `AspNetUsers`, `AspNetRoles` (3 rows), `AspNetUserRoles`, etc.
+- [x] Migration applies cleanly on top of the WI-00-1 schema.
 
 ## Notes
 

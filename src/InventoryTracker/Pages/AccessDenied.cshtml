@@ -1,0 +1,14 @@
+@page "/AccessDenied"
+@model AccessDeniedModel
+@{
+    ViewData["Title"] = "Access denied";
+}
+
+<div class="error-page">
+    <div class="error-code">403</div>
+    <h2>Access denied</h2>
+    <p>You don't have permission to open that page. If you think you should, ask an administrator to change your role.</p>
+    <p>
+        <a role="button" href="~/">Back to the dashboard</a>
+    </p>
+</div>

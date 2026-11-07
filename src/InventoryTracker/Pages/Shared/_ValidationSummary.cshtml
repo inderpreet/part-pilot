@@ -1,0 +1,14 @@
+@* Usage: <partial name="_ValidationSummary" model="ViewData.ModelState" /> — lists every ModelState error, including mapped service errors. *@
+@model Microsoft.AspNetCore.Mvc.ModelBinding.ModelStateDictionary
+@if (!Model.IsValid)
+{
+    <article class="validation-summary" role="alert">
+        <strong>Please fix the following:</strong>
+        <ul>
+            @foreach (var error in Model.Values.SelectMany(v => v.Errors))
+            {
+                <li>@error.ErrorMessage</li>
+            }
+        </ul>
+    </article>
+}

@@ -1,0 +1,18 @@
+@page "/Admin"
+@model InventoryTracker.Pages.Admin.IndexModel
+@{
+    ViewData["Title"] = "Administration";
+}
+
+<div class="grid">
+    <article>
+        <header><strong>Users</strong></header>
+        <p>Create accounts, assign roles, deactivate former staff and reset passwords.</p>
+        <a role="button" asp-page="/Admin/Users/Index">Manage users</a>
+    </article>
+    <article>
+        <header><strong>Settings</strong></header>
+        <p>Company name, currency, negative stock and purchase order numbering.</p>
+        <a role="button" asp-page="/Admin/Settings">Edit settings</a>
+    </article>
+</div>

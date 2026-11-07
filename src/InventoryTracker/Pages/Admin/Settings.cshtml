@@ -1,0 +1,43 @@
+@page "/Admin/Settings"
+@model InventoryTracker.Pages.Admin.SettingsModel
+@{
+    ViewData["Title"] = "Settings";
+}
+
+<form method="post" novalidate class="form-narrow">
+    <partial name="_ValidationSummary" model="ViewData.ModelState" />
+
+    <label>
+        Company name
+        <input name="Input.CompanyName" value="@Model.Input.CompanyName" maxlength="100" required aria-invalid="@Html.AriaInvalid("Input.CompanyName")" />
+        <small>Shown in the header and on printed documents.</small>
+    </label>
+
+    <div class="grid">
+        <label>
+            Currency code
+            <input name="Input.CurrencyCode" value="@Model.Input.CurrencyCode" maxlength="3" minlength="3" autocapitalize="characters" required
+                   aria-invalid="@Html.AriaInvalid("Input.CurrencyCode")" />
+            <small>Three letters, e.g. USD, EUR, GBP.</small>
+        </label>
+        <label>
+            Currency symbol
+            <input name="Input.CurrencySymbol" value="@Model.Input.CurrencySymbol" maxlength="5" required aria-invalid="@Html.AriaInvalid("Input.CurrencySymbol")" />
+        </label>
+    </div>
+
+    <label>
+        PO number prefix
+        <input name="Input.PurchaseOrderNumberPrefix" value="@Model.Input.PurchaseOrderNumberPrefix" maxlength="10"
+               aria-invalid="@Html.AriaInvalid("Input.PurchaseOrderNumberPrefix")" />
+        <small>Put in front of purchase order numbers, e.g. <code>PO-</code>. Up to 10 characters, no spaces.</small>
+    </label>
+
+    <label>
+        <input type="checkbox" name="Input.AllowNegativeStock" value="true" role="switch" checked="@Model.Input.AllowNegativeStock" />
+        Allow stock to go negative
+        <input type="hidden" name="Input.AllowNegativeStock" value="false" />
+    </label>
+
+    <button type="submit">Save settings</button>
+</form>

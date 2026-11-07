@@ -1,0 +1,14 @@
+@page "/Error/{statusCode:int?}"
+@model ErrorModel
+@{
+    ViewData["Title"] = Model.Title;
+}
+<article class="error-page">
+    <p class="error-code" aria-hidden="true">@Model.HttpStatus</p>
+    <p>@Model.Message</p>
+    <p><a role="button" href="~/">Back to dashboard</a></p>
+    @if (Model.RequestId is not null)
+    {
+        <small>Reference: @Model.RequestId</small>
+    }
+</article>

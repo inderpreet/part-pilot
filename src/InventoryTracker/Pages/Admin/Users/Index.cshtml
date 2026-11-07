@@ -1,0 +1,16 @@
+@page "/Admin/Users"
+@model InventoryTracker.Pages.Admin.Users.IndexModel
+@{
+    ViewData["Title"] = "Users";
+}
+
+<div class="toolbar">
+    <input type="search" name="search" value="@Model.Query.Search" placeholder="Search users…" aria-label="Search users"
+           hx-get="/Admin/Users" hx-trigger="input changed delay:300ms, search" hx-target="#results" hx-push-url="true"
+           hx-include="this" autocomplete="off" />
+    <a role="button" asp-page="/Admin/Users/Edit">New user</a>
+</div>
+
+<div id="results">
+    <partial name="_UserTable" model="Model" />
+</div>

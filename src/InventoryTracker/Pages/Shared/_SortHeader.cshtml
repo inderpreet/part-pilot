@@ -1,0 +1,22 @@
+@using Microsoft.AspNetCore.WebUtilities
+@model SortHeaderModel
+@{
+    var active = Model.Query.IsSortedBy(Model.Column);
+    var nextDesc = active && !Model.Query.Desc;
+
+    var carried = Context.Request.Query
+        .Where(q => q.Key is not ("sort" or "desc" or "page"))
+        .SelectMany(q => q.Value.Select(v => KeyValuePair.Create(q.Key, v)))
+        .Append(KeyValuePair.Create("sort", (string?)Model.Column))
+        .Append(KeyValuePair.Create("desc", (string?)(nextDesc ? "true" : "false")));
+    var link = QueryHelpers.AddQueryString(Context.Request.Path.Value ?? "/", carried);
+    var ariaSort = !active ? "none" : Model.Query.Desc ? "descending" : "ascending";
+}
+<th scope="col" aria-sort="@ariaSort">
+    <a href="@link" hx-get="@link" hx-target="@Model.Target" hx-push-url="true" class="sort-link">
+        @Model.Label@if (active)
+        {
+            <span class="sort-indicator" aria-hidden="true">@(Model.Query.Desc ? "▼" : "▲")</span>
+        }
+    </a>
+</th>
