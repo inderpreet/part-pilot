@@ -50,6 +50,7 @@ builder.Services.AddSingleton<IClock, SystemClock>();
 builder.Services.AddSingleton<ISettingsService, SettingsService>();
 
 builder.Services.AddInventoryAuth();
+builder.Services.AddCatalog();
 
 builder.Services.AddHealthChecks().AddCheck<DatabaseHealthCheck>(DatabaseHealthCheck.Name);
 builder.Services.AddRazorPages();

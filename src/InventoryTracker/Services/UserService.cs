@@ -86,11 +86,11 @@ public sealed class UserService(
 
         if (query.SearchTerm is { } term)
         {
-            var pattern = "%" + term.Replace("\\", "\\\\").Replace("%", "\\%").Replace("_", "\\_") + "%";
+            var pattern = LikePattern.Contains(term);
             rows = rows.Where(x =>
-                EF.Functions.Like(x.User.UserName!, pattern, "\\")
-                || EF.Functions.Like(x.User.DisplayName, pattern, "\\")
-                || (x.User.Email != null && EF.Functions.Like(x.User.Email, pattern, "\\")));
+                EF.Functions.Like(x.User.UserName!, pattern, LikePattern.Escape)
+                || EF.Functions.Like(x.User.DisplayName, pattern, LikePattern.Escape)
+                || (x.User.Email != null && EF.Functions.Like(x.User.Email, pattern, LikePattern.Escape)));
         }
 
         var ordered = (query.Sort?.ToLowerInvariant(), query.Desc) switch
