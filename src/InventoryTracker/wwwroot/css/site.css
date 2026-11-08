@@ -577,7 +577,14 @@ button.star:hover, button.star:focus-visible { color: #d99a00; background: none;
 .po-lines td.row-actions form, .bom-lines td.row-actions form { margin: 0; }
 .po-lines tfoot th, .po-lines tfoot td { border-top: 2px solid var(--pico-muted-border-color); }
 .po-add-line, .bom-add-line { margin-top: var(--pico-spacing); }
+/* The BOM's add-part form sits inside the card, so it gets the card's side padding and a divider from the table above. */
+.bom-add-line { margin: 0; padding: 1rem 1.1rem 0.85rem; border-top: 1px solid var(--it-line); }
+.card > .card-empty + .bom-add-line { border-top: 0; padding-top: 0; }
 .po-add-line .grid, .bom-add-line .grid { align-items: end; }
+/* Fields bottom-align in the row. A label that wraps its input has no bottom margin of its own, and the picker's label gets the same 4px gap above its input, so labels and inputs line up across the row. */
+.po-add-line .grid > label, .bom-add-line .grid > label { margin-bottom: 0; }
+.po-add-line .grid > button, .bom-add-line .grid > button { height: 2.5rem; padding-block: 0; }
+.po-add-line .grid > .product-picker > label, .bom-add-line .grid > .product-picker > label { margin-bottom: 4px; }
 .po-add-line .grid > button, .bom-add-line .grid > button { width: auto; margin-bottom: var(--pico-spacing); }
 .bom-lines input[type="number"] { width: 5rem; }
 .bom-lines input.bom-note { display: block; width: 100%; max-width: 18rem; margin: 0.25rem 0 0; padding: 0.2rem 0.5rem; text-align: left; font-size: var(--it-text-sm); }
@@ -636,6 +643,8 @@ button.star:hover, button.star:focus-visible { color: #d99a00; background: none;
 
 /* ---------- Shared components (F09): used by later work items and by F06/F07/F08 ---------- */
 .card { position: relative; margin: 0; padding: 0; overflow: hidden; background: var(--it-card); border: 1px solid var(--it-line); border-radius: var(--it-radius); box-shadow: var(--it-shadow); }
+/* A card that holds a product picker must not clip its dropdown (cards clip their corners with overflow: hidden). */
+.card:has(.product-picker) { overflow: visible; }
 .card-head { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.85rem 1.1rem; border-bottom: 1px solid var(--it-line); font-size: var(--it-text-sm); }
 .card-title { margin: 0; font-size: var(--it-text); font-weight: 600; }
 .card-foot { display: flex; align-items: center; justify-content: space-between; gap: 1rem; padding: 0.7rem 1.1rem; border-top: 1px solid var(--it-line); color: var(--it-muted); font-size: var(--it-text-sm); }
