@@ -9,9 +9,9 @@ public static class DataServiceCollectionExtensions
     public static DbContextOptionsBuilder UseInventorySqlite(this DbContextOptionsBuilder options, string connectionString)
         => options.UseSqlite(connectionString).AddInventoryInterceptors();
 
-    /// <summary>Adds the pragma, timestamp and row-version interceptors.</summary>
+    /// <summary>Adds the pragma, timestamp, row-version and reporting-change interceptors.</summary>
     public static DbContextOptionsBuilder AddInventoryInterceptors(this DbContextOptionsBuilder options)
-        => options.AddInterceptors(new SqlitePragmaInterceptor(), new TimestampInterceptor(), new RowVersionInterceptor());
+        => options.AddInterceptors(new SqlitePragmaInterceptor(), new TimestampInterceptor(), new RowVersionInterceptor(), new ReportingChangeInterceptor());
 
     public static IServiceCollection AddInventoryData(this IServiceCollection services, string connectionString)
         => services.AddInventoryData(_ => connectionString);

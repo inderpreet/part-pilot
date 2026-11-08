@@ -60,10 +60,11 @@ No new tables. Indexes + read-model queries — see WI-06-1.
 | ID | Title | Status |
 |---|---|---|
 | [WI-06-1](../work-items/F06-dashboard-alerts-reports/WI-06-1-db-schema.md) | Query indexes, reporting queries | Done |
-| [WI-06-2](../work-items/F06-dashboard-alerts-reports/WI-06-2-api.md) | ReportService, reorder suggestions | Planned |
+| [WI-06-2](../work-items/F06-dashboard-alerts-reports/WI-06-2-api.md) | ReportService, reorder suggestions | Done |
 | [WI-06-3](../work-items/F06-dashboard-alerts-reports/WI-06-3-frontend.md) | Dashboard, low-stock, reports pages | Planned |
 
 ## Open questions
 
 - Any additional reports needed in v1?
+- Usage counts Issue movements only; a reversed issue is not netted off, so usage can be slightly overstated. Net it (issues minus their reversals) if that matters in practice.
 - ~~Should Viewers see cost/valuation figures?~~ Resolved: yes, every signed-in user sees cost and valuation figures (decided with F10 FR-11).

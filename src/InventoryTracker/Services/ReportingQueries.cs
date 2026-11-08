@@ -46,6 +46,9 @@ public sealed class LowStockRow
 
     public string? PreferredSupplierName { get; init; }
 
+    /// <summary>False when the preferred supplier is archived: it cannot receive a new purchase order.</summary>
+    public bool PreferredSupplierIsActive { get; init; }
+
     public int? PreferredMinOrderQuantity { get; init; }
 
     public long? PreferredUnitCostCents { get; init; }
@@ -58,6 +61,9 @@ public sealed class LowStockRow
 /// </summary>
 public static class ReportingQueries
 {
+    /// <summary>The statuses in which an order is waiting for goods.</summary>
+    public static readonly PurchaseOrderStatus[] OpenStatuses = [PurchaseOrderStatus.Submitted, PurchaseOrderStatus.PartiallyReceived];
+
     /// <summary>
     /// What is on order per product: the unreceived part of every line of a Submitted or PartiallyReceived order.
     /// Drafts are not on order yet, and a Received order closed short no longer expects the rest.
@@ -99,6 +105,7 @@ public static class ReportingQueries
                ReorderQuantity = p.ReorderQuantity,
                PreferredSupplierId = preferred == null ? null : preferred.SupplierId,
                PreferredSupplierName = preferred == null ? null : preferred.Supplier!.Name,
+               PreferredSupplierIsActive = preferred != null && preferred.Supplier!.IsActive,
                PreferredMinOrderQuantity = preferred == null ? null : preferred.MinOrderQuantity,
                PreferredUnitCostCents = preferred == null ? null : preferred.UnitCostCents,
            };

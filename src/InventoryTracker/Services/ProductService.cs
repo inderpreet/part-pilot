@@ -86,7 +86,13 @@ public sealed class ProductService(AppDbContext db) : IProductService
             p.ReorderPoint,
             p.UnitCostCents,
             p.IsActive,
-            p.IsActive && p.ReorderPoint > 0 && p.QuantityOnHand <= p.ReorderPoint));
+            // Low once what is already on order is counted too (F06 FR-4); the same rule as ReportingQueries.LowStock.
+            p.IsActive && p.ReorderPoint > 0
+                && p.QuantityOnHand + (db.PurchaseOrderLines
+                    .Where(l => l.ProductId == p.Id
+                                && (l.PurchaseOrder!.Status == PurchaseOrderStatus.Submitted || l.PurchaseOrder.Status == PurchaseOrderStatus.PartiallyReceived)
+                                && l.QuantityOrdered > l.QuantityReceived)
+                    .Sum(l => (int?)(l.QuantityOrdered - l.QuantityReceived)) ?? 0) <= p.ReorderPoint));
 
         return await PagedResult<ProductListItem>.CreateAsync(page, query, cancellationToken);
     }
@@ -109,7 +115,13 @@ public sealed class ProductService(AppDbContext db) : IProductService
     public async Task<ProductDetail?> GetAsync(int id, CancellationToken cancellationToken = default)
     {
         var p = await db.Products.AsNoTracking().Include(x => x.Category).FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
-        return p is null ? null : ToDetail(p, await IsSkuLockedAsync(p.Id, cancellationToken));
+        if (p is null)
+        {
+            return null;
+        }
+
+        var onOrder = await db.OnOrder().Where(o => o.ProductId == id).Select(o => o.Quantity).FirstOrDefaultAsync(cancellationToken);
+        return ToDetail(p, await IsSkuLockedAsync(p.Id, cancellationToken), onOrder);
     }
 
     public async Task<Result<ProductDetail>> CreateAsync(ProductInput input, CancellationToken cancellationToken = default)
@@ -366,7 +378,7 @@ public sealed class ProductService(AppDbContext db) : IProductService
         }
     }
 
-    private static ProductDetail ToDetail(Product p, bool skuLocked) => new(
+    private static ProductDetail ToDetail(Product p, bool skuLocked, int onOrder) => new(
         p.Id,
         p.Sku,
         p.Name,
@@ -382,7 +394,7 @@ public sealed class ProductService(AppDbContext db) : IProductService
         p.UnitCostCents,
         p.QuantityOnHand,
         p.IsActive,
-        p.IsActive && p.ReorderPoint > 0 && p.QuantityOnHand <= p.ReorderPoint,
+        p.IsActive && p.ReorderPoint > 0 && p.QuantityOnHand + onOrder <= p.ReorderPoint,
         skuLocked,
         p.RowVersion,
         p.CreatedAt,

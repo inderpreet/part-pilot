@@ -64,7 +64,7 @@ F00 has an extra packaging item. F09 has no schema and no service layer; it is s
 | [WI-05-2](work-items/F05-purchase-orders/WI-05-2-api.md) | POs — PurchaseOrderService, receiving | Done |
 | [WI-05-3](work-items/F05-purchase-orders/WI-05-3-frontend.md) | POs — list, editor, receive, print view | Done |
 | [WI-06-1](work-items/F06-dashboard-alerts-reports/WI-06-1-db-schema.md) | Dashboard — query indexes, reporting queries | Done |
-| [WI-06-2](work-items/F06-dashboard-alerts-reports/WI-06-2-api.md) | Dashboard — ReportService, reorder suggestions | Planned |
+| [WI-06-2](work-items/F06-dashboard-alerts-reports/WI-06-2-api.md) | Dashboard — ReportService, reorder suggestions | Done |
 | [WI-06-3](work-items/F06-dashboard-alerts-reports/WI-06-3-frontend.md) | Dashboard — dashboard, low-stock, reports pages | Planned |
 | [WI-07-1](work-items/F07-data-import-export/WI-07-1-db-schema.md) | Import/export — ImportBatch schema, CSV formats | Planned |
 | [WI-07-2](work-items/F07-data-import-export/WI-07-2-api.md) | Import/export — Import/Export/Backup services | Planned |
