@@ -101,7 +101,11 @@ PurchaseOrder(Id, Number UQ, SupplierId→Supplier, Status, OrderDate, ExpectedD
               Notes, CreatedById→AspNetUsers, RowVersion)
   Status ∈ {Draft, Submitted, PartiallyReceived, Received, Cancelled}
 PurchaseOrderLine(Id, PurchaseOrderId→PurchaseOrder, ProductId→Product, QuantityOrdered, QuantityReceived, UnitCostCents)
-DocumentSequence(Name, Year, NextValue)  PK (Name, Year)  -- PO numbering, one row per year
+DocumentSequence(Name, Year, NextValue)  PK (Name, Year)  -- numbering (PurchaseOrder, and Project in F10), one row per name and year
+
+Project(Id, Name UQ, Number UQ (Admin-changeable), Description, TargetUnits, Notes, IsActive, RowVersion)   -- F10, planned
+BomLine(Id, ProjectId→Project Cascade, ProductId→Product Restrict, QuantityPerUnit, Note)  UQ (ProjectId, ProductId)
+ProjectBuild(Id, ProjectId→Project Restrict, Units, Note, UserId→AspNetUsers, CreatedAt)   -- immutable
 
 ImportBatch(Id, Kind, FileName, RowCount, CreatedCount, UpdatedCount, SkippedCount, CreatedById, CreatedAt)
 
@@ -109,11 +113,13 @@ AuditEntry(Id, OccurredAt, UserId?, UserName, Action, EntityType, EntityId, Chan
 ```
 
 Relationships: Category 1–* Product; Product 1–* StockTransaction; Product *–* Supplier via ProductSupplier;
-Supplier 1–* PurchaseOrder 1–* PurchaseOrderLine *–1 Product; PurchaseOrderLine 1–* StockTransaction (receipts).
+Supplier 1–* PurchaseOrder 1–* PurchaseOrderLine *–1 Product; PurchaseOrderLine 1–* StockTransaction (receipts);
+Project 1–* BomLine *–1 Product; Project 1–* ProjectBuild (a build's issue rows are linked by `StockTransaction.Reference`, D18).
 
 Derived values (not stored): **on order** = Σ(QuantityOrdered − QuantityReceived) over lines of Submitted /
 PartiallyReceived POs; **stock value** = Σ(QuantityOnHand × UnitCostCents); **low stock** =
-`QuantityOnHand + OnOrder <= ReorderPoint AND ReorderPoint > 0 AND IsActive`.
+`QuantityOnHand + OnOrder <= ReorderPoint AND ReorderPoint > 0 AND IsActive`; **BOM line status** (F10) =
+needed `QuantityPerUnit × remaining units` against on hand, on order and **in draft** (quantity on all Draft PO lines; information only, not supply; nothing stored, no reservation).
 
 ## 6. Key invariants
 
@@ -122,7 +128,10 @@ PartiallyReceived POs; **stock value** = Σ(QuantityOnHand × UnitCostCents); **
 2. Stock transactions are immutable. Mistakes are corrected with a `Reversal` transaction pointing at the original.
 3. Negative on-hand is rejected unless setting `Stock.AllowNegative = true`.
 4. PO status transitions are enforced by `PurchaseOrderService` (see F05); received quantities only increase via receiving.
-5. Optimistic concurrency on `Product` and `PurchaseOrder` via `RowVersion` (incremented in `SaveChanges`, since SQLite has no rowversion type).
+5. (F10) A project build changes stock only by posting `Issue` movements through `StockService`, all lines in one
+   call and in the same DB transaction as its `ProjectBuild` row; shortages reach purchase orders only through
+   `PurchaseOrderService` and only onto a Draft.
+6. Optimistic concurrency on `Product`, `PurchaseOrder` and `Project` via `RowVersion` (incremented in `SaveChanges`, since SQLite has no rowversion type).
 
 ## 7. SQLite configuration
 
@@ -232,10 +241,11 @@ dotnet publish src/InventoryTracker -c Release -r <rid> --self-contained true
 | D15 | `StockService` writes `Product.QuantityOnHand` with a guarded `ExecuteUpdate` (`WHERE QuantityOnHand = <value read>`) inside a `BEGIN IMMEDIATE` transaction, not through the change tracker | A stock movement must not bump `RowVersion`/`UpdatedAt`: otherwise every sale would make an open product edit form fail with a false conflict. `StockInvariantSourceTests` fails if any other production file writes the column |
 | D16 | A migration that adds a foreign key to an existing SQLite table writes the table rebuild by hand (`AddPurchaseOrders` does, for `StockTransactions`) | EF rebuilds after all other operations of the migration, so triggers cannot be restored by a `Sql` call in the same migration; the hand-written rebuild keeps D14's triggers. Future FK/column changes to `StockTransactions` must do the same (`PurchaseOrderSchemaTests` and `StockSchemaTests` fail if the triggers are lost) |
 | D17 | UI stays on vendored Pico.css plus `site.css`. F09 (UI overhaul) defines the shared shell (left rail, top bar), page header, list card, button, overflow menu, confirm-dialog, status chip, form-section and type-scale patterns, and pins `--pico-font-size: 100%` because Pico otherwise grows the root size to 125% on wide screens; later features (F06, F07, F08) use those partials, classes and `--it-*` tokens instead of new one-off sizes. `site.css` is the only app stylesheet and `/Dev/Components` is the gallery of the patterns (the static prototype and its `overhaul.css` were removed when the screens matched it) | A data app needs density and a stable action hierarchy. A second stylesheet, an embedded webfont, or a component library would add a build step and a larger binary, which D2 and D11 rule out. The system UI font is the font |
+| D18 | A project build is linked to its stock issue rows by `StockTransaction.Reference` text (`<project name> build #<id>`) and the `ProjectBuild` table, not by a foreign key on `StockTransactions` (F10) | Adding an FK to `StockTransactions` needs the hand-written table rebuild of D16 and re-creating the D14 triggers, for a link that is only used to show a build's history. A text reference keeps the ledger schema untouched; the build's exact rows are still found by the reference, and nothing is denormalised |
 
 ## 14. Open questions
 
-- Is a JSON API (`/api/v1`) needed for integrations (e.g. e-commerce sync)? Currently out of scope.
+- Is a JSON API (`/api/v1`) needed for integrations (e.g. e-commerce sync)? Currently out of scope. F10 expects outside systems to read BOMs by **project number** (`Project.Number`, unique; only an Admin can change it) when such an API is built; F10 itself builds no API.
 - Fractional quantities (kg, m)? v1 assumes whole units; changing later means `int` → scaled `long`.
 - HTTPS: run behind a reverse proxy, or support a self-signed/PFX cert via config?
 - Currency: single currency per install assumed.
