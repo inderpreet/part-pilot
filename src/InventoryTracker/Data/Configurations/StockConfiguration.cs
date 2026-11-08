@@ -54,7 +54,10 @@ public class StockTransactionConfiguration : IEntityTypeConfiguration<StockTrans
 
         builder.HasIndex(t => new { t.ProductId, t.Id });
         builder.HasIndex(t => t.OccurredAt);
-        builder.HasIndex(t => t.Type);
+        // Reports filter by kind and date range (usage by product, issues in a period): a leading Type alone is not selective enough. ProductId and QuantityDelta ride along so "usage by product" is answered from the index alone.
+        builder.HasIndex(t => new { t.Type, t.OccurredAt, t.ProductId, t.QuantityDelta });
+        // "No movement since" (dead stock) asks, per product, whether any row is newer than a date.
+        builder.HasIndex(t => new { t.ProductId, t.OccurredAt });
         builder.HasIndex(t => t.UserId);
         // A line that has receipts cannot be deleted (only drafts, which have none, are).
         builder.HasOne(t => t.PurchaseOrderLine)

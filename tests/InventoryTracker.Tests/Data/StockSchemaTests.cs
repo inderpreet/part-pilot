@@ -61,7 +61,8 @@ public sealed class StockSchemaTests : IAsyncLifetime
         Assert.Equal(1L, await SqliteTestDb.ScalarAsync(context, "SELECT COUNT(*) FROM sqlite_master WHERE type='table' AND name='StockTransactions'"));
         foreach (var index in new[]
                  {
-                     "IX_StockTransactions_ProductId_Id", "IX_StockTransactions_OccurredAt", "IX_StockTransactions_Type",
+                     "IX_StockTransactions_ProductId_Id", "IX_StockTransactions_OccurredAt",
+                     "IX_StockTransactions_Type_OccurredAt_ProductId_QuantityDelta", "IX_StockTransactions_ProductId_OccurredAt",
                      "IX_StockTransactions_UserId", "IX_StockTransactions_PurchaseOrderLineId", "IX_StockTransactions_ReversesTransactionId",
                  })
         {

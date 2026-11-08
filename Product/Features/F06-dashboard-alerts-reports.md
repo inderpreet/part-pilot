@@ -1,6 +1,6 @@
 # F06 — Dashboard, alerts & reports
 
-- **Status:** Planned
+- **Status:** In Progress
 - **Depends on:** F03, F05
 - **Roles:** All users view; Admin/Staff create draft POs from suggestions
 
@@ -59,7 +59,7 @@ No new tables. Indexes + read-model queries — see WI-06-1.
 
 | ID | Title | Status |
 |---|---|---|
-| [WI-06-1](../work-items/F06-dashboard-alerts-reports/WI-06-1-db-schema.md) | Query indexes, reporting queries | Planned |
+| [WI-06-1](../work-items/F06-dashboard-alerts-reports/WI-06-1-db-schema.md) | Query indexes, reporting queries | Done |
 | [WI-06-2](../work-items/F06-dashboard-alerts-reports/WI-06-2-api.md) | ReportService, reorder suggestions | Planned |
 | [WI-06-3](../work-items/F06-dashboard-alerts-reports/WI-06-3-frontend.md) | Dashboard, low-stock, reports pages | Planned |
 

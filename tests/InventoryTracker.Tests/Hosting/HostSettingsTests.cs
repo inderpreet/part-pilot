@@ -128,6 +128,19 @@ public class HostSettingsTests
     }
 
     [Fact]
+    public void Seed_demo_is_a_bare_flag_that_is_stripped_and_does_not_swallow_the_next_option()
+    {
+        var cli = CliOptions.Parse(["--seed-demo", "--db", "x.db"]);
+
+        Assert.True(cli.SeedDemo);
+        Assert.False(cli.OpenBrowser);
+        Assert.DoesNotContain("--seed-demo", cli.ConfigurationArgs);
+        var config = new ConfigurationBuilder().AddCommandLine(cli.ConfigurationArgs, CliOptions.SwitchMappings).Build();
+        Assert.Equal("x.db", config[HostSettings.DbKey]);
+        Assert.False(CliOptions.Parse(["--db", "x.db"]).SeedDemo);
+    }
+
+    [Fact]
     public void Open_flag_does_not_swallow_the_next_option()
     {
         var cli = CliOptions.Parse(["--open", "--db", "x.db"]);

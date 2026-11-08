@@ -91,6 +91,7 @@ or a `.env` file (copy [`.env.example`](.env.example) to `.env`):
 | Port | `--port <n>` | `INVENTORY_PORT` | `5080` |
 | Database file | `--db <path>` | `INVENTORY_DB` | `inventory.db` next to the executable |
 | Open browser on start | `--open` | - | off |
+| Fill the development database with demo data (10k parts, 1M stock transactions; ignored outside `Development`, needs the first account to exist) | `--seed-demo` | - | off |
 | Product name shown in the tab, footer and setup page | `Branding:ProductName` | `Branding__ProductName` | `Part Pilot` |
 | Default company name (a name saved in Admin → Settings wins) | `Branding:CompanyName` | `Branding__CompanyName` | `My Company` |
 | Full URL override | `--urls <url>` | `ASPNETCORE_URLS` | derived from bind + port |
@@ -174,7 +175,11 @@ Treat the folder like the database itself: the `keys/` folder is not encrypted.
 .\scripts\dev.ps1 build                    # build (warnings are errors)
 .\scripts\dev.ps1 migrate -Name AddProducts
 .\scripts\dev.ps1 reset-db                 # delete the dev database
+.\scripts\dev.ps1 run -SeedDemo            # add demo data (10k parts, 1M stock transactions) once the first account exists
 ```
+
+To time the dashboard and report queries on that data set, run `$env:INVENTORY_BENCH = 1; dotnet test --filter ReportingBenchmarks`
+(about a minute; the table is written to `%TEMP%\f06-benchmark.md`).
 
 Or use the plain commands:
 

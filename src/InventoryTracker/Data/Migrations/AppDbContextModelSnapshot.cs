@@ -639,11 +639,13 @@ namespace InventoryTracker.Data.Migrations
                         .IsUnique()
                         .HasFilter("\"ReversesTransactionId\" IS NOT NULL");
 
-                    b.HasIndex("Type");
-
                     b.HasIndex("UserId");
 
                     b.HasIndex("ProductId", "Id");
+
+                    b.HasIndex("ProductId", "OccurredAt");
+
+                    b.HasIndex("Type", "OccurredAt", "ProductId", "QuantityDelta");
 
                     b.ToTable("StockTransactions", null, t =>
                         {

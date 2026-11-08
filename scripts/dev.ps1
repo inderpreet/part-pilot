@@ -36,6 +36,10 @@
 .PARAMETER Open
   Open the default browser once the server has started (--open).
 
+.PARAMETER SeedDemo
+  Fill the dev database with demo data (10k parts, 200 suppliers, 2k POs, 1M stock transactions) at startup (--seed-demo).
+  Needs the first account to exist already, does nothing if demo data is there, and is ignored outside Development.
+
 .PARAMETER Name
   Migration name for the migrate task, e.g. -Name AddProducts.
 
@@ -51,6 +55,8 @@
   .\scripts\dev.ps1 run -Lan -Open           # reachable from the LAN, open the browser
 .EXAMPLE
   .\scripts\dev.ps1 watch -Port 6000
+.EXAMPLE
+  .\scripts\dev.ps1 run -SeedDemo               # after creating the first account once
 .EXAMPLE
   .\scripts\dev.ps1 test -Filter "FullyQualifiedName~Settings"
 .EXAMPLE
@@ -70,6 +76,7 @@ param(
     [int]$Port,
     [string]$DbPath,
     [switch]$Open,
+    [switch]$SeedDemo,
 
     [string]$Name,
     [string]$Filter,
@@ -117,6 +124,7 @@ function Get-AppArgs {
     if ($bindValue) { $appArgs += @('--bind', $bindValue) }
     if ($Port) { $appArgs += @('--port', "$Port") }
     if ($Open) { $appArgs += '--open' }
+    if ($SeedDemo) { $appArgs += '--seed-demo' }
 
     if ($DbPath) {
         $appArgs += @('--db', (Resolve-UserPath $DbPath))

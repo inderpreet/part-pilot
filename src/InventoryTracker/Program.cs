@@ -69,6 +69,23 @@ var app = builder.Build();
 await using (var scope = app.Services.CreateAsyncScope())
 {
     await scope.ServiceProvider.GetRequiredService<DatabaseInitializer>().MigrateAsync();
+
+    if (cli.SeedDemo)
+    {
+        var seedLog = scope.ServiceProvider.GetRequiredService<ILoggerFactory>().CreateLogger("DemoSeed");
+        if (!app.Environment.IsDevelopment())
+        {
+            seedLog.LogWarning("--seed-demo is ignored outside the Development environment.");
+        }
+        else
+        {
+            var started = Stopwatch.StartNew();
+            seedLog.LogInformation("Seeding demo data; this takes a little while.");
+            var seeded = await new DevSeeder(scope.ServiceProvider.GetRequiredService<AppDbContext>()).SeedAsync();
+            seedLog.LogInformation("{Message} ({Products} products, {Suppliers} suppliers, {Orders} purchase orders, {Transactions} stock transactions, {Seconds:F1}s)",
+                seeded.Message, seeded.Products, seeded.Suppliers, seeded.PurchaseOrders, seeded.Transactions, started.Elapsed.TotalSeconds);
+        }
+    }
 }
 
 // Pages return a partial for HX-Request and a full page otherwise, so caches must key on that header.
