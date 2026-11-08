@@ -56,6 +56,12 @@ public class StockTransactionConfiguration : IEntityTypeConfiguration<StockTrans
         builder.HasIndex(t => t.OccurredAt);
         builder.HasIndex(t => t.Type);
         builder.HasIndex(t => t.UserId);
+        // A line that has receipts cannot be deleted (only drafts, which have none, are).
+        builder.HasOne(t => t.PurchaseOrderLine)
+            .WithMany(l => l.Receipts)
+            .HasForeignKey(t => t.PurchaseOrderLineId)
+            .OnDelete(DeleteBehavior.Restrict);
+
         builder.HasIndex(t => t.PurchaseOrderLineId);
 
         // A transaction can be reversed only once.

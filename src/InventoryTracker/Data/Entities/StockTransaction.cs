@@ -56,8 +56,10 @@ public class StockTransaction : IHasCreatedAt
 
     public string? Note { get; set; }
 
-    /// <summary>Set by PO receiving (F05). The column exists now; its foreign key is added by WI-05-1.</summary>
+    /// <summary>Set by PO receiving (F05): the order line this receipt (or its reversal) belongs to.</summary>
     public long? PurchaseOrderLineId { get; set; }
+
+    public PurchaseOrderLine? PurchaseOrderLine { get; set; }
 
     /// <summary>Set by CSV import (F07). The column exists now; its foreign key is added by WI-07-1.</summary>
     public long? ImportBatchId { get; set; }

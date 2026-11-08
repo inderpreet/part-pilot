@@ -94,6 +94,24 @@ public abstract class StockTestBase : CatalogTestBase, IAsyncLifetime
         return id;
     }
 
+    /// <summary>Seeds a supplier, a purchase order and one line for the product; returns the line id (stock receipts reference lines).</summary>
+    protected async Task<long> NewPurchaseOrderLineAsync(int productId, int quantity = 10)
+    {
+        await using var context = Db.CreateContext();
+        var supplier = new Supplier { Name = "Seed supplier " + Guid.NewGuid().ToString("N")[..8] };
+        var order = new PurchaseOrder
+        {
+            Number = "PO-SEED-" + Guid.NewGuid().ToString("N")[..8],
+            Supplier = supplier,
+            OrderDate = new DateOnly(2026, 6, 1),
+            CreatedById = UserId,
+            Lines = [new PurchaseOrderLine { ProductId = productId, QuantityOrdered = quantity }],
+        };
+        context.PurchaseOrders.Add(order);
+        await context.SaveChangesAsync();
+        return order.Lines[0].Id;
+    }
+
     protected static StockMovement Receive(int productId, int quantity, string? reference = null)
         => new(productId, StockTransactionType.Receive, quantity, Reference: reference);
 

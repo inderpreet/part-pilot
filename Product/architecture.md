@@ -101,7 +101,7 @@ PurchaseOrder(Id, Number UQ, SupplierId→Supplier, Status, OrderDate, ExpectedD
               Notes, CreatedById→AspNetUsers, RowVersion)
   Status ∈ {Draft, Submitted, PartiallyReceived, Received, Cancelled}
 PurchaseOrderLine(Id, PurchaseOrderId→PurchaseOrder, ProductId→Product, QuantityOrdered, QuantityReceived, UnitCostCents)
-DocumentSequence(Name PK, Year, NextValue)          -- PO numbering
+DocumentSequence(Name, Year, NextValue)  PK (Name, Year)  -- PO numbering, one row per year
 
 ImportBatch(Id, Kind, FileName, RowCount, CreatedCount, UpdatedCount, SkippedCount, CreatedById, CreatedAt)
 
@@ -230,6 +230,7 @@ dotnet publish src/InventoryTracker -c Release -r <rid> --self-contained true
 | D13 | NuGet: `Microsoft.AspNetCore.Identity.EntityFrameworkCore` (+ `Microsoft.EntityFrameworkCore.Design`, build-time only, `PrivateAssets=all`) | Identity stores on EF Core; Design is only for `dotnet ef migrations` |
 | D14 | The stock ledger is made immutable by the database: SQLite `BEFORE UPDATE` / `BEFORE DELETE` triggers on `StockTransactions` (`RAISE(ABORT)`), plus CHECKs (`QuantityDelta <> 0`, `Type` in the enum, `Type = 'Reversal'` ⇔ `ReversesTransactionId IS NOT NULL`) and a filtered unique index on `ReversesTransactionId` | Invariant 2 holds even for code or SQL that bypasses `StockService`. The triggers are hand-written in the `AddStockLedger` migration (EF cannot model them); a future migration that rebuilds the table must re-create them (`StockSchemaTests` fails if it forgets) |
 | D15 | `StockService` writes `Product.QuantityOnHand` with a guarded `ExecuteUpdate` (`WHERE QuantityOnHand = <value read>`) inside a `BEGIN IMMEDIATE` transaction, not through the change tracker | A stock movement must not bump `RowVersion`/`UpdatedAt`: otherwise every sale would make an open product edit form fail with a false conflict. `StockInvariantSourceTests` fails if any other production file writes the column |
+| D16 | A migration that adds a foreign key to an existing SQLite table writes the table rebuild by hand (`AddPurchaseOrders` does, for `StockTransactions`) | EF rebuilds after all other operations of the migration, so triggers cannot be restored by a `Sql` call in the same migration; the hand-written rebuild keeps D14's triggers. Future FK/column changes to `StockTransactions` must do the same (`PurchaseOrderSchemaTests` and `StockSchemaTests` fail if the triggers are lost) |
 
 ## 14. Open questions
 

@@ -168,6 +168,27 @@ namespace InventoryTracker.Data.Migrations
                     b.ToTable("Categories", (string)null);
                 });
 
+            modelBuilder.Entity("InventoryTracker.Data.Entities.DocumentSequence", b =>
+                {
+                    b.Property<string>("Name")
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("Year")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("NextValue")
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
+                    b.HasKey("Name", "Year");
+
+                    b.ToTable("DocumentSequences", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_DocumentSequences_NextValue", "\"NextValue\" >= 1");
+                        });
+                });
+
             modelBuilder.Entity("InventoryTracker.Data.Entities.Product", b =>
                 {
                     b.Property<int>("Id")
@@ -279,7 +300,6 @@ namespace InventoryTracker.Data.Migrations
                         .HasColumnType("INTEGER");
 
                     b.Property<int>("MinOrderQuantity")
-                        .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER")
                         .HasDefaultValue(1);
 
@@ -309,6 +329,112 @@ namespace InventoryTracker.Data.Migrations
                             t.HasCheckConstraint("CK_ProductSuppliers_MinOrderQuantity", "\"MinOrderQuantity\" >= 1");
 
                             t.HasCheckConstraint("CK_ProductSuppliers_UnitCostCents", "\"UnitCostCents\" >= 0");
+                        });
+                });
+
+            modelBuilder.Entity("InventoryTracker.Data.Entities.PurchaseOrder", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime?>("ClosedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedById")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly?>("ExpectedDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Number")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT")
+                        .UseCollation("NOCASE");
+
+                    b.Property<DateOnly>("OrderDate")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("RowVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("SubmittedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("SupplierId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedById");
+
+                    b.HasIndex("Number")
+                        .IsUnique();
+
+                    b.HasIndex("Status");
+
+                    b.HasIndex("SupplierId", "OrderDate");
+
+                    b.ToTable("PurchaseOrders", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_PurchaseOrders_Status", "\"Status\" IN ('Draft', 'Submitted', 'PartiallyReceived', 'Received', 'Cancelled')");
+                        });
+                });
+
+            modelBuilder.Entity("InventoryTracker.Data.Entities.PurchaseOrderLine", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("PurchaseOrderId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("QuantityOrdered")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("QuantityReceived")
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(0);
+
+                    b.Property<long>("UnitCostCents")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("PurchaseOrderId", "ProductId")
+                        .IsUnique();
+
+                    b.ToTable("PurchaseOrderLines", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_PurchaseOrderLines_QuantityOrdered", "\"QuantityOrdered\" > 0");
+
+                            t.HasCheckConstraint("CK_PurchaseOrderLines_QuantityReceived", "\"QuantityReceived\" >= 0");
+
+                            t.HasCheckConstraint("CK_PurchaseOrderLines_UnitCostCents", "\"UnitCostCents\" >= 0");
                         });
                 });
 
@@ -631,6 +757,44 @@ namespace InventoryTracker.Data.Migrations
                     b.Navigation("Supplier");
                 });
 
+            modelBuilder.Entity("InventoryTracker.Data.Entities.PurchaseOrder", b =>
+                {
+                    b.HasOne("InventoryTracker.Data.Entities.ApplicationUser", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("InventoryTracker.Data.Entities.Supplier", "Supplier")
+                        .WithMany()
+                        .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CreatedBy");
+
+                    b.Navigation("Supplier");
+                });
+
+            modelBuilder.Entity("InventoryTracker.Data.Entities.PurchaseOrderLine", b =>
+                {
+                    b.HasOne("InventoryTracker.Data.Entities.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("InventoryTracker.Data.Entities.PurchaseOrder", "PurchaseOrder")
+                        .WithMany("Lines")
+                        .HasForeignKey("PurchaseOrderId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+
+                    b.Navigation("PurchaseOrder");
+                });
+
             modelBuilder.Entity("InventoryTracker.Data.Entities.StockTransaction", b =>
                 {
                     b.HasOne("InventoryTracker.Data.Entities.Product", "Product")
@@ -638,6 +802,11 @@ namespace InventoryTracker.Data.Migrations
                         .HasForeignKey("ProductId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.HasOne("InventoryTracker.Data.Entities.PurchaseOrderLine", "PurchaseOrderLine")
+                        .WithMany("Receipts")
+                        .HasForeignKey("PurchaseOrderLineId")
+                        .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("InventoryTracker.Data.Entities.StockTransaction", "ReversesTransaction")
                         .WithMany()
@@ -651,6 +820,8 @@ namespace InventoryTracker.Data.Migrations
                         .IsRequired();
 
                     b.Navigation("Product");
+
+                    b.Navigation("PurchaseOrderLine");
 
                     b.Navigation("ReversesTransaction");
 
@@ -718,6 +889,16 @@ namespace InventoryTracker.Data.Migrations
                     b.Navigation("StockTransactions");
 
                     b.Navigation("Suppliers");
+                });
+
+            modelBuilder.Entity("InventoryTracker.Data.Entities.PurchaseOrder", b =>
+                {
+                    b.Navigation("Lines");
+                });
+
+            modelBuilder.Entity("InventoryTracker.Data.Entities.PurchaseOrderLine", b =>
+                {
+                    b.Navigation("Receipts");
                 });
 
             modelBuilder.Entity("InventoryTracker.Data.Entities.Supplier", b =>

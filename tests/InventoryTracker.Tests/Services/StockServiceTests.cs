@@ -444,14 +444,15 @@ public sealed class StockServiceTests : StockTestBase
     public async Task A_reversal_carries_over_the_cost_reference_and_purchase_order_line()
     {
         var id = await NewProductAsync("V-6");
-        var original = (await PostAsync(new StockMovement(id, StockTransactionType.Receive, 5, Reference: "PO-1", UnitCostCents: 199, PurchaseOrderLineId: 42))).Value[0].TransactionId!.Value;
+        var lineId = await NewPurchaseOrderLineAsync(id);
+        var original = (await PostAsync(new StockMovement(id, StockTransactionType.Receive, 5, Reference: "PO-1", UnitCostCents: 199, PurchaseOrderLineId: lineId))).Value[0].TransactionId!.Value;
 
         await ReverseAsync(original);
 
         var reversal = (await LedgerAsync(id)).Last();
         Assert.Equal(199L, reversal.UnitCostCents);
         Assert.Equal("PO-1", reversal.Reference);
-        Assert.Equal(42L, reversal.PurchaseOrderLineId);
+        Assert.Equal(lineId, reversal.PurchaseOrderLineId);
     }
 
     [Fact]
