@@ -11,10 +11,13 @@ public sealed class FakeSettings : ISettingsService
 {
     public bool AllowNegative { get; set; }
 
+    public string PurchaseOrderPrefix { get; set; } = "PO-";
+
     public Task<bool> GetBoolAsync(string key, CancellationToken cancellationToken = default)
         => Task.FromResult(key == SettingKeys.StockAllowNegative && AllowNegative);
 
-    public Task<string> GetStringAsync(string key, CancellationToken cancellationToken = default) => throw new NotSupportedException();
+    public Task<string> GetStringAsync(string key, CancellationToken cancellationToken = default)
+        => key == SettingKeys.PurchaseOrderNumberPrefix ? Task.FromResult(PurchaseOrderPrefix) : throw new NotSupportedException();
 
     public Task<int> GetIntAsync(string key, CancellationToken cancellationToken = default) => throw new NotSupportedException();
 

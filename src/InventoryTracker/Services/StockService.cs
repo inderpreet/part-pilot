@@ -19,8 +19,18 @@ public interface IStockService
     Task<Result<IReadOnlyList<PostedMovement>>> PostAsync(
         IReadOnlyList<StockMovement> lines, StockContext context, CancellationToken cancellationToken = default);
 
-    /// <summary>Cancels a transaction with an opposite one. Not allowed for a Reversal or for something already reversed.</summary>
+    /// <summary>
+    /// Cancels a transaction with an opposite one. Not allowed for a Reversal, for something already reversed, or for a purchase
+    /// order receipt (those are reversed through <c>PurchaseOrderService</c>, which also lowers the line's received quantity).
+    /// </summary>
     Task<Result<PostedMovement>> ReverseAsync(
+        long transactionId, StockContext context, string? note = null, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Reverses a purchase order receipt: the counterpart of <see cref="ReverseAsync"/> for rows that carry a
+    /// <c>PurchaseOrderLineId</c>. Only <c>PurchaseOrderService</c> calls this, inside its own transaction.
+    /// </summary>
+    Task<Result<PostedMovement>> ReverseOrderReceiptAsync(
         long transactionId, StockContext context, string? note = null, CancellationToken cancellationToken = default);
 
     Task<StockMovementItem?> GetAsync(long transactionId, CancellationToken cancellationToken = default);
@@ -82,8 +92,16 @@ public sealed class StockService(AppDbContext db, ISettingsService settings, ICl
             cancellationToken);
     }
 
-    public async Task<Result<PostedMovement>> ReverseAsync(
+    public Task<Result<PostedMovement>> ReverseAsync(
         long transactionId, StockContext context, string? note = null, CancellationToken cancellationToken = default)
+        => ReverseCoreInTransactionAsync(transactionId, context, note, orderReceipt: false, cancellationToken);
+
+    public Task<Result<PostedMovement>> ReverseOrderReceiptAsync(
+        long transactionId, StockContext context, string? note = null, CancellationToken cancellationToken = default)
+        => ReverseCoreInTransactionAsync(transactionId, context, note, orderReceipt: true, cancellationToken);
+
+    private async Task<Result<PostedMovement>> ReverseCoreInTransactionAsync(
+        long transactionId, StockContext context, string? note, bool orderReceipt, CancellationToken cancellationToken)
     {
         RequireUser(context);
 
@@ -97,7 +115,7 @@ public sealed class StockService(AppDbContext db, ISettingsService settings, ICl
         var now = clock.UtcNow;
 
         return await InTransactionAsync(
-            () => ReverseCoreAsync(transactionId, context, cleanNote, allowNegative, now, cancellationToken),
+            () => ReverseCoreAsync(transactionId, context, cleanNote, allowNegative, now, orderReceipt, cancellationToken),
             result => result.Succeeded,
             cancellationToken);
     }
@@ -301,7 +319,7 @@ public sealed class StockService(AppDbContext db, ISettingsService settings, ICl
     }
 
     private async Task<Result<PostedMovement>> ReverseCoreAsync(
-        long transactionId, StockContext context, string? note, bool allowNegative, DateTime now, CancellationToken cancellationToken)
+        long transactionId, StockContext context, string? note, bool allowNegative, DateTime now, bool orderReceipt, CancellationToken cancellationToken)
     {
         var original = await db.StockTransactions.AsNoTracking()
             .Where(t => t.Id == transactionId)
@@ -315,6 +333,13 @@ public sealed class StockService(AppDbContext db, ISettingsService settings, ICl
         if (original.Type == StockTransactionType.Reversal)
         {
             return Result.Failure<PostedMovement>("stock.reverse_reversal", "A reversal cannot be reversed. Record a new movement instead.");
+        }
+
+        if (orderReceipt != (original.PurchaseOrderLineId is not null))
+        {
+            return orderReceipt
+                ? Result.Failure<PostedMovement>("stock.not_order_receipt", "That transaction does not belong to a purchase order.")
+                : Result.Failure<PostedMovement>("stock.reverse_order_receipt", "That is a purchase order receipt. Reverse it from the purchase order, so the order's received quantity follows.");
         }
 
         if (await db.StockTransactions.AnyAsync(t => t.ReversesTransactionId == transactionId, cancellationToken))
@@ -340,7 +365,7 @@ public sealed class StockService(AppDbContext db, ISettingsService settings, ICl
         }
 
         // Archived products can still be reversed (FR / business rules): only new movements need an active product.
-        // PurchaseOrderLineId is copied so a line's receipts net out; F05 owns the PO line's own cached received quantity.
+        // PurchaseOrderLineId is copied so a line's receipts net out; PurchaseOrderService lowers the line's received quantity.
         var row = new StockTransaction
         {
             ProductId = original.ProductId,

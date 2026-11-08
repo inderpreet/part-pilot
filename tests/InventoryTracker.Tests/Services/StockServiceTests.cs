@@ -447,7 +447,12 @@ public sealed class StockServiceTests : StockTestBase
         var lineId = await NewPurchaseOrderLineAsync(id);
         var original = (await PostAsync(new StockMovement(id, StockTransactionType.Receive, 5, Reference: "PO-1", UnitCostCents: 199, PurchaseOrderLineId: lineId))).Value[0].TransactionId!.Value;
 
-        await ReverseAsync(original);
+        // Receipts are reversed through the purchase order service; the stock service has a dedicated entry point for it.
+        var (context, stock) = NewStock();
+        await using (context)
+        {
+            Assert.True((await stock.ReverseOrderReceiptAsync(original, Who)).Succeeded);
+        }
 
         var reversal = (await LedgerAsync(id)).Last();
         Assert.Equal(199L, reversal.UnitCostCents);
@@ -455,6 +460,27 @@ public sealed class StockServiceTests : StockTestBase
         Assert.Equal(lineId, reversal.PurchaseOrderLineId);
     }
 
+    [Fact]
+    public async Task The_generic_reverse_refuses_purchase_order_receipts_and_the_order_reverse_refuses_everything_else()
+    {
+        var id = await NewProductAsync("V-7");
+        var lineId = await NewPurchaseOrderLineAsync(id);
+        var receipt = (await PostAsync(new StockMovement(id, StockTransactionType.Receive, 5, PurchaseOrderLineId: lineId))).Value[0].TransactionId!.Value;
+        var plain = (await PostAsync(Receive(id, 2))).Value[0].TransactionId!.Value;
+
+        AssertFailed(await ReverseAsync(receipt), "stock.reverse_order_receipt");
+
+        var (context, stock) = NewStock();
+        await using (context)
+        {
+            AssertFailed(await stock.ReverseOrderReceiptAsync(plain, Who), "stock.not_order_receipt");
+            Assert.True((await stock.ReverseOrderReceiptAsync(receipt, Who)).Succeeded);
+            AssertFailed(await stock.ReverseOrderReceiptAsync(receipt, Who), "stock.already_reversed");
+        }
+
+        Assert.Equal(2, await OnHandAsync(id));
+        await AssertConsistentAsync(id);
+    }
     [Fact]
     public async Task A_too_long_reversal_note_is_rejected()
     {

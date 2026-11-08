@@ -56,7 +56,7 @@ F00 has an extra packaging item.
 | [WI-04-2](work-items/F04-suppliers/WI-04-2-api.md) | Suppliers — SupplierService | Done |
 | [WI-04-3](work-items/F04-suppliers/WI-04-3-frontend.md) | Suppliers — list/detail/edit, product links | Done |
 | [WI-05-1](work-items/F05-purchase-orders/WI-05-1-db-schema.md) | POs — PurchaseOrder, PurchaseOrderLine schema | Done |
-| [WI-05-2](work-items/F05-purchase-orders/WI-05-2-api.md) | POs — PurchaseOrderService, receiving | Planned |
+| [WI-05-2](work-items/F05-purchase-orders/WI-05-2-api.md) | POs — PurchaseOrderService, receiving | Done |
 | [WI-05-3](work-items/F05-purchase-orders/WI-05-3-frontend.md) | POs — list, editor, receive, print view | Planned |
 | [WI-06-1](work-items/F06-dashboard-alerts-reports/WI-06-1-db-schema.md) | Dashboard — query indexes, reporting queries | Planned |
 | [WI-06-2](work-items/F06-dashboard-alerts-reports/WI-06-2-api.md) | Dashboard — ReportService, reorder suggestions | Planned |

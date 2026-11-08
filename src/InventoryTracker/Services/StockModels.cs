@@ -51,8 +51,8 @@ public sealed record StockMovementItem(
     /// <summary>True for a row that a later Reversal has already cancelled.</summary>
     public bool IsReversed => ReversedByTransactionId is not null;
 
-    /// <summary>Whether the Reverse action applies: not itself a reversal and not already reversed.</summary>
-    public bool CanReverse => Type != StockTransactionType.Reversal && !IsReversed;
+    /// <summary>Whether the Reverse action applies: not itself a reversal, not already reversed, and not a purchase order receipt (those are reversed from the order).</summary>
+    public bool CanReverse => Type != StockTransactionType.Reversal && !IsReversed && PurchaseOrderLineId is null;
 }
 
 /// <summary>

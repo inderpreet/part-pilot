@@ -68,11 +68,11 @@ partially). Receiving posts `Receive` stock transactions linked to PO lines.
 | ID | Title | Status |
 |---|---|---|
 | [WI-05-1](../work-items/F05-purchase-orders/WI-05-1-db-schema.md) | PurchaseOrder, PurchaseOrderLine schema | Done |
-| [WI-05-2](../work-items/F05-purchase-orders/WI-05-2-api.md) | PurchaseOrderService, receiving | Planned |
+| [WI-05-2](../work-items/F05-purchase-orders/WI-05-2-api.md) | PurchaseOrderService, receiving | Done |
 | [WI-05-3](../work-items/F05-purchase-orders/WI-05-3-frontend.md) | List, editor, receive, print view | Planned |
 
 ## Open questions
 
 - Need tax and shipping lines on the PO?
 - Should a PO require approval (e.g. Admin) above a value threshold?
-- Reversing a PO receipt: `StockService.ReverseAsync` copies `PurchaseOrderLineId` onto the reversal, but the PO line's cached `QuantityReceived` must be lowered too. Decide in WI-05-2 whether the generic Reverse action is hidden for these rows or routed through `PurchaseOrderService`.
+- ~~Reversing a PO receipt~~ — decided in WI-05-2: the generic Reverse refuses receipts; `PurchaseOrderService.ReverseReceiptAsync` reverses the stock row, lowers the line's `QuantityReceived` and reopens a received order. The Reverse action lives on the PO page.
