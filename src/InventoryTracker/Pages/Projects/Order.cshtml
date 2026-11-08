@@ -1,0 +1,104 @@
+@page "/Projects/{id:int}/Order"
+@model InventoryTracker.Pages.Projects.OrderModel
+@using InventoryTracker.Pages.Projects
+@{
+    var p = Model.Project;
+    ViewData["Title"] = $"Order shortages · {p.Name}";
+    ViewData["Crumb"] = "Order shortages";
+}
+
+@section Leading {
+    <a asp-page="Detail" asp-route-id="@p.Id">‹ @p.Name</a>
+}
+
+@section Subtitle {
+    <span class="project-number">@p.Number</span> · parts this project is short of
+}
+
+@if (Model.Result is { } result)
+{
+    <section class="card" aria-label="What was done">
+        <div class="card-head">
+            <h2 class="card-title">Done</h2>
+            <span class="muted">@OrderModel.Summary(result)</span>
+        </div>
+        <div class="table-wrap">
+            <table class="striped compact">
+                <thead>
+                    <tr>
+                        <th scope="col">Part</th>
+                        <th scope="col">Result</th>
+                        <th scope="col">Purchase order</th>
+                        <th scope="col">Details</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var outcome in result.Outcomes)
+                    {
+                        <tr>
+                            <td><strong>@outcome.Sku</strong></td>
+                            <td>
+                                @switch (outcome.Kind)
+                                {
+                                    case ShortageOutcomeKind.Added:
+                                        <span class="badge badge-ok">Added</span>
+                                        break;
+                                    case ShortageOutcomeKind.Updated:
+                                        <span class="badge badge-partial">Updated</span>
+                                        break;
+                                    default:
+                                        <span class="badge badge-inactive">Skipped</span>
+                                        break;
+                                }
+                            </td>
+                            <td>
+                                @if (outcome.PurchaseOrderId is { } orderId)
+                                {
+                                    <a asp-page="/PurchaseOrders/Detail" asp-route-id="@orderId">@outcome.PurchaseOrderNumber</a>
+                                }
+                                else
+                                {
+                                    <span>—</span>
+                                }
+                            </td>
+                            <td>
+                                @switch (outcome.Kind)
+                                {
+                                    case ShortageOutcomeKind.Added:
+                                        <text>Quantity @outcome.Quantity</text>
+                                        break;
+                                    case ShortageOutcomeKind.Updated:
+                                        <text>Quantity @outcome.PreviousQuantity → @outcome.Quantity</text>
+                                        break;
+                                    default:
+                                        <text>@(outcome.Reason is null or "Skipped." ? "Left as it is." : outcome.Reason)</text>
+                                        break;
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <p class="card-note muted">Nothing was submitted: open the purchase order to review it, then submit it when it is ready.</p>
+    </section>
+
+    <div class="form-actions">
+        @{
+            var firstOrder = result.Outcomes.FirstOrDefault(o => o.PurchaseOrderId is not null)?.PurchaseOrderId ?? result.CreatedPurchaseOrderId;
+        }
+        @if (firstOrder is { } openId)
+        {
+            <a role="button" asp-page="/PurchaseOrders/Detail" asp-route-id="@openId">Open purchase order</a>
+        }
+        <a role="button" class="secondary outline" asp-page="Detail" asp-route-id="@p.Id">Back to project</a>
+    </div>
+}
+else if (!Model.Status.Shortages.Any())
+{
+    <partial name="_EmptyState" model="@(new EmptyStateModel("Nothing to order", "Every part is covered by stock or by orders that are already placed.", "Back to project", Url.Page("Detail", new { id = p.Id })))" />
+}
+else
+{
+    <partial name="_OrderForm" model="Model" />
+}

@@ -1,0 +1,45 @@
+@model InventoryTracker.Pages.Projects.DetailModel
+@using InventoryTracker.Data.Entities
+@{
+    // In the dialog the form posts with htmx and replaces itself when the server answers 422 (a short part, a bad number);
+    // on success the server sends the browser back to this page. As a card on the page it is an ordinary form post.
+    var modal = Model.IsHtmx();
+    var postUrl = Url.Page("Detail", "Build", new { id = Model.Project.Id })!;
+    var previewUrl = Url.Page("Detail", "BuildPreview", new { id = Model.Project.Id })!;
+}
+<form method="post" action="@postUrl" novalidate
+      hx-post="@(modal ? postUrl : null)" hx-target="@(modal ? "this" : null)" hx-swap="@(modal ? "outerHTML" : null)">
+    <partial name="_ValidationSummary" model="Model.ModelState" />
+
+    <div class="grid">
+        <label>
+            Units to build
+            <input type="number" name="units" value="@Model.BuildUnits" min="1" max="@Project.MaxTargetUnits" step="1" inputmode="numeric" required autofocus
+                   aria-invalid="@Html.AriaInvalid(ProjectFields.Units)" aria-describedby="@Html.DescribedBy(ProjectFields.Units)"
+                   hx-get="@previewUrl" hx-trigger="input changed delay:300ms" hx-target="#build-list" hx-swap="outerHTML" hx-include="this" />
+            @Html.FieldError(ProjectFields.Units)
+            <small>@Model.Status.RemainingUnits of @Model.Status.TargetUnits still to build.</small>
+        </label>
+        <label>
+            Note <small>(optional)</small>
+            <input type="text" name="note" value="@Model.BuildNote" maxlength="@ProjectBuild.NoteMaxLength" autocomplete="off" placeholder="Batch, serial range, who built it" />
+        </label>
+    </div>
+
+    <partial name="_BuildList" model="Model" />
+
+    @if (modal)
+    {
+        <footer>
+            <button type="button" class="text" data-close-modal>Cancel</button>
+            <button type="submit">Build and issue parts</button>
+        </footer>
+    }
+    else
+    {
+        <div class="form-actions">
+            <button type="submit">Build and issue parts</button>
+            <a role="button" class="text" asp-page="Detail" asp-route-id="@Model.Project.Id">Cancel</a>
+        </div>
+    }
+</form>

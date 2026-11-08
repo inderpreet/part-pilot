@@ -1019,7 +1019,8 @@ public sealed class ProjectService(
     }
 
     /// <summary>The ledger reference of a build's issue rows. The project name is shortened to fit the column.</summary>
-    internal static string ReferenceFor(string projectName, long buildId)
+    /// <summary>The reference text on the issue rows of a build ("Robot build #3"); the stock history can be searched for it.</summary>
+    public static string ReferenceFor(string projectName, long buildId)
     {
         var suffix = string.Create(CultureInfo.InvariantCulture, $" build #{buildId}");
         var room = StockTransaction.ReferenceMaxLength - suffix.Length;

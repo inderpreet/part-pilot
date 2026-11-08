@@ -1,0 +1,80 @@
+@model InventoryTracker.Pages.Projects.OrderModel
+@using InventoryTracker.Pages.Projects
+@{
+    var p = Model.Project;
+    var existing = Model.Kind == OrderModel.TargetKind.Existing;
+}
+@* A plain form: it posts and redirects without JavaScript. The browser hides what does not apply (CSS :has), and the target
+   section reloads the lines through htmx so the server can suggest quantities for that supplier's minimum order. *@
+<form method="post" asp-page="Order" asp-route-id="@p.Id" novalidate class="form-page order-form">
+    <partial name="_ValidationSummary" model="ViewData.ModelState" />
+
+    <section class="form-row" aria-labelledby="order-lines-title">
+        <div class="form-intro">
+            <h2 id="order-lines-title">Parts to order</h2>
+            <p>What is still short after stock and placed orders. Parts already on a draft purchase order are shown with it, so you can change that quantity instead of adding twice.</p>
+        </div>
+        <div class="card form-card order-card">
+            <partial name="_OrderLines" model="Model" />
+        </div>
+    </section>
+
+    <section class="form-row order-target" aria-labelledby="order-target-title"
+             hx-get="@Url.Page("Order", "Lines", new { id = p.Id })" hx-trigger="change" hx-target="#order-lines" hx-swap="outerHTML" hx-include="this">
+        <div class="form-intro">
+            <h2 id="order-target-title">Where to order</h2>
+            <p>Used for the parts set to Add. Nothing is created when no part is set to Add. The order stays a draft: you submit it yourself.</p>
+        </div>
+        <div class="card form-card">
+            <fieldset class="segmented">
+                <legend>Add to</legend>
+                <label>
+                    <input type="radio" name="Input.Kind" value="@OrderModel.TargetKind.Existing" checked="@existing" />
+                    An existing draft purchase order
+                </label>
+                <label>
+                    <input type="radio" name="Input.Kind" value="@OrderModel.TargetKind.New" checked="@(!existing)" />
+                    A new draft for a supplier
+                </label>
+            </fieldset>
+
+            <label class="target-existing">
+                Draft purchase order
+                @if (Model.Drafts.Count == 0)
+                {
+                    <select name="Input.PurchaseOrderId" disabled aria-describedby="no-drafts">
+                        <option value="">No draft orders</option>
+                    </select>
+                    <small id="no-drafts">There are no draft purchase orders. Choose a new draft for a supplier instead.</small>
+                }
+                else
+                {
+                    <select name="Input.PurchaseOrderId">
+                        <option value="">Choose a draft…</option>
+                        @foreach (var draft in Model.Drafts)
+                        {
+                            <option value="@draft.Id" selected="@(Model.TargetOrderId == draft.Id)">@draft.Number · @draft.SupplierName · @draft.LineCount @(draft.LineCount == 1 ? "line" : "lines")</option>
+                        }
+                    </select>
+                }
+            </label>
+
+            <label class="target-new">
+                Supplier
+                <select name="Input.SupplierId">
+                    <option value="">Choose a supplier…</option>
+                    @foreach (var supplier in Model.Suppliers)
+                    {
+                        <option value="@supplier.Id" selected="@(Model.TargetSupplierId == supplier.Id)">@supplier.Name</option>
+                    }
+                </select>
+                <small>Prices come from the supplier's price for each part, then the part's own cost.</small>
+            </label>
+        </div>
+    </section>
+
+    <div class="action-bar form-actions">
+        <a role="button" class="text" asp-page="Detail" asp-route-id="@p.Id">Cancel</a>
+        <button type="submit">Apply choices</button>
+    </div>
+</form>

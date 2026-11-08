@@ -8,6 +8,9 @@
 
     var bom = new BomModel(p, Model.Status, Model.CanEdit, ViewData.ModelState);
     string Action(string handler) => Url.Page("Detail", handler, new { id = p.Id })!;
+
+    // Build is always in the menu; it is also the primary button once every part is in stock (see _ProjectActions).
+    var canBuild = Model.Status.RemainingUnits > 0;
 }
 
 @section Leading {
@@ -25,12 +28,18 @@
 @section Actions {
     @if (Model.CanEdit)
     {
+        <partial name="_ProjectActions" model="bom" />
+
         <a role="button" class="secondary outline" asp-page="Edit" asp-route-id="@p.Id">Edit</a>
 
         @* Each item is its own form (or link), so it works without JavaScript; htmx adds the confirmation dialog. *@
         <details class="menu">
             <summary class="menu-toggle" aria-label="More actions"><svg class="ico" aria-hidden="true"><use href="#i-dots"/></svg></summary>
             <div class="menu-pop">
+                @if (canBuild)
+                {
+                    <a class="menu-item" href="@Action("Build")" hx-get="@Action("Build")" hx-target="#modal">Build…</a>
+                }
                 @if (Model.IsAdmin)
                 {
                     <a class="menu-item" href="@Action("ChangeNumber")" hx-get="@Action("ChangeNumber")" hx-target="#modal">Change number…</a>
@@ -71,6 +80,13 @@
         <partial name="_NewPartForm" model="Model" />
     </section>
 }
+else if (Model.Dialog == DetailModel.ProjectDialog.Build)
+{
+    <section id="inline-dialog" class="card form-card" aria-label="Build">
+        <h2 class="card-title">Build @p.Name</h2>
+        <partial name="_BuildForm" model="Model" />
+    </section>
+}
 else if (Model.Dialog == DetailModel.ProjectDialog.ChangeNumber)
 {
     <section id="inline-dialog" class="card form-card" aria-label="Change project number">
@@ -105,6 +121,7 @@ else if (Model.Dialog == DetailModel.ProjectDialog.ChangeNumber)
                                 <th scope="col" class="num">Units</th>
                                 <th scope="col">Who</th>
                                 <th scope="col">Note</th>
+                                <th scope="col">Stock</th>
                             </tr>
                         </thead>
                         <tbody>
@@ -115,6 +132,7 @@ else if (Model.Dialog == DetailModel.ProjectDialog.ChangeNumber)
                                     <td class="num">@build.Units</td>
                                     <td>@build.UserName</td>
                                     <td>@(string.IsNullOrWhiteSpace(build.Note) ? "—" : build.Note)</td>
+                                    <td><a asp-page="/Stock/Movements" asp-route-search="@ProjectService.ReferenceFor(p.Name, build.Id)">Parts issued</a></td>
                                 </tr>
                             }
                         </tbody>

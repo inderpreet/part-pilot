@@ -1,0 +1,110 @@
+@model InventoryTracker.Pages.Projects.OrderModel
+@using System.Globalization
+@using InventoryTracker.Pages.Projects
+<div id="order-lines" class="table-wrap">
+    <table class="striped compact bom-lines order-lines">
+        <thead>
+            <tr>
+                <th scope="col">Part</th>
+                <th scope="col" class="num">Short</th>
+                <th scope="col" class="num">To order</th>
+                <th scope="col" class="num">In stock</th>
+                <th scope="col" class="num">On order</th>
+                <th scope="col" class="num">In PO draft</th>
+                <th scope="col">Action</th>
+                <th scope="col" class="num">Quantity</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (var i = 0; i < Model.Lines.Count; i++)
+            {
+                var view = Model.Lines[i];
+                var line = view.Line;
+                var prefix = $"Input.Lines[{i}]";
+                <tr class="order-line @(view.Archived ? "is-disabled" : null)" data-line-row>
+                    <td>
+                        <a asp-page="/Products/Detail" asp-route-id="@line.ProductId"><strong>@line.Sku</strong></a> @line.ProductName
+                        @if (view.Archived)
+                        {
+                            <br /><small class="muted"><span class="badge badge-inactive">Archived</span> Restore this part or remove it from the BOM to order it.</small>
+                        }
+                    </td>
+                    <td class="num">@line.Short</td>
+                    <td class="num"><strong>@line.ToOrder</strong></td>
+                    <td class="num">@line.OnHand</td>
+                    <td class="num">@(line.OnOrder > 0 ? line.OnOrder.ToString(CultureInfo.InvariantCulture) : "—")</td>
+                    <td class="num">
+                        @if (line.InDraft > 0)
+                        {
+                            <strong>@line.InDraft</strong>
+                            <br />
+                            <small>
+                                Already in draft
+                                @for (var d = 0; d < line.DraftOrders.Count; d++)
+                                {
+                                    var draft = line.DraftOrders[d];
+                                    @if (d > 0)
+                                    {
+                                        <text>, </text>
+                                    }
+                                    <a asp-page="/PurchaseOrders/Detail" asp-route-id="@draft.PurchaseOrderId" title="@draft.Quantity on draft @draft.Number">@draft.Number</a>
+                                }
+                            </small>
+                        }
+                        else
+                        {
+                            <span>—</span>
+                        }
+                    </td>
+                    @if (view.Archived)
+                    {
+                        @* Still posted (as Skip) so the form's row numbers stay contiguous for model binding. *@
+                        <td colspan="2">
+                            <input type="hidden" name="@(prefix + ".LineId")" value="@line.LineId" />
+                            <input type="hidden" name="@(prefix + ".Action")" value="@OrderModel.SkipAction" />
+                            <span class="muted">Not offered</span>
+                        </td>
+                    }
+                    else
+                    {
+                        <td>
+                            <input type="hidden" name="@(prefix + ".LineId")" value="@line.LineId" />
+                            <select name="@(prefix + ".Action")" aria-label="What to do with @line.Sku">
+                                @if (view.CanAdd)
+                                {
+                                    <option value="@OrderModel.AddAction" selected="@(view.Action == OrderModel.AddAction)">Add to order</option>
+                                }
+                                @if (view.CanUpdate)
+                                {
+                                    <option value="@OrderModel.UpdateAction" selected="@(view.Action == OrderModel.UpdateAction)">Update quantity</option>
+                                }
+                                <option value="@OrderModel.SkipAction" selected="@(view.Action == OrderModel.SkipAction)">Skip</option>
+                            </select>
+                            @if (view.CanUpdate)
+                            {
+                                @if (line.DraftOrders.Count > 1)
+                                {
+                                    <select name="@(prefix + ".DraftId")" class="draft-select" aria-label="Which draft to change for @line.Sku">
+                                        @foreach (var draft in line.DraftOrders)
+                                        {
+                                            <option value="@draft.PurchaseOrderId" selected="@(view.DraftId == draft.PurchaseOrderId)">@draft.Number (@draft.Quantity)</option>
+                                        }
+                                    </select>
+                                }
+                                else
+                                {
+                                    <input type="hidden" name="@(prefix + ".DraftId")" value="@line.DraftOrders[0].PurchaseOrderId" />
+                                    <small class="draft-select muted">on @line.DraftOrders[0].Number (@line.DraftOrders[0].Quantity)</small>
+                                }
+                            }
+                        </td>
+                        <td class="num qty-cell">
+                            <input type="number" name="@(prefix + ".Quantity")" value="@view.Quantity" min="1" step="1" inputmode="numeric"
+                                   aria-label="Quantity for @line.Sku" aria-invalid="@Html.AriaInvalid($"{prefix}.Quantity")" />
+                        </td>
+                    }
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>

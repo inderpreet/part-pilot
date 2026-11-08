@@ -1,0 +1,22 @@
+@model BomModel
+@* Order shortages and the primary Build button depend on the BOM status, so a BOM change swaps them out of band. *@
+@{
+    var id = Model.Project.Id;
+    var status = Model.Status;
+    var canBuild = status.RemainingUnits > 0 && status.Lines.Count > 0;
+    var buildUrl = Url.Page("Detail", "Build", new { id })!;
+}
+<span id="project-actions" class="contents" hx-swap-oob="@(Model.Oob ? "true" : null)">
+    @if (Model.CanEdit)
+    {
+        @if (status.Shortages.Any())
+        {
+            <a role="button" class="secondary outline" asp-page="Order" asp-route-id="@id">Order shortages</a>
+        }
+
+        @if (canBuild && status.State == ProjectState.Ready)
+        {
+            <a role="button" href="@buildUrl" hx-get="@buildUrl" hx-target="#modal">Build</a>
+        }
+    }
+</span>

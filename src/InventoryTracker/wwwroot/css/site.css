@@ -584,6 +584,20 @@ button.star:hover, button.star:focus-visible { color: #d99a00; background: none;
 .bom-add-hint { margin: 0; font-size: var(--it-text-sm); }
 .card-note { margin: 0; padding: 0 1.1rem 1rem; font-size: var(--it-text-sm); }
 .project-number { font-weight: 600; }
+.contents { display: contents; }
+.build-effect { margin: 0 0 0.5rem; }
+.build-short td { background: var(--it-danger-soft); }
+.order-lines td { vertical-align: top; }
+.order-lines select { width: auto; max-width: 14rem; margin: 0; padding: 0.25rem 2rem 0.25rem 0.5rem; }
+.order-lines .draft-select { margin-top: 0.25rem; display: block; }
+.order-lines tr.is-disabled td { color: var(--it-muted); }
+.order-card { padding: 0; }
+/* What does not apply is hidden by what is chosen (CSS only, so it works without JavaScript). */
+.order-line:has(select[name$=".Action"] option[value="Skip"]:checked) .qty-cell input { visibility: hidden; }
+.order-line:not(:has(select[name$=".Action"] option[value="Update"]:checked)) .draft-select { display: none; }
+.order-form:not(:has(.order-line select[name$=".Action"] option[value="Add"]:checked)) .order-target { display: none; }
+.order-target:has(input[name="Input.Kind"][value="New"]:checked) .target-existing { display: none; }
+.order-target:has(input[name="Input.Kind"][value="Existing"]:checked) .target-new { display: none; }
 .form-intro-text { margin-top: 0; font-size: var(--it-text-sm); }
 /* Receive: big touch targets for a tablet at the goods-in door. */
 .po-receive input.receive-qty { width: 8rem; height: 3rem; margin: 0; font-size: var(--it-qty); text-align: right; }

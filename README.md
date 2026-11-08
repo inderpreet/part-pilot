@@ -7,7 +7,7 @@ The product is called **Part Pilot**; the name (and the default company name) co
 [Configuration](#configuration). The repository, projects and executable keep the original name `InventoryTracker`.
 
 > **Status: in development.** Platform, users, catalog, stock, suppliers, purchase orders and the UI overhaul
-> (F00-F05, F09) are done. Projects and bills of materials (F10) are in progress; dashboard and reports, import/export
+> (F00-F05, F09) and projects with bills of materials (F10) are done; dashboard and reports, import/export
 > and the audit log are specified but not built yet. See [Project status](#project-status).
 
 ## Features
@@ -15,7 +15,7 @@ The product is called **Part Pilot**; the name (and the default company name) co
 - Product catalog with SKUs, categories, reorder points and costs
 - Immutable stock ledger: receive, issue, adjust, count - with an always-verifiable on-hand quantity
 - Suppliers, purchase orders and receiving into stock
-- Projects with a bill of materials (BOM): check what is in stock, on order or in a draft PO, order the shortages, build and issue the parts *(F10, in progress)*
+- Projects with a bill of materials (BOM): check what is in stock, on order or in a draft PO, order the shortages, build and issue the parts *(F10)*
 - Dashboard, low-stock alerts, reorder suggestions and reports *(planned)*
 - CSV import/export and one-click database backup
 - Roles (Admin / Staff / Viewer) and an audit log
@@ -228,7 +228,7 @@ warnings are errors. The full rules - and how work is tracked through work items
 | F07 Data import/export & backup | Planned |
 | F08 Audit log | Planned |
 | F09 UI overhaul | Done |
-| F10 Projects & BOMs | In progress |
+| F10 Projects & BOMs | Done |
 
 The authoritative status table is in [Product/README.md](Product/README.md).
 

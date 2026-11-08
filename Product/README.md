@@ -30,7 +30,7 @@ executable: run it, open the browser, sign in. Data lives in a single SQLite fil
 | [F07](Features/F07-data-import-export.md) | Data import/export & backup | CSV import/export, opening stock, DB backup download | F03, F04 | Planned |
 | [F08](Features/F08-audit-log.md) | Audit log | Who changed what and when; sign-in events | F01 | Planned |
 | [F09](Features/F09-ui-overhaul.md) | UI overhaul | Left rail shell, list cards, actions, forms and detail pages on the screens that exist | F05 | Done |
-| [F10](Features/F10-project-boms.md) | Projects & BOMs | Numbered projects with bills of materials from catalog or new parts, status check against stock, orders and draft POs, order shortages, build (issue parts) | F02, F03, F04, F05, F09 | In Progress |
+| [F10](Features/F10-project-boms.md) | Projects & BOMs | Numbered projects with bills of materials from catalog or new parts, status check against stock, orders and draft POs, order shortages, build (issue parts) | F02, F03, F04, F05, F09 | Done |
 
 Suggested build order: F00 → F01 → F02 → F03 → F04 → F05 → F09 → F10 → F08 → F06 → F07 (F10 is independent of F06–F08 and can move).
 F09 is a presentation overhaul of F00–F05 (shipped; the shared patterns are shown at `/Dev/Components`). F06, F07 and F08 should use its shared patterns (architecture D17) when they build screens.
@@ -84,7 +84,7 @@ F00 has an extra packaging item. F09 has no schema and no service layer; it is s
 | [WI-10-1](work-items/F10-project-boms/WI-10-1-db-schema.md) | Projects — Project, BomLine, ProjectBuild schema | Done |
 | [WI-10-2](work-items/F10-project-boms/WI-10-2-api.md) | Projects — ProjectService (BOM, status, build), PO add-lines | Done |
 | [WI-10-3](work-items/F10-project-boms/WI-10-3-frontend-projects.md) | Projects — list, project page, BOM editing, new part | Done |
-| [WI-10-4](work-items/F10-project-boms/WI-10-4-frontend-order-build.md) | Projects — order shortages, build, builds history | Planned |
+| [WI-10-4](work-items/F10-project-boms/WI-10-4-frontend-order-build.md) | Projects — order shortages, build, builds history | Done |
 
 ## Non-functional requirements
 

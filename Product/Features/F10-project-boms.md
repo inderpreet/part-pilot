@@ -1,6 +1,6 @@
 # F10 — Projects & BOMs
 
-- **Status:** In Progress
+- **Status:** Done
 - **Depends on:** F02, F03, F04, F05, F09
 - **Roles:** Admin/Staff create and edit projects and BOMs, create parts, add shortages to purchase orders and record builds; only Admin changes a project number; Viewer reads projects and BOM status
 
@@ -113,7 +113,7 @@ Built in this order: schema, API, then the frontend in two steps (the frontend i
 | [WI-10-1](../work-items/F10-project-boms/WI-10-1-db-schema.md) | Project, BomLine, ProjectBuild schema | Done |
 | [WI-10-2](../work-items/F10-project-boms/WI-10-2-api.md) | ProjectService (BOM, status, build), PO add-lines | Done |
 | [WI-10-3](../work-items/F10-project-boms/WI-10-3-frontend-projects.md) | Projects list, project page, BOM editing, new part | Done |
-| [WI-10-4](../work-items/F10-project-boms/WI-10-4-frontend-order-build.md) | Order shortages, build, builds history | Planned |
+| [WI-10-4](../work-items/F10-project-boms/WI-10-4-frontend-order-build.md) | Order shortages, build, builds history | Done |
 
 ## Open questions
 

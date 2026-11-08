@@ -1,0 +1,62 @@
+@model InventoryTracker.Pages.Projects.DetailModel
+@using System.Globalization
+@{
+    var units = Model.BuildUnitsValue;
+    var lines = Model.Status.Lines;
+    var total = lines.Sum(l => (long)l.QuantityPerUnit * units);
+    var anyShort = lines.Any(l => (long)l.QuantityPerUnit * units > l.OnHand || !l.ProductIsActive);
+}
+<div id="build-list">
+    @if (lines.Count == 0)
+    {
+        <p class="muted">There are no parts in the BOM, so there is nothing to build yet.</p>
+    }
+    else
+    {
+        <p class="build-effect">
+            <strong>Issue @total.ToString("N0", CultureInfo.InvariantCulture) @(total == 1 ? "part" : "parts") from stock for @units @(units == 1 ? "unit" : "units")?</strong>
+            <span class="muted">One stock movement per part, all at once or none.</span>
+        </p>
+        <div class="table-wrap">
+            <table class="striped compact">
+                <thead>
+                    <tr>
+                        <th scope="col">Part</th>
+                        <th scope="col" class="num">Per unit</th>
+                        <th scope="col" class="num">Issued</th>
+                        <th scope="col" class="num">In stock</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var line in lines)
+                    {
+                        var issued = (long)line.QuantityPerUnit * units;
+                        var problem = issued > line.OnHand || !line.ProductIsActive;
+                        <tr class="@(problem ? "build-short" : null)">
+                            <td>
+                                <strong>@line.Sku</strong> @line.ProductName
+                                @if (!line.ProductIsActive)
+                                {
+                                    <span class="badge badge-inactive">Archived</span>
+                                }
+                            </td>
+                            <td class="num">@line.QuantityPerUnit</td>
+                            <td class="num">@issued.ToString("N0", CultureInfo.InvariantCulture)</td>
+                            <td class="num">
+                                @line.OnHand
+                                @if (problem && line.ProductIsActive)
+                                {
+                                    <span class="badge badge-out">Short @(issued - line.OnHand)</span>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        @if (anyShort)
+        {
+            <p class="muted">Something is short or archived. A build issues nothing until every part is covered.</p>
+        }
+    }
+</div>

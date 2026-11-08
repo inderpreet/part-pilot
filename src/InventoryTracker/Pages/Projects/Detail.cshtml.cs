@@ -42,6 +42,14 @@ public class DetailModel(IProjectService projects, ICurrentUser currentUser, IAu
 
     public string? NewNumber { get; private set; }
 
+    /// <summary>The Build form as typed: units (text, so a mistake can be shown back) and note.</summary>
+    public string BuildUnits { get; private set; } = "1";
+
+    public string? BuildNote { get; private set; }
+
+    /// <summary>The units the issue list is worked out for: <see cref="BuildUnits"/> when it is a valid number, else what remains.</summary>
+    public int BuildUnitsValue { get; private set; } = 1;
+
     public async Task<IActionResult> OnGetAsync(int id)
     {
         if (!await LoadAsync(id))
@@ -263,6 +271,95 @@ public class DetailModel(IProjectService projects, ICurrentUser currentUser, IAu
         return Partial("_ChangeNumberForm", this);
     }
 
+    // ---- Build -------------------------------------------------------------------------------------------------
+
+    public async Task<IActionResult> OnGetBuildAsync(int id)
+    {
+        if (!await this.CanEditAsync())
+        {
+            return Forbid();
+        }
+
+        if (!await LoadAsync(id))
+        {
+            return NotFound();
+        }
+
+        Dialog = ProjectDialog.Build;
+        SetBuildFields(null, null);
+        return this.IsHtmx() ? Partial("_BuildModal", this) : Page();
+    }
+
+    /// <summary>The list of what a build of <paramref name="units"/> would issue (htmx, as the units change).</summary>
+    public async Task<IActionResult> OnGetBuildPreviewAsync(int id, string? units)
+    {
+        if (!await this.CanEditAsync())
+        {
+            return Forbid();
+        }
+
+        if (!await LoadAsync(id))
+        {
+            return NotFound();
+        }
+
+        SetBuildFields(units, null);
+        return Partial("_BuildList", this);
+    }
+
+    public async Task<IActionResult> OnPostBuildAsync(int id, string? units, string? note)
+    {
+        if (!await this.CanEditAsync())
+        {
+            return Forbid();
+        }
+
+        if (!await LoadAsync(id))
+        {
+            return NotFound();
+        }
+
+        if (!int.TryParse(units?.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var unitCount))
+        {
+            ModelState.AddModelError(ProjectFields.Units, "Enter how many units to build as a whole number, 1 or more.");
+        }
+        else
+        {
+            var result = await projects.BuildAsync(id, unitCount, note, new StockContext(currentUser.Id!), HttpContext.RequestAborted);
+            if (result.Succeeded)
+            {
+                var parts = result.Value.Movements.Sum(m => (long)Math.Abs(m.QuantityDelta));
+                TempData[PageExtensions.FlashKey] =
+                    $"Built {result.Value.Units} {(result.Value.Units == 1 ? "unit" : "units")}. Issued {parts:N0} {(parts == 1 ? "part" : "parts")} from stock.";
+                return Back(Url.Page("Detail", new { id })!);
+            }
+
+            ModelState.AddErrors(result);
+
+            // Stock may have moved while the dialog was open: the list below shows what is on hand now.
+            await LoadAsync(id);
+        }
+
+        Dialog = ProjectDialog.Build;
+        SetBuildFields(units, note);
+        if (!this.IsHtmx())
+        {
+            return Page();
+        }
+
+        Response.StatusCode = StatusCodes.Status422UnprocessableEntity;
+        return Partial("_BuildForm", this);
+    }
+
+    private void SetBuildFields(string? units, string? note)
+    {
+        BuildUnits = units ?? Math.Max(1, Status.RemainingUnits).ToString(CultureInfo.InvariantCulture);
+        BuildNote = note;
+        BuildUnitsValue = int.TryParse(BuildUnits.Trim(), NumberStyles.Integer, CultureInfo.InvariantCulture, out var parsed) && parsed >= 1
+            ? Math.Min(parsed, Data.Entities.Project.MaxTargetUnits)
+            : Math.Max(1, Status.RemainingUnits);
+    }
+
     // ---- Archive / delete --------------------------------------------------------------------------------------
 
     public async Task<IActionResult> OnPostArchiveAsync(int id, bool active, long rowVersion)
@@ -372,6 +469,7 @@ public class DetailModel(IProjectService projects, ICurrentUser currentUser, IAu
         None,
         NewPart,
         ChangeNumber,
+        Build,
     }
 
     /// <summary>The New part fields as typed. All text, so a mistake can be shown back in place; the service does the checking.</summary>
