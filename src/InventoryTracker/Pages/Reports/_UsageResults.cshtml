@@ -1,0 +1,54 @@
+@model InventoryTracker.Pages.Reports.UsageModel
+@using InventoryTracker.Hosting
+@{
+    var report = Model.Report;
+}
+@if (report.Page.TotalCount == 0)
+{
+    <partial name="_EmptyState" model="@(new EmptyStateModel(
+        "No usage in this period",
+        "Nothing was issued between these dates. Try a wider date range, or clear the search and category."))" />
+}
+else
+{
+    <div class="report-bar">
+        <p>@report.Totals.Products.ToString("N0") @(report.Totals.Products == 1 ? "part" : "parts") used · @report.Totals.Units.ToString("N0") units · <strong>@Html.Money(report.Totals.ValueCents)</strong> at current cost</p>
+        <a role="button" class="outline" href="@Model.CsvUrl()" download>Download CSV</a>
+    </div>
+    <div class="table-wrap">
+        <table class="striped">
+            <thead>
+                <tr>
+                    <partial name="_SortHeader" model="@(new SortHeaderModel("sku", "SKU", Model.Query))" />
+                    <partial name="_SortHeader" model="@(new SortHeaderModel("name", "Name", Model.Query))" />
+                    <partial name="_SortHeader" model="@(new SortHeaderModel("category", "Category", Model.Query))" />
+                    <partial name="_SortHeader" model="@(new SortHeaderModel("units", "Units used", Model.Query, Numeric: true))" />
+                    <partial name="_SortHeader" model="@(new SortHeaderModel("issues", "Issues", Model.Query, Numeric: true))" />
+                    <partial name="_SortHeader" model="@(new SortHeaderModel("value", "Value", Model.Query, Numeric: true))" />
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in report.Page.Items)
+                {
+                    <tr>
+                        <td><a asp-page="/Products/Detail" asp-route-id="@row.ProductId">@row.Sku</a></td>
+                        <td>@row.Name</td>
+                        <td>@(row.CategoryName ?? "—")</td>
+                        <td class="num">@row.UnitsUsed.ToString("N0") @row.Unit</td>
+                        <td class="num">@row.Issues.ToString("N0")</td>
+                        <td class="num">@Html.Money(row.ValueCents)</td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot class="report-total">
+                <tr>
+                    <th scope="row" colspan="3">Total, all @report.Totals.Products.ToString("N0") @(report.Totals.Products == 1 ? "part" : "parts")</th>
+                    <td class="num">@report.Totals.Units.ToString("N0")</td>
+                    <td></td>
+                    <td class="num">@Html.Money(report.Totals.ValueCents)</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    <partial name="_Pager" model="@PagerModel.From(report.Page)" />
+}

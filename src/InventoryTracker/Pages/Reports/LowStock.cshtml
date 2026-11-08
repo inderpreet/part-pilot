@@ -1,0 +1,92 @@
+@page
+@model InventoryTracker.Pages.Reports.LowStockModel
+@{
+    ViewData["Title"] = "Low stock";
+}
+
+@section Subtitle {
+    Parts whose stock on hand plus what is already on order is at or below the reorder point.
+}
+
+@section Actions {
+    <a role="button" class="outline" asp-page="Index">All reports</a>
+}
+
+@if (Model.Outcome is { } outcome)
+{
+    <section class="card reorder-result @(outcome.Skipped.Count > 0 ? "has-skipped" : null)" aria-label="Draft orders created" role="status">
+        @if (outcome.Created.Count > 0)
+        {
+            <h2>Created @(outcome.Created.Count + outcome.MoreCreated) draft purchase @((outcome.Created.Count + outcome.MoreCreated) == 1 ? "order" : "orders")</h2>
+            <ul>
+                @foreach (var order in outcome.Created)
+                {
+                    <li>
+                        <a asp-page="/PurchaseOrders/Detail" asp-route-id="@order.Id">@order.Number</a>
+                        for <a asp-page="/Suppliers/Detail" asp-route-id="@order.SupplierId">@order.Supplier</a>
+                        — @order.Lines @(order.Lines == 1 ? "line" : "lines"), @Html.Money(order.TotalCents)
+                    </li>
+                }
+            </ul>
+            @if (outcome.MoreCreated > 0)
+            {
+                <p>and @outcome.MoreCreated more. <a asp-page="/PurchaseOrders/Index" asp-route-tab="Draft">See all drafts</a>.</p>
+            }
+            <p class="muted">They are drafts: review the lines, then submit each order to its supplier.</p>
+        }
+        else
+        {
+            <h2>No draft orders were created</h2>
+        }
+
+        @if (outcome.Skipped.Count > 0)
+        {
+            <h2>Not ordered</h2>
+            <ul>
+                @foreach (var skipped in outcome.Skipped)
+                {
+                    <li><strong>@skipped.Sku</strong> @skipped.Name — @skipped.Reason</li>
+                }
+            </ul>
+            @if (outcome.MoreSkipped > 0)
+            {
+                <p>and @outcome.MoreSkipped more.</p>
+            }
+        }
+    </section>
+}
+
+@* A plain GET form, so Enter submits normally; its controls also refresh #results through htmx. The order form is inside #results. *@
+<div class="card list-card">
+    <div class="load-bar" role="status" aria-label="Updating"></div>
+
+    <form method="get" action="/Reports/LowStock" class="toolbar report-filters" role="search">
+        <input type="search" name="search" value="@Model.Query.Search" placeholder="Search SKU or name…" aria-label="Search low-stock parts"
+               autocomplete="off" enterkeyhint="search"
+               hx-get="/Reports/LowStock" hx-trigger="input changed delay:300ms" hx-target="#results" hx-push-url="true" hx-include="closest form" hx-indicator=".load-bar" />
+
+        <select name="categoryId" aria-label="Category"
+                hx-get="/Reports/LowStock" hx-trigger="change" hx-target="#results" hx-push-url="true" hx-include="closest form" hx-indicator=".load-bar">
+            <option value="">All categories</option>
+            @foreach (var category in Model.Categories)
+            {
+                <option value="@category.Id" selected="@(Model.Query.CategoryId == category.Id)">@category.Name@(category.IsActive ? "" : " (archived)")</option>
+            }
+        </select>
+
+        <select name="supplierId" aria-label="Preferred supplier"
+                hx-get="/Reports/LowStock" hx-trigger="change" hx-target="#results" hx-push-url="true" hx-include="closest form" hx-indicator=".load-bar">
+            <option value="">All suppliers</option>
+            @foreach (var supplier in Model.Suppliers)
+            {
+                <option value="@supplier.Id" selected="@(Model.Query.SupplierId == supplier.Id)">@supplier.Name@(supplier.IsActive ? "" : " (archived)")</option>
+            }
+        </select>
+
+        <button type="submit" class="visually-hidden" tabindex="-1">Apply filters</button>
+    </form>
+
+    <div id="results">
+        <partial name="_LowStockResults" model="Model" />
+    </div>
+</div>

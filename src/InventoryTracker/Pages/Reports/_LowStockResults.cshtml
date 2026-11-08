@@ -1,0 +1,113 @@
+@model InventoryTracker.Pages.Reports.LowStockModel
+@using InventoryTracker.Pages.Shared
+@if (Model.Suggestions.TotalCount == 0)
+{
+    if (Model.IsFiltered)
+    {
+        <partial name="_EmptyState" model="@(new EmptyStateModel("No low-stock parts match", "Try a different search, or clear the category and supplier filters."))" />
+    }
+    else
+    {
+        <partial name="_EmptyState" model="@(new EmptyStateModel("Nothing needs reordering", "Every part with a reorder point has enough stock, counting what is already on order. Set a reorder point on a part to be warned when it runs low."))" />
+    }
+}
+else
+{
+    <form method="post" action="@(Context.Request.Path + Context.Request.QueryString)" class="reorder-form">
+        @Html.AntiForgeryToken()
+        <div class="table-wrap">
+            <table class="striped">
+                <thead>
+                    <tr>
+                        @if (Model.CanEdit)
+                        {
+                            <th scope="col" class="check"><input type="checkbox" data-check-all="Selected" aria-label="Select all orderable parts on this page" checked /></th>
+                        }
+                        <partial name="_SortHeader" model="@(new SortHeaderModel("sku", "Part", Model.Query))" />
+                        <partial name="_SortHeader" model="@(new SortHeaderModel("onhand", "On hand", Model.Query, Numeric: true))" />
+                        <partial name="_SortHeader" model="@(new SortHeaderModel("onorder", "On order", Model.Query, Numeric: true))" />
+                        <partial name="_SortHeader" model="@(new SortHeaderModel("reorderpoint", "Reorder at", Model.Query, Numeric: true))" />
+                        <th scope="col" class="num">Suggested</th>
+                        <partial name="_SortHeader" model="@(new SortHeaderModel("supplier", "Preferred supplier", Model.Query))" />
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Suggestions.Items)
+                    {
+                        var preselected = item.CanOrder && item.InDraft == 0;
+                        <tr>
+                            @if (Model.CanEdit)
+                            {
+                                <td class="check">
+                                    <input type="checkbox" name="Selected" value="@item.ProductId" checked="@preselected" disabled="@(!item.CanOrder)"
+                                           aria-label="Order @item.Sku" />
+                                </td>
+                            }
+                            <td>
+                                <a asp-page="/Products/Detail" asp-route-id="@item.ProductId">@item.Sku</a> <small class="muted">@item.Name</small>
+                                @if (item.InDraft > 0)
+                                {
+                                    <br />
+                                    <small class="muted">
+                                        @item.InDraft already on draft
+                                        @foreach (var draft in item.Drafts)
+                                        {
+                                            <a asp-page="/PurchaseOrders/Detail" asp-route-id="@draft.PurchaseOrderId">@draft.Number</a>
+                                        }
+                                    </small>
+                                }
+                            </td>
+                            <td class="num"><span class="@(item.OnHand <= 0 ? "delta-down" : null)">@item.OnHand</span></td>
+                            <td class="num">@item.OnOrder</td>
+                            <td class="num">@item.ReorderPoint</td>
+                            <td class="num">
+                                @if (Model.CanEdit && item.CanOrder)
+                                {
+                                    <input type="number" class="reorder-qty" name="Quantities[@item.ProductId]" value="@item.SuggestedQuantity" min="1" max="@PurchaseOrderService.MaxQuantity" step="1"
+                                           inputmode="numeric" aria-label="Quantity to order of @item.Sku" />
+                                }
+                                else
+                                {
+                                    @item.SuggestedQuantity
+                                }
+                                <small class="muted">@item.Unit</small>
+                            </td>
+                            <td>
+                                @if (item.SupplierId is null)
+                                {
+                                    <span class="badge badge-low">None</span>
+                                    <a asp-page="/Products/Detail" asp-route-id="@item.ProductId" title="Choose a preferred supplier on the part's page">Set one</a>
+                                }
+                                else
+                                {
+                                    <a asp-page="/Suppliers/Detail" asp-route-id="@item.SupplierId">@item.SupplierName</a>
+                                    @if (!item.SupplierIsActive)
+                                    {
+                                        <span class="badge badge-cancelled" title="Archived suppliers cannot be ordered from">Archived</span>
+                                    }
+                                    <br />
+                                    <small class="muted">
+                                        @Html.Money(item.UnitCostCents)@if (item.MinOrderQuantity is > 1) { <text> · min @item.MinOrderQuantity</text> }
+                                    </small>
+                                }
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        @if (Model.CanEdit)
+        {
+            <div class="reorder-bar">
+                <p>One draft order is made per preferred supplier. Nothing is sent to a supplier until you submit it.</p>
+                <button type="submit">Create draft POs</button>
+            </div>
+        }
+        else
+        {
+            <div class="reorder-bar"><p>Ask an Admin or Staff user to create purchase orders from this list.</p></div>
+        }
+    </form>
+    <partial name="_Pager" model="@PagerModel.From(Model.Suggestions)" />
+}

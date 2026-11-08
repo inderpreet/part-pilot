@@ -1,16 +1,6 @@
 @using System.Globalization
 @using InventoryTracker.Data.Entities
 @model MovementTableModel
-@{
-    string TypeBadge(StockTransactionType type) => type switch
-    {
-        StockTransactionType.Receive or StockTransactionType.Return => "badge-ok",
-        StockTransactionType.Issue => "badge-out",
-        StockTransactionType.Adjust => "badge-low",
-        StockTransactionType.Count => "badge-submitted",
-        _ => "badge-draft",
-    };
-}
 @if (Model.Page.TotalCount == 0)
 {
     <partial name="_EmptyState" model="@(new EmptyStateModel(Model.EmptyTitle ?? "No movements", Model.EmptyMessage ?? "Nothing has been recorded yet."))" />
@@ -46,7 +36,7 @@ else
                         {
                             <td><a asp-page="/Products/Detail" asp-route-id="@m.ProductId">@m.Sku</a> <small class="muted">@m.ProductName</small></td>
                         }
-                        <td><span class="badge @TypeBadge(m.Type)">@m.Type</span></td>
+                        <td><span class="badge @StockDisplay.TypeBadge(m.Type)">@m.Type</span></td>
                         <td class="num"><span class="@(m.QuantityDelta > 0 ? "delta-up" : "delta-down")">@m.QuantityDelta.ToString("+#;-#;0", CultureInfo.InvariantCulture)</span></td>
                         <td class="num">@m.QuantityAfter</td>
                         <td>

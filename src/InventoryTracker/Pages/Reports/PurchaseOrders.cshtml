@@ -1,0 +1,55 @@
+@page
+@model InventoryTracker.Pages.Reports.PurchaseOrdersModel
+@using InventoryTracker.Data.Entities
+@{
+    ViewData["Title"] = "Purchase order report";
+}
+
+@section Subtitle {
+    Orders by order date, supplier and status, with what is still to arrive.
+}
+
+@section Actions {
+    <a role="button" class="outline" asp-page="Index">All reports</a>
+}
+
+<div class="card list-card">
+    <div class="load-bar" role="status" aria-label="Updating"></div>
+
+    <form method="get" action="/Reports/PurchaseOrders" class="toolbar report-filters" role="search">
+        <input type="search" name="search" value="@Model.Query.Search" placeholder="Order number…" aria-label="Search by order number"
+               autocomplete="off" enterkeyhint="search"
+               hx-get="/Reports/PurchaseOrders" hx-trigger="input changed delay:300ms" hx-target="#results" hx-push-url="true" hx-include="closest form" hx-indicator=".load-bar" />
+
+        <select name="supplierId" aria-label="Supplier" hx-get="/Reports/PurchaseOrders" hx-trigger="change" hx-target="#results" hx-push-url="true" hx-include="closest form" hx-indicator=".load-bar">
+            <option value="">All suppliers</option>
+            @foreach (var supplier in Model.Suppliers)
+            {
+                <option value="@supplier.Id" selected="@(Model.Query.SupplierId == supplier.Id)">@supplier.Name@(supplier.IsActive ? "" : " (archived)")</option>
+            }
+        </select>
+
+        <select name="status" aria-label="Status" hx-get="/Reports/PurchaseOrders" hx-trigger="change" hx-target="#results" hx-push-url="true" hx-include="closest form" hx-indicator=".load-bar">
+            <option value="">All statuses</option>
+            @foreach (var status in Enum.GetValues<PurchaseOrderStatus>())
+            {
+                <option value="@status" selected="@(Model.Query.Status == status)">@PurchaseOrderDisplay.StatusLabel(status)</option>
+            }
+        </select>
+
+        <label class="inline-date">From
+            <input type="date" name="from" value="@Model.Query.From?.ToString("yyyy-MM-dd")" aria-label="Ordered from"
+                   hx-get="/Reports/PurchaseOrders" hx-trigger="change" hx-target="#results" hx-push-url="true" hx-include="closest form" hx-indicator=".load-bar" />
+        </label>
+        <label class="inline-date">To
+            <input type="date" name="to" value="@Model.Query.To?.ToString("yyyy-MM-dd")" aria-label="Ordered to"
+                   hx-get="/Reports/PurchaseOrders" hx-trigger="change" hx-target="#results" hx-push-url="true" hx-include="closest form" hx-indicator=".load-bar" />
+        </label>
+
+        <button type="submit" class="visually-hidden" tabindex="-1">Apply filters</button>
+    </form>
+
+    <div id="results">
+        <partial name="_PurchaseOrdersResults" model="Model" />
+    </div>
+</div>

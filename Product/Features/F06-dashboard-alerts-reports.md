@@ -1,6 +1,6 @@
 # F06 — Dashboard, alerts & reports
 
-- **Status:** In Progress
+- **Status:** Done
 - **Depends on:** F03, F05
 - **Roles:** All users view; Admin/Staff create draft POs from suggestions
 
@@ -20,7 +20,7 @@ handful of standard reports with CSV export.
 
 1. FR-1 Dashboard tiles: active SKUs, total stock value, low-stock count, out-of-stock count, open POs (count + value), POs overdue (ExpectedDate passed).
 2. FR-2 Dashboard lists: top 10 low-stock items, last 10 stock movements, open POs due this week.
-3. FR-3 Nav badge with low-stock count on every page (cached ~60 s).
+3. FR-3 Nav badge with low-stock count on every page (cached ~60 s; rendered server-side from the cached counter on the `Low stock` rail item, see WI-06-3).
 4. FR-4 Low-stock page: products where on hand + on order <= reorder point; columns: SKU, name, on hand, on order,
    reorder point, suggested qty, preferred supplier; filter by category/supplier.
 5. FR-5 Suggested quantity = max(ReorderQuantity, ReorderPoint − (OnHand + OnOrder)), rounded up to supplier MinOrderQuantity (shared helper `MinOrderRounding.RoundUp(quantity, minOrderQuantity)`, already in `Services/MinOrderRounding.cs` from F10; reuse it, do not copy it).
@@ -61,7 +61,7 @@ No new tables. Indexes + read-model queries — see WI-06-1.
 |---|---|---|
 | [WI-06-1](../work-items/F06-dashboard-alerts-reports/WI-06-1-db-schema.md) | Query indexes, reporting queries | Done |
 | [WI-06-2](../work-items/F06-dashboard-alerts-reports/WI-06-2-api.md) | ReportService, reorder suggestions | Done |
-| [WI-06-3](../work-items/F06-dashboard-alerts-reports/WI-06-3-frontend.md) | Dashboard, low-stock, reports pages | Planned |
+| [WI-06-3](../work-items/F06-dashboard-alerts-reports/WI-06-3-frontend.md) | Dashboard, low-stock, reports pages | Done |
 
 ## Open questions
 

@@ -1,0 +1,47 @@
+@page
+@model InventoryTracker.Pages.Reports.UsageModel
+@{
+    ViewData["Title"] = "Usage report";
+}
+
+@section Subtitle {
+    Units issued per part over a period. Only issues count; receipts, adjustments and counts do not.
+}
+
+@section Actions {
+    <a role="button" class="outline" asp-page="Index">All reports</a>
+}
+
+<div class="card list-card">
+    <div class="load-bar" role="status" aria-label="Updating"></div>
+
+    <form method="get" action="/Reports/Usage" class="toolbar report-filters" role="search">
+        <input type="search" name="search" value="@Model.Query.Search" placeholder="Search SKU or name…" aria-label="Search parts"
+               autocomplete="off" enterkeyhint="search"
+               hx-get="/Reports/Usage" hx-trigger="input changed delay:300ms" hx-target="#results" hx-push-url="true" hx-include="closest form" hx-indicator=".load-bar" />
+
+        <select name="categoryId" aria-label="Category" hx-get="/Reports/Usage" hx-trigger="change" hx-target="#results" hx-push-url="true" hx-include="closest form" hx-indicator=".load-bar">
+            <option value="">All categories</option>
+            @foreach (var category in Model.Categories)
+            {
+                <option value="@category.Id" selected="@(Model.Query.CategoryId == category.Id)">@category.Name@(category.IsActive ? "" : " (archived)")</option>
+            }
+        </select>
+
+        <label class="inline-date">From
+            <input type="date" name="from" value="@Model.Query.From?.ToString("yyyy-MM-dd")" aria-label="From date"
+                   hx-get="/Reports/Usage" hx-trigger="change" hx-target="#results" hx-push-url="true" hx-include="closest form" hx-indicator=".load-bar" />
+        </label>
+        <label class="inline-date">To
+            <input type="date" name="to" value="@Model.Query.To?.ToString("yyyy-MM-dd")" aria-label="To date"
+                   hx-get="/Reports/Usage" hx-trigger="change" hx-target="#results" hx-push-url="true" hx-include="closest form" hx-indicator=".load-bar" />
+        </label>
+
+        <input type="hidden" name="tz" value="@Model.Query.Tz" data-tz-offset />
+        <button type="submit" class="visually-hidden" tabindex="-1">Apply filters</button>
+    </form>
+
+    <div id="results">
+        <partial name="_UsageResults" model="Model" />
+    </div>
+</div>

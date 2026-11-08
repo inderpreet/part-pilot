@@ -8,6 +8,7 @@
 @inject IAntiforgery Antiforgery
 @inject IAuthorizationService Authorization
 @inject ICurrentUser CurrentUser
+@inject ILowStockCounter LowStockCounter
 @{
     // Antiforgery token for every htmx request, sent as a header (configured as "RequestVerificationToken").
     var token = Antiforgery.GetAndStoreTokens(Context).RequestToken;
@@ -36,7 +37,24 @@
     var footItems = navItems.Where(i => i.Group == NavGroups.Foot).ToList();
 
     // Top-bar trail: the section, then the page's own crumb when it sets one.
-    var currentItem = navItems.FirstOrDefault(i => i.Available && NavItems.IsCurrent(i, path));
+    var currentItem = NavItems.Current(navItems, path);
+    ViewData["NavCurrentHref"] = currentItem?.Href;
+
+    // The nav badge: cached for a minute and refreshed as soon as stock or orders change (LowStockCounter). Never fatal.
+    var lowStockCount = 0;
+    if (signedIn && navItems.Any(i => i.LowStockBadge))
+    {
+        try
+        {
+            lowStockCount = await LowStockCounter.GetAsync(Context.RequestAborted);
+        }
+        catch (Exception)
+        {
+            lowStockCount = 0;
+        }
+    }
+
+    ViewData["LowStockCount"] = lowStockCount;
     var crumb = ViewData["Crumb"] as string;
 
     var userName = CurrentUser.DisplayName ?? "";

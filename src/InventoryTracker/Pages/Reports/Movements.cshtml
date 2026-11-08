@@ -1,0 +1,64 @@
+@page
+@model InventoryTracker.Pages.Reports.MovementsModel
+@using InventoryTracker.Data.Entities
+@{
+    ViewData["Title"] = "Stock movements report";
+}
+
+@section Subtitle {
+    Receipts, issues, adjustments and counts in a period, with the totals in and out.
+}
+
+@section Actions {
+    <a role="button" class="outline" asp-page="Index">All reports</a>
+}
+
+<div class="card list-card">
+    <div class="load-bar" role="status" aria-label="Updating"></div>
+
+    <form method="get" action="/Reports/Movements" class="toolbar report-filters" role="search">
+        <input type="search" name="search" value="@Model.Query.Search" placeholder="Search SKU, part, reason or reference…" aria-label="Search movements"
+               autocomplete="off" enterkeyhint="search"
+               hx-get="/Reports/Movements" hx-trigger="input changed delay:300ms" hx-target="#results" hx-push-url="true" hx-include="closest form" hx-indicator=".load-bar" />
+
+        <select name="type" aria-label="Type" hx-get="/Reports/Movements" hx-trigger="change" hx-target="#results" hx-push-url="true" hx-include="closest form" hx-indicator=".load-bar">
+            <option value="">All types</option>
+            @foreach (var type in Enum.GetValues<StockTransactionType>())
+            {
+                <option value="@type" selected="@(Model.Query.Type == type)">@type</option>
+            }
+        </select>
+
+        <select name="categoryId" aria-label="Category" hx-get="/Reports/Movements" hx-trigger="change" hx-target="#results" hx-push-url="true" hx-include="closest form" hx-indicator=".load-bar">
+            <option value="">All categories</option>
+            @foreach (var category in Model.Categories)
+            {
+                <option value="@category.Id" selected="@(Model.Query.CategoryId == category.Id)">@category.Name@(category.IsActive ? "" : " (archived)")</option>
+            }
+        </select>
+
+        <select name="userId" aria-label="User" hx-get="/Reports/Movements" hx-trigger="change" hx-target="#results" hx-push-url="true" hx-include="closest form" hx-indicator=".load-bar">
+            <option value="">Everyone</option>
+            @foreach (var user in Model.Users)
+            {
+                <option value="@user.Id" selected="@(Model.Query.UserId == user.Id)">@user.Name</option>
+            }
+        </select>
+
+        <label class="inline-date">From
+            <input type="date" name="from" value="@Model.Query.From?.ToString("yyyy-MM-dd")" aria-label="From date"
+                   hx-get="/Reports/Movements" hx-trigger="change" hx-target="#results" hx-push-url="true" hx-include="closest form" hx-indicator=".load-bar" />
+        </label>
+        <label class="inline-date">To
+            <input type="date" name="to" value="@Model.Query.To?.ToString("yyyy-MM-dd")" aria-label="To date"
+                   hx-get="/Reports/Movements" hx-trigger="change" hx-target="#results" hx-push-url="true" hx-include="closest form" hx-indicator=".load-bar" />
+        </label>
+
+        <input type="hidden" name="tz" value="@Model.Query.Tz" data-tz-offset />
+        <button type="submit" class="visually-hidden" tabindex="-1">Apply filters</button>
+    </form>
+
+    <div id="results">
+        <partial name="_MovementsResults" model="Model" />
+    </div>
+</div>

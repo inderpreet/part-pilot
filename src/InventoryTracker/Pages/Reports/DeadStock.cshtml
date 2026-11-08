@@ -1,0 +1,43 @@
+@page
+@model InventoryTracker.Pages.Reports.DeadStockModel
+@{
+    ViewData["Title"] = "Dead stock";
+}
+
+@section Subtitle {
+    Active parts with stock on hand that have had no movement for the chosen number of days.
+}
+
+@section Actions {
+    <a role="button" class="outline" asp-page="Index">All reports</a>
+}
+
+<div class="card list-card">
+    <div class="load-bar" role="status" aria-label="Updating"></div>
+
+    <form method="get" action="/Reports/DeadStock" class="toolbar report-filters" role="search">
+        <input type="search" name="search" value="@Model.Query.Search" placeholder="Search SKU or name…" aria-label="Search parts"
+               autocomplete="off" enterkeyhint="search"
+               hx-get="/Reports/DeadStock" hx-trigger="input changed delay:300ms" hx-target="#results" hx-push-url="true" hx-include="closest form" hx-indicator=".load-bar" />
+
+        <select name="categoryId" aria-label="Category" hx-get="/Reports/DeadStock" hx-trigger="change" hx-target="#results" hx-push-url="true" hx-include="closest form" hx-indicator=".load-bar">
+            <option value="">All categories</option>
+            @foreach (var category in Model.Categories)
+            {
+                <option value="@category.Id" selected="@(Model.Query.CategoryId == category.Id)">@category.Name@(category.IsActive ? "" : " (archived)")</option>
+            }
+        </select>
+
+        <label class="inline-date">No movement for
+            <input type="number" name="days" value="@Model.Query.SafeDays" min="1" max="@DeadStockFilter.MaxDays" step="1" inputmode="numeric" aria-label="Days without movement"
+                   hx-get="/Reports/DeadStock" hx-trigger="input changed delay:400ms, change" hx-target="#results" hx-push-url="true" hx-include="closest form" hx-indicator=".load-bar" />
+            days
+        </label>
+
+        <button type="submit" class="visually-hidden" tabindex="-1">Apply filters</button>
+    </form>
+
+    <div id="results">
+        <partial name="_DeadStockResults" model="Model" />
+    </div>
+</div>

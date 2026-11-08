@@ -1,0 +1,181 @@
+@model IndexModel
+@using InventoryTracker.Pages.Shared
+@{
+    var t = Model.Summary.Tiles;
+}
+
+@if (Model.IsEmpty)
+{
+    <section class="card" aria-label="Getting started">
+        @if (Model.CanEdit)
+        {
+            <partial name="_EmptyState" model="@(new EmptyStateModel(
+                "Nothing here yet",
+                "Add your first part, then receive some stock. Stock levels, low-stock alerts and open orders will show up on this page.",
+                "Add a part",
+                "/Products/Edit"))" />
+        }
+        else
+        {
+            <partial name="_EmptyState" model="@(new EmptyStateModel(
+                "Nothing here yet",
+                "Ask an Admin or Staff user to add parts and receive stock. Stock levels, low-stock alerts and open orders will show up on this page."))" />
+        }
+    </section>
+}
+else
+{
+    <section class="stats" aria-label="Key figures">
+        <a class="card stat stat-link" href="/Products">
+            <p class="stat-label">Active parts</p>
+            <p class="stat-value">@t.ActiveSkus.ToString("N0")</p>
+            <p class="stat-note">View all parts</p>
+        </a>
+        <a class="card stat stat-link" href="/Reports/Valuation">
+            <p class="stat-label">Stock value</p>
+            <p class="stat-value stat-money">@Html.Money(t.StockValueCents)</p>
+            <p class="stat-note">At current unit cost</p>
+        </a>
+        <a class="card stat stat-link @(t.LowStockCount > 0 ? "stat-alert" : null)" href="/Reports/LowStock">
+            <p class="stat-label">Low stock</p>
+            <p class="stat-value">@t.LowStockCount.ToString("N0")</p>
+            <p class="stat-note @(t.LowStockCount > 0 ? "warn" : null)">@(t.LowStockCount > 0 ? "Review and reorder" : "Nothing to reorder")</p>
+        </a>
+        <a class="card stat stat-link @(t.OutOfStockCount > 0 ? "stat-alert" : null)" href="/Reports/Valuation?sort=onhand&amp;desc=false">
+            <p class="stat-label">Out of stock</p>
+            <p class="stat-value">@t.OutOfStockCount.ToString("N0")</p>
+            <p class="stat-note @(t.OutOfStockCount > 0 ? "warn" : null)">@(t.OutOfStockCount > 0 ? "Zero or fewer on hand" : "Every part has stock")</p>
+        </a>
+        <a class="card stat stat-link" href="/PurchaseOrders">
+            <p class="stat-label">Open orders</p>
+            <p class="stat-value">@t.OpenPurchaseOrders.ToString("N0")</p>
+            <p class="stat-note">@Html.Money(t.OpenPurchaseOrderValueCents) ordered</p>
+        </a>
+        <a class="card stat stat-link @(t.OverduePurchaseOrders > 0 ? "stat-alert" : null)" href="/PurchaseOrders">
+            <p class="stat-label">Overdue orders</p>
+            <p class="stat-value">@t.OverduePurchaseOrders.ToString("N0")</p>
+            <p class="stat-note @(t.OverduePurchaseOrders > 0 ? "warn" : null)">@(t.OverduePurchaseOrders > 0 ? "Past their expected date" : "None past their date")</p>
+        </a>
+    </section>
+
+    <div class="dash-grid">
+        <section class="card" aria-labelledby="dash-low">
+            <div class="card-head">
+                <h2 class="card-title" id="dash-low">Running low</h2>
+                <a class="card-link" href="/Reports/LowStock">See all@(t.LowStockCount > Model.Summary.LowStock.Count ? $" {t.LowStockCount}" : "")</a>
+            </div>
+            @if (Model.Summary.LowStock.Count == 0)
+            {
+                <partial name="_EmptyState" model="@(new EmptyStateModel("Nothing is running low", "Every part with a reorder point has enough, counting what is already on order."))" />
+            }
+            else
+            {
+                <div class="table-wrap">
+                    <table class="striped compact">
+                        <thead>
+                            <tr>
+                                <th scope="col">Part</th>
+                                <th scope="col" class="num">On hand</th>
+                                <th scope="col" class="num">On order</th>
+                                <th scope="col" class="num">Reorder at</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var row in Model.Summary.LowStock)
+                            {
+                                <tr>
+                                    <td><a asp-page="/Products/Detail" asp-route-id="@row.ProductId">@row.Sku</a> <small class="muted">@row.Name</small></td>
+                                    <td class="num"><span class="@(row.OnHand <= 0 ? "delta-down" : null)">@row.OnHand</span></td>
+                                    <td class="num">@row.OnOrder</td>
+                                    <td class="num">@row.ReorderPoint</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+
+        <section class="card" aria-labelledby="dash-due">
+            <div class="card-head">
+                <h2 class="card-title" id="dash-due">Orders due this week</h2>
+                <a class="card-link" href="/PurchaseOrders">All orders</a>
+            </div>
+            @if (Model.Summary.DueThisWeek.Count == 0)
+            {
+                <partial name="_EmptyState" model="@(new EmptyStateModel("No orders due this week", "Open orders with an expected date in the next 7 days appear here."))" />
+            }
+            else
+            {
+                <div class="table-wrap">
+                    <table class="striped compact">
+                        <thead>
+                            <tr>
+                                <th scope="col">Order</th>
+                                <th scope="col">Supplier</th>
+                                <th scope="col">Expected</th>
+                                <th scope="col" class="num">Still to arrive</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var order in Model.Summary.DueThisWeek)
+                            {
+                                <tr>
+                                    <td><a asp-page="/PurchaseOrders/Detail" asp-route-id="@order.Id">@order.Number</a></td>
+                                    <td><a asp-page="/Suppliers/Detail" asp-route-id="@order.SupplierId">@order.SupplierName</a></td>
+                                    <td>
+                                        @PurchaseOrderDisplay.Date(order.ExpectedDate)
+                                        @if (order.ExpectedDate == Model.Today)
+                                        {
+                                            <span class="badge badge-submitted">Today</span>
+                                        }
+                                    </td>
+                                    <td class="num">@Html.Money(order.OutstandingCents)</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+
+        <section class="card wide" aria-labelledby="dash-moves">
+            <div class="card-head">
+                <h2 class="card-title" id="dash-moves">Latest stock movements</h2>
+                <a class="card-link" href="/Stock/Movements">All movements</a>
+            </div>
+            @if (Model.Summary.RecentMovements.Count == 0)
+            {
+                <partial name="_EmptyState" model="@(new EmptyStateModel("No stock movements yet", "Receive, issue or count some stock and it will show up here."))" />
+            }
+            else
+            {
+                <div class="table-wrap">
+                    <table class="striped compact">
+                        <thead>
+                            <tr>
+                                <th scope="col">When</th>
+                                <th scope="col">Part</th>
+                                <th scope="col">Type</th>
+                                <th scope="col" class="num">Change</th>
+                                <th scope="col">By</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var m in Model.Summary.RecentMovements)
+                            {
+                                <tr>
+                                    <td>@Html.LocalTime(m.OccurredAt)</td>
+                                    <td><a asp-page="/Products/Detail" asp-route-id="@m.ProductId">@m.Sku</a> <small class="muted">@m.ProductName</small></td>
+                                    <td><span class="badge @StockDisplay.TypeBadge(m.Type)">@m.Type</span></td>
+                                    <td class="num"><span class="@(m.QuantityDelta > 0 ? "delta-up" : "delta-down")">@StockDisplay.Delta(m.QuantityDelta)</span></td>
+                                    <td>@m.UserName</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+    </div>
+}

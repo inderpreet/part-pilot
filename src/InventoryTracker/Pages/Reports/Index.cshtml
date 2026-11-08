@@ -1,0 +1,17 @@
+@page "/Reports"
+@model InventoryTracker.Pages.Reports.IndexModel
+@{
+    ViewData["Title"] = "Reports";
+}
+
+<ul class="report-links">
+    @foreach (var report in Model.Reports)
+    {
+        <li>
+            <a href="@report.Url">
+                <strong>@report.Title</strong>
+                <span>@report.Description</span>
+            </a>
+        </li>
+    }
+</ul>

@@ -1,0 +1,66 @@
+@model InventoryTracker.Pages.Reports.MovementsModel
+@using InventoryTracker.Hosting
+@{
+    var report = Model.Report;
+}
+@if (report.Page.TotalCount == 0)
+{
+    <partial name="_EmptyState" model="@(new EmptyStateModel(
+        Model.IsFiltered ? "No movements match" : "No stock movements yet",
+        Model.IsFiltered ? "Try different filters or a wider date range." : "Receive, issue or count some stock and it will show up here."))" />
+}
+else
+{
+    <div class="report-bar">
+        <p>@report.Totals.Count.ToString("N0") @(report.Totals.Count == 1 ? "movement" : "movements") · <span class="delta-up">+@report.Totals.In.ToString("N0") in</span> · <span class="delta-down">−@report.Totals.Out.ToString("N0") out</span></p>
+        <a role="button" class="outline" href="@Model.CsvUrl()" download>Download CSV</a>
+    </div>
+    <div class="table-wrap">
+        <table class="striped compact movements">
+            <thead>
+                <tr>
+                    <th scope="col">When</th>
+                    <th scope="col">Part</th>
+                    <th scope="col">Type</th>
+                    <th scope="col" class="num">Change</th>
+                    <th scope="col" class="num">On hand after</th>
+                    <th scope="col" class="num">Unit cost</th>
+                    <th scope="col">Details</th>
+                    <th scope="col">By</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var m in report.Page.Items)
+                {
+                    <tr>
+                        <td>@Html.LocalTime(m.OccurredAt)</td>
+                        <td><a asp-page="/Products/Detail" asp-route-id="@m.ProductId">@m.Sku</a> <small class="muted">@m.ProductName</small></td>
+                        <td><span class="badge @StockDisplay.TypeBadge(m.Type)">@m.Type</span></td>
+                        <td class="num"><span class="@(m.QuantityDelta > 0 ? "delta-up" : "delta-down")">@StockDisplay.Delta(m.QuantityDelta)</span></td>
+                        <td class="num">@m.QuantityAfter</td>
+                        <td class="num">@Html.Money(m.UnitCostCents)</td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(m.Reason))
+                            {
+                                <span>@m.Reason</span>
+                            }
+                            @if (!string.IsNullOrEmpty(m.Reference))
+                            {
+                                <small class="muted">ref @m.Reference</small>
+                            }
+                        </td>
+                        <td>@m.UserName</td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot class="report-total">
+                <tr>
+                    <th scope="row" colspan="3">Total, all @report.Totals.Count.ToString("N0")</th>
+                    <td class="num">@((report.Totals.In - report.Totals.Out).ToString("+#,##0;-#,##0;0", System.Globalization.CultureInfo.InvariantCulture))</td>
+                    <td colspan="4"></td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    <partial name="_Pager" model="@PagerModel.From(report.Page)" />
+}

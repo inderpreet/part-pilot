@@ -6,6 +6,7 @@
 //  - <time data-local> is upgraded to the browser's local time zone
 //  - product picker ([data-product-picker]): select a result, scanner-style Enter, keyboard navigation
 //  - rail drawer below 64rem: [data-rail-open] opens, [data-rail-close] (scrim), Escape or a rail link click close
+//  - `[data-check-all="name"]`: a select-all checkbox for the checkboxes called `name` in the same form
 //  - `.section-nav`: aria-current follows the URL hash (first link when there is none)
 //  - `htmx:confirm`: hx-confirm text opens <dialog id="confirm"> (Cancel / Confirm); <details class="menu"> closes on outside click / Escape
 (() => {
@@ -365,6 +366,16 @@
   }
 
   window.addEventListener('hashchange', markSectionNav);
+
+  // ---------- Select all ----------
+  // <input type="checkbox" data-check-all="name"> ticks or clears every enabled checkbox called `name` in the same form.
+  document.addEventListener('change', event => {
+    const all = event.target.closest?.('[data-check-all]');
+    if (!all) return;
+    const scope = all.closest('form') ?? document;
+    scope.querySelectorAll(`input[type="checkbox"][name="${CSS.escape(all.dataset.checkAll)}"]:not(:disabled)`)
+      .forEach(box => { box.checked = all.checked; });
+  });
 
   // ---------- Boot ----------
   function init() {

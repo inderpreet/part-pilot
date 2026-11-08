@@ -1,10 +1,15 @@
 @model NavItem
 @{
-    var path = Context.Request.Path.Value ?? "/";
+    // The layout works out the single current item (the longest matching address) and the low-stock count.
+    var current = ViewData["NavCurrentHref"] as string == Model.Href;
+    var lowStock = Model.LowStockBadge ? ViewData["LowStockCount"] as int? ?? 0 : 0;
 }
 @if (Model.Available)
 {
-    <li><a href="@Model.Href" aria-current="@(NavItems.IsCurrent(Model, path) ? "page" : null)"><svg class="ico" aria-hidden="true"><use href="#i-@Model.Icon"/></svg><span>@Model.Label</span></a></li>
+    <li><a href="@Model.Href" aria-current="@(current ? "page" : null)"><svg class="ico" aria-hidden="true"><use href="#i-@Model.Icon"/></svg><span>@Model.Label</span>@if (lowStock > 0)
+        {
+            <small class="rail-badge" title="@lowStock low-stock @(lowStock == 1 ? "part" : "parts")"><span class="visually-hidden">@lowStock low-stock @(lowStock == 1 ? "part" : "parts")</span><span aria-hidden="true">@(lowStock > 99 ? "99+" : lowStock.ToString())</span></small>
+        }</a></li>
 }
 else
 {

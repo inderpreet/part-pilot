@@ -10,8 +10,9 @@ namespace InventoryTracker.Pages.Shared;
 /// shown as a muted "coming soon" label instead of a link that would 404.
 /// <paramref name="Group"/> is the rail section it sits under (<see cref="NavGroups"/>); <c>null</c> means the top of the rail.
 /// <paramref name="Icon"/> is the id of a symbol in <c>_Icons.cshtml</c> (without the <c>i-</c> prefix).
+/// <paramref name="LowStockBadge"/> shows the number of low-stock parts next to the label (F06 FR-3).
 /// </summary>
-public sealed record NavItem(string Label, string Href, string Policy, bool Available = true, string? Group = null, string Icon = "home");
+public sealed record NavItem(string Label, string Href, string Policy, bool Available = true, string? Group = null, string Icon = "home", bool LowStockBadge = false);
 
 /// <summary>Rail sections. <see cref="Foot"/> items sit at the bottom of the rail, above the user card.</summary>
 public static class NavGroups
@@ -35,7 +36,8 @@ public static class NavItems
         new("Suppliers", "/Suppliers", Policies.CanView, Group: NavGroups.Inventory, Icon: "users"),
         new("Purchase Orders", "/PurchaseOrders", Policies.CanView, Group: NavGroups.Inventory, Icon: "file"),
         new("BOMs", "/Projects", Policies.CanView, Group: NavGroups.Inventory, Icon: "clipboard"),
-        new("Reports", "/Reports", Policies.CanView, Available: false, Group: NavGroups.Insights, Icon: "chart"),
+        new("Low stock", "/Reports/LowStock", Policies.CanView, Group: NavGroups.Insights, Icon: "alert", LowStockBadge: true),
+        new("Reports", "/Reports", Policies.CanView, Group: NavGroups.Insights, Icon: "chart"),
         new("Admin", "/Admin", Policies.RequireAdmin, Group: NavGroups.Foot, Icon: "gear"),
     ];
 
@@ -58,6 +60,13 @@ public static class NavItems
 
         return visible;
     }
+
+    /// <summary>
+    /// The one item to highlight for <paramref name="path"/>: the available item with the longest matching address, so
+    /// <c>/Reports/LowStock</c> lights up "Low stock" and not also "Reports".
+    /// </summary>
+    public static NavItem? Current(IEnumerable<NavItem> items, string path)
+        => items.Where(i => i.Available && IsCurrent(i, path)).OrderByDescending(i => i.Href.Length).FirstOrDefault();
 
     /// <summary>Whether <paramref name="item"/> is the section containing <paramref name="path"/>.</summary>
     public static bool IsCurrent(NavItem item, string path)

@@ -1,0 +1,84 @@
+@model InventoryTracker.Pages.Reports.ValuationModel
+@using InventoryTracker.Hosting
+@{
+    var report = Model.Report;
+}
+@if (report.Page.TotalCount == 0)
+{
+    <partial name="_EmptyState" model="@(new EmptyStateModel(
+        Model.IsFiltered ? "No parts match" : "No stock to value yet",
+        Model.IsFiltered ? "Try a different search or category." : "Add parts and receive stock and their value will be listed here."))" />
+}
+else
+{
+    <div class="report-bar">
+        <p>@report.Totals.Products.ToString("N0") @(report.Totals.Products == 1 ? "part" : "parts") · @report.Totals.Units.ToString("N0") units · <strong>@Html.Money(report.Totals.ValueCents)</strong></p>
+        <a role="button" class="outline" href="@Model.CsvUrl()" download>Download CSV</a>
+    </div>
+    <div class="table-wrap">
+        <table class="striped">
+            <thead>
+                <tr>
+                    <partial name="_SortHeader" model="@(new SortHeaderModel("sku", "SKU", Model.Query))" />
+                    <partial name="_SortHeader" model="@(new SortHeaderModel("name", "Name", Model.Query))" />
+                    <partial name="_SortHeader" model="@(new SortHeaderModel("category", "Category", Model.Query))" />
+                    <partial name="_SortHeader" model="@(new SortHeaderModel("onhand", "On hand", Model.Query, Numeric: true))" />
+                    <partial name="_SortHeader" model="@(new SortHeaderModel("cost", "Unit cost", Model.Query, Numeric: true))" />
+                    <partial name="_SortHeader" model="@(new SortHeaderModel("value", "Value", Model.Query, Numeric: true))" />
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var row in report.Page.Items)
+                {
+                    <tr>
+                        <td><a asp-page="/Products/Detail" asp-route-id="@row.ProductId">@row.Sku</a></td>
+                        <td>@row.Name@if (!row.IsActive) { <text> </text><span class="badge badge-cancelled">Archived</span> }</td>
+                        <td>@(row.CategoryName ?? "—")</td>
+                        <td class="num">@row.OnHand @row.Unit</td>
+                        <td class="num">@Html.Money(row.UnitCostCents)</td>
+                        <td class="num">@Html.Money(row.ValueCents)</td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot class="report-total">
+                <tr>
+                    <th scope="row" colspan="3">Total, all @report.Totals.Products.ToString("N0") @(report.Totals.Products == 1 ? "part" : "parts")</th>
+                    <td class="num">@report.Totals.Units.ToString("N0")</td>
+                    <td></td>
+                    <td class="num">@Html.Money(report.Totals.ValueCents)</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    <partial name="_Pager" model="@PagerModel.From(report.Page)" />
+
+    @if (report.ByCategory.Count > 1)
+    {
+        <section class="report-split" aria-labelledby="by-category">
+            <h3 id="by-category">By category</h3>
+            <div class="table-wrap">
+                <table class="striped compact">
+                    <thead>
+                        <tr>
+                            <th scope="col">Category</th>
+                            <th scope="col" class="num">Parts</th>
+                            <th scope="col" class="num">Units</th>
+                            <th scope="col" class="num">Value</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var category in report.ByCategory)
+                        {
+                            <tr>
+                                <td>@(category.CategoryName ?? "No category")</td>
+                                <td class="num">@category.Products.ToString("N0")</td>
+                                <td class="num">@category.Units.ToString("N0")</td>
+                                <td class="num">@Html.Money(category.ValueCents)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    }
+}

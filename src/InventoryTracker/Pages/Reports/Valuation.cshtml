@@ -1,0 +1,44 @@
+@page
+@model InventoryTracker.Pages.Reports.ValuationModel
+@{
+    ViewData["Title"] = "Stock valuation";
+}
+
+@section Subtitle {
+    What is on the shelves and what it is worth at each part's current unit cost.
+}
+
+@section Actions {
+    <a role="button" class="outline" asp-page="Index">All reports</a>
+}
+
+<div class="card list-card">
+    <div class="load-bar" role="status" aria-label="Updating"></div>
+
+    <form method="get" action="/Reports/Valuation" class="toolbar report-filters" role="search">
+        <input type="search" name="search" value="@Model.Query.Search" placeholder="Search SKU or name…" aria-label="Search parts"
+               autocomplete="off" enterkeyhint="search"
+               hx-get="/Reports/Valuation" hx-trigger="input changed delay:300ms" hx-target="#results" hx-push-url="true" hx-include="closest form" hx-indicator=".load-bar" />
+
+        <select name="categoryId" aria-label="Category"
+                hx-get="/Reports/Valuation" hx-trigger="change" hx-target="#results" hx-push-url="true" hx-include="closest form" hx-indicator=".load-bar">
+            <option value="">All categories</option>
+            @foreach (var category in Model.Categories)
+            {
+                <option value="@category.Id" selected="@(Model.Query.CategoryId == category.Id)">@category.Name@(category.IsActive ? "" : " (archived)")</option>
+            }
+        </select>
+
+        <label class="inline-check">
+            <input type="checkbox" name="includeArchived" value="true" checked="@Model.Query.IncludeArchived"
+                   hx-get="/Reports/Valuation" hx-trigger="change" hx-target="#results" hx-push-url="true" hx-include="closest form" hx-indicator=".load-bar" />
+            Include archived parts
+        </label>
+
+        <button type="submit" class="visually-hidden" tabindex="-1">Apply filters</button>
+    </form>
+
+    <div id="results">
+        <partial name="_ValuationResults" model="Model" />
+    </div>
+</div>

@@ -837,3 +837,47 @@ section[id] { scroll-margin-top: 4.5rem; }
   .rail .rail-icon-btn { min-width: 2.75rem; }
   .menu-item { display: flex; align-items: center; }
 }
+/* ---- F06: nav badge, dashboard, reports ---- */
+.rail a .rail-badge { margin-left: auto; min-width: 1.4rem; padding: 0.15rem 0.45rem; border-radius: var(--it-badge-radius); background: var(--it-warn); color: #fff; font-size: var(--it-text-xs); font-weight: 650; line-height: 1.1; text-align: center; font-variant-numeric: tabular-nums; }
+.stat-link { display: block; color: inherit; text-decoration: none; }
+a.stat:hover, .stat-link:hover { text-decoration: none; border-color: var(--it-line-strong); box-shadow: 0 2px 6px rgba(16, 24, 40, 0.08); }
+.stat-money { font-size: 1.75rem; }
+.dash-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1rem; align-items: start; }
+.dash-grid > .wide { grid-column: 1 / -1; }
+.dash-grid .card { margin: 0; overflow: hidden; }
+.dash-grid .table-wrap { margin: 0; border: 0; border-radius: 0; box-shadow: none; background: transparent; overflow-x: auto; }
+.dash-grid th:first-child, .dash-grid td:first-child { padding-left: 1.1rem; }
+.dash-grid th:last-child, .dash-grid td:last-child { padding-right: 1.1rem; }
+.dash-grid .empty-state { padding: 1.75rem 1rem; }
+.dash-grid .empty-state h3 { margin-bottom: 0.25rem; font-size: var(--it-text); }
+.card-head .card-link { font-size: var(--it-text-sm); font-weight: 500; white-space: nowrap; }
+@media (max-width: 64rem) { .dash-grid { grid-template-columns: 1fr; } }
+.report-links { display: grid; grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr)); gap: 1rem; margin: 0; padding: 0; list-style: none; }
+.report-links li { margin: 0; padding: 0; list-style: none; }
+.report-links li::before { content: none; }
+.report-links a { display: block; height: 100%; padding: 1rem 1.1rem; border: 1px solid var(--it-line); border-radius: var(--it-radius); background: var(--it-card); box-shadow: var(--it-shadow); color: var(--it-ink); text-decoration: none; }
+.report-links a:hover { border-color: var(--it-line-strong); box-shadow: 0 2px 6px rgba(16, 24, 40, 0.08); text-decoration: none; }
+.report-links strong { display: block; font-size: var(--it-text); font-weight: 600; }
+.report-links span { display: block; margin-top: 0.25rem; color: var(--it-muted); font-size: var(--it-text-sm); }
+.report-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem 1rem; padding: 0.6rem 1.1rem; border-bottom: 1px solid var(--it-line); font-size: var(--it-text-sm); color: var(--it-muted); }
+.report-bar p { margin: 0; }
+.report-bar a[role="button"] { width: auto; margin: 0; }
+.report-filters label.inline-date, .report-filters label.inline-check { display: flex; align-items: center; gap: 0.4rem; margin: 0; white-space: nowrap; }
+.report-filters input[type="number"] { width: 6rem; margin: 0; }
+.report-filters label.inline-check input { margin: 0; }
+tfoot.report-total th, tfoot.report-total td { border-top: 2px solid var(--it-line-strong); background: #f9fafb; font-weight: 650; }
+.report-split { padding: 1rem 1.1rem 0.4rem; border-top: 1px solid var(--it-line); }
+.report-split h3 { margin: 0 0 0.4rem; font-size: var(--it-text-sm); font-weight: 600; color: var(--it-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+.report-split .table-wrap { max-height: none; }
+.reorder-qty { width: 6rem; margin: 0; padding: 0.3rem 0.5rem; text-align: right; font-variant-numeric: tabular-nums; }
+.reorder-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem 1rem; padding: 0.8rem 1.1rem; border-top: 1px solid var(--it-line); }
+.reorder-bar p { margin: 0; color: var(--it-muted); font-size: var(--it-text-sm); }
+.reorder-bar button { width: auto; margin: 0; }
+.reorder-result { margin-bottom: 1rem; padding: 1rem 1.1rem; border-color: #abefc6; background: var(--it-ok-soft); }
+.reorder-result.has-skipped { border-color: #fedf89; background: var(--it-warn-soft); }
+.reorder-result h2 { margin: 0 0 0.5rem; font-size: var(--it-text); }
+.reorder-result ul { margin: 0 0 0.5rem; padding-left: 1.2rem; }
+.reorder-result p { margin: 0 0 0.5rem; }
+td.check, th.check { width: 2.5rem; text-align: center; }
+td.check input, th.check input { margin: 0; }
+.list-card .toolbar input[type="checkbox"] { width: 1.25em; height: 1.25em; }

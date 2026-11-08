@@ -3,6 +3,8 @@
 @{
     ViewData["Title"] = "Dashboard";
 }
-<partial name="_EmptyState" model="@(new EmptyStateModel(
-    "Dashboard coming in F06",
-    "Stock levels, low-stock alerts and reorder suggestions will appear here."))" />
+
+@* The block refreshes itself every minute through htmx (the response is just the partial). Without JavaScript it is a normal page. *@
+<div id="dashboard" hx-get="/" hx-trigger="every 60s" hx-swap="innerHTML">
+    <partial name="_Dashboard" model="Model" />
+</div>

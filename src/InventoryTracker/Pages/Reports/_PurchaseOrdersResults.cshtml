@@ -1,0 +1,94 @@
+@model InventoryTracker.Pages.Reports.PurchaseOrdersModel
+@using InventoryTracker.Hosting
+@{
+    var report = Model.Report;
+}
+@if (report.Page.TotalCount == 0)
+{
+    <partial name="_EmptyState" model="@(new EmptyStateModel(
+        Model.IsFiltered ? "No purchase orders match" : "No purchase orders yet",
+        Model.IsFiltered ? "Try different filters or a wider date range." : "Orders you create will be summarised here."))" />
+}
+else
+{
+    <div class="report-bar">
+        <p>@report.Totals.Orders.ToString("N0") @(report.Totals.Orders == 1 ? "order" : "orders") · <strong>@Html.Money(report.Totals.TotalCents)</strong> ordered · @Html.Money(report.Totals.OutstandingCents) still to arrive</p>
+        <a role="button" class="outline" href="@Model.CsvUrl()" download>Download CSV</a>
+    </div>
+    <div class="table-wrap">
+        <table class="striped">
+            <thead>
+                <tr>
+                    <partial name="_SortHeader" model="@(new SortHeaderModel("number", "Number", Model.Query))" />
+                    <partial name="_SortHeader" model="@(new SortHeaderModel("supplier", "Supplier", Model.Query))" />
+                    <partial name="_SortHeader" model="@(new SortHeaderModel("status", "Status", Model.Query))" />
+                    <partial name="_SortHeader" model="@(new SortHeaderModel("date", "Ordered", Model.Query))" />
+                    <partial name="_SortHeader" model="@(new SortHeaderModel("expected", "Expected", Model.Query))" />
+                    <th scope="col" class="num">Lines</th>
+                    <partial name="_SortHeader" model="@(new SortHeaderModel("total", "Total", Model.Query, Numeric: true))" />
+                    <partial name="_SortHeader" model="@(new SortHeaderModel("outstanding", "Outstanding", Model.Query, Numeric: true))" />
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var order in report.Page.Items)
+                {
+                    var overdue = PurchaseOrderDisplay.IsOverdue(order.Status, order.ExpectedDate, Model.Today);
+                    <tr>
+                        <td><a asp-page="/PurchaseOrders/Detail" asp-route-id="@order.Id">@order.Number</a></td>
+                        <td><a asp-page="/Suppliers/Detail" asp-route-id="@order.SupplierId">@order.SupplierName</a></td>
+                        <td><partial name="_PoStatusBadge" model="order.Status" /></td>
+                        <td>@PurchaseOrderDisplay.Date(order.OrderDate)</td>
+                        <td>
+                            @PurchaseOrderDisplay.Date(order.ExpectedDate)
+                            @if (overdue)
+                            {
+                                <span class="badge badge-overdue po-overdue" title="Expected @PurchaseOrderDisplay.Date(order.ExpectedDate); not fully received yet">Overdue</span>
+                            }
+                        </td>
+                        <td class="num">@order.Lines</td>
+                        <td class="num">@Html.Money(order.TotalCents)</td>
+                        <td class="num">@(order.OutstandingCents > 0 ? Html.Money(order.OutstandingCents) : Html.Raw("—"))</td>
+                    </tr>
+                }
+            </tbody>
+            <tfoot class="report-total">
+                <tr>
+                    <th scope="row" colspan="6">Total, all @report.Totals.Orders.ToString("N0") @(report.Totals.Orders == 1 ? "order" : "orders")</th>
+                    <td class="num">@Html.Money(report.Totals.TotalCents)</td>
+                    <td class="num">@Html.Money(report.Totals.OutstandingCents)</td>
+                </tr>
+            </tfoot>
+        </table>
+    </div>
+    <partial name="_Pager" model="@PagerModel.From(report.Page)" />
+
+    @if (report.BySupplier.Count > 1)
+    {
+        <section class="report-split" aria-labelledby="by-supplier">
+            <h3 id="by-supplier">By supplier</h3>
+            <div class="table-wrap">
+                <table class="striped compact">
+                    <thead>
+                        <tr>
+                            <th scope="col">Supplier</th>
+                            <th scope="col" class="num">Orders</th>
+                            <th scope="col" class="num">Ordered</th>
+                            <th scope="col" class="num">Outstanding</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var supplier in report.BySupplier)
+                        {
+                            <tr>
+                                <td><a asp-page="/Suppliers/Detail" asp-route-id="@supplier.SupplierId">@supplier.SupplierName</a></td>
+                                <td class="num">@supplier.Orders.ToString("N0")</td>
+                                <td class="num">@Html.Money(supplier.TotalCents)</td>
+                                <td class="num">@Html.Money(supplier.OutstandingCents)</td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </section>
+    }
+}

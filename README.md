@@ -229,7 +229,7 @@ warnings are errors. The full rules - and how work is tracked through work items
 | F03 Stock tracking | Done |
 | F04 Suppliers | Done |
 | F05 Purchase orders & receiving | Done |
-| F06 Dashboard, alerts & reports | Planned |
+| F06 Dashboard, alerts & reports | Done |
 | F07 Data import/export & backup | Planned |
 | F08 Audit log | Planned |
 | F09 UI overhaul | Done |

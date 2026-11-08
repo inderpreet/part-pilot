@@ -38,7 +38,7 @@ public partial class LayoutAndComponentTests(AppFactory factory) : IClassFixture
         Assert.Contains("<h1 class=\"page-title\">Dashboard</h1>", html);
         Assert.Contains("<a class=\"skip-link\" href=\"#content\">", html);
         Assert.Contains("<main id=\"content\"", html);
-        Assert.Contains("Dashboard coming in F06", html);
+        Assert.Contains("id=\"dashboard\"", html);
     }
 
     [Fact]
@@ -71,18 +71,14 @@ public partial class LayoutAndComponentTests(AppFactory factory) : IClassFixture
         var html = await client.GetStringAsync("/");
 
         // Built sections are links; Admin is visible because the test user is an administrator.
-        foreach (var label in new[] { "Dashboard", "Parts", "Stock", "Suppliers", "Purchase Orders", "Admin" })
+        foreach (var label in new[] { "Dashboard", "Parts", "Stock", "Suppliers", "Purchase Orders", "BOMs", "Reports", "Admin" })
         {
             Assert.Contains($"<span>{label}</span></a>", html);
         }
 
-        // Sections whose pages do not exist yet are labelled, never linked (they would 404).
-        foreach (var label in new[] { "Reports" })
-        {
-            Assert.DoesNotContain($">{label}</a>", html);
-            Assert.DoesNotContain($"<span>{label}</span></a>", html);
-            Assert.Contains($"aria-disabled=\"true\" title=\"Coming soon\">{label}</span>", html);
-        }
+        // Every section is built now, so none is an inert "Soon" label (the mechanism stays for future sections).
+        Assert.DoesNotContain("title=\"Coming soon\"", html);
+        Assert.Matches("<a href=\"/Reports/LowStock\"[^>]*><svg[^>]*>.*?</svg><span>Low stock</span>", html);
 
         Assert.Matches("<a href=\"/\" aria-current=\"page\"><svg[^>]*>.*?</svg><span>Dashboard</span></a>", html);
         Assert.Contains("class=\"rail-label\">Inventory</p>", html);
