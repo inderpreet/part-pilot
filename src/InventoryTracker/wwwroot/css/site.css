@@ -168,6 +168,42 @@ tr.inline-edit .grid { margin-bottom: 0.5rem; }
 .detail-grid dd { margin: 0; overflow-wrap: anywhere; }
 .tabs-soon ul { margin-left: 0; }
 .tabs-soon span { color: var(--it-muted); cursor: not-allowed; padding: 0.25rem 0.75rem; }
+.tabs-soon a { padding: 0.25rem 0.75rem; margin: 0; }
+.tabs-soon a[aria-current] { font-weight: 600; border-bottom: 2px solid var(--pico-primary); border-radius: 0; text-decoration: none; }
+
+/* ---------- Stock (F03) ---------- */
+/* The "+ In / − Out / Adjust" links: small, link-styled so a long product list is not a wall of buttons. */
+.move-button { display: inline-block; padding: 0.1rem 0.5rem; margin-left: 0.25rem; border: 1px solid var(--pico-primary-border, var(--pico-primary)); border-radius: var(--pico-border-radius); text-decoration: none; font-size: 0.85em; white-space: nowrap; }
+.move-buttons { display: flex; gap: 0.25rem; align-items: center; }
+.move-buttons .move-button { margin-left: 0; padding: 0.4rem 0.8rem; font-size: 1em; }
+.row-actions > a { margin-left: 0.5rem; }
+.move-product { margin-bottom: var(--pico-spacing); }
+fieldset.segmented { display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; border: 0; padding: 0; margin-bottom: var(--pico-spacing); }
+fieldset.segmented legend { padding: 0; margin-bottom: 0.25rem; }
+fieldset.segmented label { margin: 0; }
+.inline-form { margin: 0; }
+.inline-form > button { width: auto; margin: 0; padding: 0.15rem 0.6rem; font-size: 0.85em; }
+.delta-up { color: var(--it-ok); font-weight: 600; }
+.delta-down { color: var(--it-danger); font-weight: 600; }
+.row-reversed td { color: var(--it-muted); }
+.row-reversed td .delta-up, .row-reversed td .delta-down { color: inherit; text-decoration: line-through; }
+.movements td small { margin-left: 0.4rem; }
+.movement-filters label.inline-date { display: flex; align-items: center; gap: 0.4rem; margin: 0; white-space: nowrap; }
+.movement-filters input[type="date"] { width: auto; margin: 0; }
+.count-filters input[type="search"] { flex: 1 1 10rem; max-width: 16rem; }
+.count-filters label.inline-check { display: flex; align-items: center; gap: 0.4rem; margin: 0; white-space: nowrap; }
+.count-filters button[type="submit"] { width: auto; margin: 0; }
+input.count-input { width: 7rem; margin: 0; text-align: right; }
+.bulk-line { display: grid; grid-template-columns: minmax(12rem, 3fr) minmax(6rem, 1fr) auto; gap: 0 var(--pico-spacing); align-items: end; }
+.bulk-line > button.remove-line { width: auto; margin-bottom: var(--pico-spacing); }
+button.add-line { width: auto; margin-bottom: var(--pico-spacing); }
+.section-title { font-size: 1.1rem; margin: var(--pico-spacing) 0 0.5rem; }
+.verify-result { margin: var(--pico-spacing) 0; border-left: 4px solid var(--it-ok); }
+.verify-result.verify-bad { border-left-color: var(--it-danger); }
+.history-link { margin-bottom: 0.5rem; }
+@media (max-width: 576px) {
+  .bulk-line { grid-template-columns: 1fr; }
+}
 
 .product-picker { position: relative; }
 .picker-results { position: absolute; left: 0; right: 0; z-index: 20; }

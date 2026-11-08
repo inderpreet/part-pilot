@@ -8,9 +8,12 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 namespace InventoryTracker.Pages.Products;
 
 [Authorize(Policy = Policies.CanView)]
-public class DetailModel(IProductService products, ICurrentUser currentUser) : PageModel
+public class DetailModel(IProductService products, IStockService stock, ICurrentUser currentUser) : PageModel
 {
     public ProductDetail Product { get; private set; } = null!;
+
+    /// <summary>The History tab: this product's ledger, newest posting first.</summary>
+    public PagedResult<StockMovementItem> History { get; private set; } = new([], 1, ListQuery.DefaultPageSize, 0);
 
     /// <summary>Only used to hide edit actions; the handler and the edit page enforce <c>CanEdit</c> themselves.</summary>
     public bool CanEdit => currentUser.CanEdit;
@@ -18,7 +21,7 @@ public class DetailModel(IProductService products, ICurrentUser currentUser) : P
     /// <summary>Stock value at cost: on hand x unit cost.</summary>
     public long StockValueCents => Product.QuantityOnHand * Product.UnitCostCents;
 
-    public async Task<IActionResult> OnGetAsync(int id)
+    public async Task<IActionResult> OnGetAsync(int id, [FromQuery] ListQuery query)
     {
         var product = await products.GetAsync(id, HttpContext.RequestAborted);
         if (product is null)
@@ -27,7 +30,22 @@ public class DetailModel(IProductService products, ICurrentUser currentUser) : P
         }
 
         Product = product;
+        History = await stock.GetHistoryAsync(id, query, HttpContext.RequestAborted);
         return Page();
+    }
+
+    /// <summary>Just the history table, for paging it in place (htmx).</summary>
+    public async Task<IActionResult> OnGetHistoryAsync(int id, [FromQuery] ListQuery query)
+    {
+        var product = await products.GetAsync(id, HttpContext.RequestAborted);
+        if (product is null)
+        {
+            return NotFound();
+        }
+
+        Product = product;
+        History = await stock.GetHistoryAsync(id, query, HttpContext.RequestAborted);
+        return Partial("_StockHistory", this);
     }
 
     /// <summary>

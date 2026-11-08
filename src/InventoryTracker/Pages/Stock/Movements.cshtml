@@ -1,0 +1,68 @@
+@page
+@model InventoryTracker.Pages.Stock.MovementsModel
+@using InventoryTracker.Data.Entities
+@{
+    ViewData["Title"] = "Stock movements";
+}
+
+@* A plain GET form, so it works without JavaScript; the controls also refresh #results live through htmx. *@
+<form method="get" action="/Stock/Movements" class="toolbar movement-filters" role="search">
+    <input type="search" name="search" value="@Model.Query.Search" placeholder="Search SKU, product, reason or reference…" aria-label="Search movements"
+           autocomplete="off" enterkeyhint="search"
+           hx-get="/Stock/Movements" hx-trigger="input changed delay:300ms" hx-target="#results" hx-push-url="true" hx-include="closest form" />
+
+    <select name="type" aria-label="Type" hx-get="/Stock/Movements" hx-trigger="change" hx-target="#results" hx-push-url="true" hx-include="closest form">
+        <option value="">All types</option>
+        @foreach (var type in Enum.GetValues<StockTransactionType>())
+        {
+            <option value="@type" selected="@(Model.Query.Type == type)">@type</option>
+        }
+    </select>
+
+    <select name="userId" aria-label="User" hx-get="/Stock/Movements" hx-trigger="change" hx-target="#results" hx-push-url="true" hx-include="closest form">
+        <option value="">Everyone</option>
+        @foreach (var user in Model.Users)
+        {
+            <option value="@user.Id" selected="@(Model.Query.UserId == user.Id)">@user.Name</option>
+        }
+    </select>
+
+    <label class="inline-date">From
+        <input type="date" name="from" value="@Model.Query.From?.ToString("yyyy-MM-dd")" aria-label="From date"
+               hx-get="/Stock/Movements" hx-trigger="change" hx-target="#results" hx-push-url="true" hx-include="closest form" />
+    </label>
+    <label class="inline-date">To
+        <input type="date" name="to" value="@Model.Query.To?.ToString("yyyy-MM-dd")" aria-label="To date"
+               hx-get="/Stock/Movements" hx-trigger="change" hx-target="#results" hx-push-url="true" hx-include="closest form" />
+    </label>
+
+    <input type="hidden" name="productId" value="@Model.Query.ProductId" />
+    <input type="hidden" name="tz" value="@Model.Query.Tz" data-tz-offset />
+    <button type="submit" class="visually-hidden" tabindex="-1">Apply filters</button>
+
+    @if (Model.CanEdit)
+    {
+        <a role="button" asp-page="Bulk">Bulk movement</a>
+        <a role="button" class="outline" asp-page="Count">Stock count</a>
+    }
+</form>
+
+@if (Model.Query.ProductId is not null)
+{
+    <p class="muted">
+        Showing movements for
+        @if (Model.Product is { } product)
+        {
+            <a asp-page="/Products/Detail" asp-route-id="@product.Id">@product.Sku — @product.Name</a>
+        }
+        else
+        {
+            <span>product #@Model.Query.ProductId</span>
+        }
+        · <a asp-page="Movements">show all products</a>
+    </p>
+}
+
+<div id="results">
+    <partial name="_MovementResults" model="Model" />
+</div>

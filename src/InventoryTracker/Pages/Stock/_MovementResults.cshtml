@@ -1,0 +1,8 @@
+@model InventoryTracker.Pages.Stock.MovementsModel
+<partial name="_MovementTable" model="@(new MovementTableModel(
+    Model.Movements,
+    ShowProduct: true,
+    CanEdit: Model.CanEdit,
+    ReturnUrl: Model.CurrentUrl,
+    EmptyTitle: Model.IsFiltered ? "No movements match" : "No stock movements yet",
+    EmptyMessage: Model.IsFiltered ? "Try different filters or a wider date range." : "Receive, issue or count some stock and it will show up here."))" />

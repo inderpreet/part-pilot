@@ -56,7 +56,13 @@ else
                         <td class="num">@Html.Money(product.UnitCostCents)</td>
                         @if (Model.CanEdit)
                         {
-                            <td><a asp-page="/Products/Edit" asp-route-id="@product.Id">Edit</a></td>
+                            <td class="row-actions">
+                                @if (product.IsActive)
+                                {
+                                    <partial name="_MoveButtons" model="@(new MoveButtonsModel(product.Id, product.Sku))" />
+                                }
+                                <a asp-page="/Products/Edit" asp-route-id="@product.Id">Edit</a>
+                            </td>
                         }
                     </tr>
                 }

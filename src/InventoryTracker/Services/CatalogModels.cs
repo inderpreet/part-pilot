@@ -8,10 +8,15 @@ public enum ProductStatus
     All,
 }
 
-/// <summary>Product list query. Sort keys: <c>sku</c>, <c>name</c> (default), <c>onhand</c>, <c>category</c>.</summary>
+/// <summary>Product list query. Sort keys: <c>sku</c>, <c>name</c> (default), <c>onhand</c>, <c>category</c>, <c>bin</c>.</summary>
 public class ProductListQuery : ListQuery
 {
     public int? CategoryId { get; set; }
+
+    /// <summary>Keeps products whose bin location contains this text (used by the stock count sheet).</summary>
+    public string? Bin { get; set; }
+
+    public string? BinTerm => string.IsNullOrWhiteSpace(Bin) ? null : Bin.Trim();
 
     public ProductStatus Status { get; set; } = ProductStatus.Active;
 }

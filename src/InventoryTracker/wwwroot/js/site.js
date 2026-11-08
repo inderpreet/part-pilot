@@ -123,6 +123,15 @@
     });
   }
 
+  // ---------- Browser time zone ----------
+  // <input type="hidden" data-tz-offset> receives new Date().getTimezoneOffset() (minutes to add to local time to get UTC),
+  // so a date/time typed into a datetime-local or date input is converted to UTC with the *browser's* zone, not the server's.
+  function fillTimeZoneOffset(root) {
+    (root || document).querySelectorAll('input[data-tz-offset]').forEach(input => {
+      input.value = String(new Date().getTimezoneOffset());
+    });
+  }
+
   // ---------- Product picker (_ProductPicker) ----------
   // Markup: [data-product-picker] > input[data-picker-input] + input[data-picker-value] + [data-picker-results].
   // Picking a row stores its id in the hidden input and its label in the text input. Typing again clears the stored
@@ -147,6 +156,9 @@
     input.setAttribute('aria-expanded', 'false');
     results.innerHTML = '';
     value.dispatchEvent(new Event('change', { bubbles: true }));
+    // Scanner flow: after a product is chosen the cursor goes to the quantity box next to it.
+    const scope = picker.closest('[data-line-row]') ?? picker.closest('form') ?? document;
+    scope.querySelector('[data-focus-after-pick]')?.focus();
   }
 
   document.addEventListener('click', event => {
@@ -232,7 +244,11 @@
     watchFlashArea();
     bindModalClose();
     upgradeTimes(document);
-    if (window.htmx) window.htmx.onLoad(upgradeTimes); // also covers swapped-in content
+    fillTimeZoneOffset(document);
+    if (window.htmx) {
+      window.htmx.onLoad(upgradeTimes); // also covers swapped-in content
+      window.htmx.onLoad(fillTimeZoneOffset);
+    }
   }
 
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init);

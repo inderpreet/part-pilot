@@ -1,0 +1,24 @@
+@model InventoryTracker.Pages.Stock.BulkModel
+@* The whole block is replaced by the add/remove-line handlers; the inputs belong to the surrounding form. *@
+<div id="bulk-lines">
+    @for (var i = 0; i < Model.Input.Lines.Count; i++)
+    {
+        var line = Model.Input.Lines[i];
+        var index = i;
+        <div class="bulk-line" data-line-row>
+            <partial name="_ProductPicker" model="@(new ProductPickerModel($"Input.Lines[{index}].ProductId", line.ProductId, Model.LabelFor(line.ProductId), ActiveOnly: true, Label: $"Product {index + 1}", Required: false))" />
+            <label>
+                Quantity
+                <input type="number" name="Input.Lines[@index].Quantity" value="@line.Quantity" step="1" inputmode="numeric" data-focus-after-pick
+                       aria-invalid="@Html.AriaInvalid($"Input.Lines[{index}].Quantity")" />
+            </label>
+            <button type="button" class="secondary outline remove-line" aria-label="Remove line @(index + 1)"
+                    hx-post="@Url.Page("/Stock/Bulk", "RemoveLine", new { at = index })" hx-include="closest form" hx-target="#bulk-lines" hx-swap="outerHTML">Remove</button>
+        </div>
+    }
+    @if (Model.Input.Lines.Count < BulkModel.MaxLines)
+    {
+        <button type="button" class="outline add-line"
+                hx-post="@Url.Page("/Stock/Bulk", "AddLine")" hx-include="closest form" hx-target="#bulk-lines" hx-swap="outerHTML">+ Add line</button>
+    }
+</div>

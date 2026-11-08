@@ -2,7 +2,10 @@ using System.Security.Claims;
 using System.Text.Encodings.Web;
 using InventoryTracker.Auth;
 using InventoryTracker.Data;
+using InventoryTracker.Data.Entities;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 
@@ -34,18 +37,23 @@ public static class TestAuth
 public sealed class TestAuthHandler(IOptionsMonitor<AuthenticationSchemeOptions> options, ILoggerFactory logger, UrlEncoder encoder)
     : AuthenticationHandler<AuthenticationSchemeOptions>(options, logger, encoder)
 {
-    protected override Task<AuthenticateResult> HandleAuthenticateAsync()
+    protected override async Task<AuthenticateResult> HandleAuthenticateAsync()
     {
         var role = Request.Headers[TestAuth.RoleHeader].ToString();
         if (string.IsNullOrEmpty(role))
         {
-            return Task.FromResult(AuthenticateResult.NoResult());
+            return AuthenticateResult.NoResult();
         }
 
         var name = "test-" + role.ToLowerInvariant();
+
+        // Rows that reference the acting user (stock movements, ...) have a foreign key to the users table, so when the
+        // seeded user for this role exists the principal carries its real id; otherwise a made-up one is fine.
+        var users = Context.RequestServices.GetRequiredService<UserManager<ApplicationUser>>();
+        var seeded = await users.FindByNameAsync(role.ToLowerInvariant());
         var claims = new List<Claim>
         {
-            new(ClaimTypes.NameIdentifier, name),
+            new(ClaimTypes.NameIdentifier, seeded?.Id ?? name),
             new(ClaimTypes.Name, name),
             new(AppClaimTypes.DisplayName, "Test " + role),
         };
@@ -67,6 +75,6 @@ public sealed class TestAuthHandler(IOptionsMonitor<AuthenticationSchemeOptions>
         }
 
         var principal = new ClaimsPrincipal(new ClaimsIdentity(claims, TestAuth.Scheme));
-        return Task.FromResult(AuthenticateResult.Success(new AuthenticationTicket(principal, TestAuth.Scheme)));
+        return AuthenticateResult.Success(new AuthenticationTicket(principal, TestAuth.Scheme));
     }
 }

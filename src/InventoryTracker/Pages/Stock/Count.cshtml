@@ -1,0 +1,168 @@
+@page
+@model InventoryTracker.Pages.Stock.CountModel
+@using System.Globalization
+@{
+    ViewData["Title"] = "Stock count";
+    string Signed(int value) => value.ToString("+#;-#;0", CultureInfo.InvariantCulture);
+}
+
+@if (Model.Preview is { } preview)
+{
+    var differences = Model.Differences.ToList();
+    var matched = preview.Count - differences.Count;
+
+    <p>
+        <strong>@preview.Count</strong> @(preview.Count == 1 ? "product" : "products") counted:
+        <strong>@differences.Count</strong> @(differences.Count == 1 ? "differs" : "differ") from the system, @matched already @(matched == 1 ? "matches" : "match").
+    </p>
+
+    <form method="post" novalidate>
+        <partial name="_ValidationSummary" model="Model.ModelState" />
+        <input type="hidden" name="categoryId" value="@Model.CategoryId" />
+        <input type="hidden" name="bin" value="@Model.Bin" />
+        <input type="hidden" name="search" value="@Model.Search" />
+        <input type="hidden" name="blind" value="@(Model.Blind ? "true" : "false")" />
+        @foreach (var line in preview)
+        {
+            <input type="hidden" name="Counted[@line.ProductId]" value="@line.Counted" />
+        }
+
+        @if (differences.Count == 0)
+        {
+            <partial name="_EmptyState" model="@(new EmptyStateModel("Everything matches", "Every counted quantity equals what the system has, so there is nothing to post."))" />
+        }
+        else
+        {
+            <div class="table-wrap">
+                <table class="striped compact">
+                    <thead>
+                        <tr>
+                            <th scope="col">SKU</th>
+                            <th scope="col">Name</th>
+                            <th scope="col" class="num">System</th>
+                            <th scope="col" class="num">Counted</th>
+                            <th scope="col" class="num">Difference</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var line in differences)
+                        {
+                            <tr>
+                                <td><a asp-page="/Products/Detail" asp-route-id="@line.ProductId">@line.Sku</a></td>
+                                <td>@line.Name</td>
+                                <td class="num">@line.OnHand <small class="muted">@line.Unit</small></td>
+                                <td class="num">@line.Counted</td>
+                                <td class="num"><strong class="@(line.Difference > 0 ? "delta-up" : "delta-down")">@Signed(line.Difference)</strong></td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <label>
+                Note <small>(optional, saved on every adjustment)</small>
+                <input name="note" value="@Model.Note" maxlength="500" autocomplete="off" />
+            </label>
+        }
+
+        <div class="form-actions">
+            @if (differences.Count > 0)
+            {
+                <button type="submit" asp-page-handler="Post">Post @differences.Count @(differences.Count == 1 ? "adjustment" : "adjustments")</button>
+            }
+            <button type="submit" class="secondary" asp-page-handler="Edit">Back to the count sheet</button>
+        </div>
+    </form>
+}
+else
+{
+    <form method="get" action="/Stock/Count" class="toolbar count-filters" role="search">
+        <input type="search" name="search" value="@Model.Search" placeholder="Search SKU, name or barcode…" aria-label="Search products" autocomplete="off" />
+        <select name="categoryId" aria-label="Category">
+            <option value="">All categories</option>
+            @foreach (var category in Model.Categories)
+            {
+                <option value="@category.Id" selected="@(Model.CategoryId == category.Id)">@category.Name</option>
+            }
+        </select>
+        <input type="search" name="bin" value="@Model.Bin" placeholder="Bin location…" aria-label="Bin location" autocomplete="off" />
+        <label class="inline-check">
+            <input type="checkbox" name="blind" value="true" checked="@Model.Blind" /> Blind count
+        </label>
+        <button type="submit">Show products</button>
+    </form>
+
+    @if (Model.Sheet.TotalCount == 0)
+    {
+        <partial name="_EmptyState" model="@(new EmptyStateModel(
+            Model.HasFilter ? "No products match" : "No products yet",
+            Model.HasFilter ? "Try a different category, bin or search." : "Add products before counting them."))" />
+    }
+    else
+    {
+        <p class="muted">
+            @if (Model.Sheet.TotalCount > CountModel.MaxRows)
+            {
+                <span>Showing the first @CountModel.MaxRows of @Model.Sheet.TotalCount products. Narrow the filter to count the rest.</span>
+            }
+            else
+            {
+                <span>@Model.Sheet.TotalCount @(Model.Sheet.TotalCount == 1 ? "product" : "products").</span>
+            }
+            Type what you counted; leave a box empty for products you did not count (empty is not the same as zero).
+            @if (Model.Blind)
+            {
+                <span>Blind count: system quantities are hidden until you preview.</span>
+            }
+        </p>
+
+        <form method="post" novalidate>
+            <partial name="_ValidationSummary" model="Model.ModelState" />
+            <input type="hidden" name="categoryId" value="@Model.CategoryId" />
+            <input type="hidden" name="bin" value="@Model.Bin" />
+            <input type="hidden" name="search" value="@Model.Search" />
+            <input type="hidden" name="blind" value="@(Model.Blind ? "true" : "false")" />
+            <input type="hidden" name="note" value="@Model.Note" />
+
+            <div class="table-wrap">
+                <table class="striped compact count-sheet">
+                    <thead>
+                        <tr>
+                            <th scope="col">SKU</th>
+                            <th scope="col">Name</th>
+                            <th scope="col">Bin</th>
+                            @if (!Model.Blind)
+                            {
+                                <th scope="col" class="num">System</th>
+                            }
+                            <th scope="col" class="num">Counted</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var p in Model.Sheet.Items)
+                        {
+                            <tr>
+                                <td><a asp-page="/Products/Detail" asp-route-id="@p.Id">@p.Sku</a></td>
+                                <td>@p.Name</td>
+                                <td>@(p.BinLocation ?? "—")</td>
+                                @if (!Model.Blind)
+                                {
+                                    <td class="num">@p.QuantityOnHand <small class="muted">@p.Unit</small></td>
+                                }
+                                <td class="num">
+                                    <input type="number" min="0" step="1" inputmode="numeric" class="count-input"
+                                           name="Counted[@p.Id]" value="@Model.Counted.GetValueOrDefault(p.Id)" aria-label="Counted quantity for @p.Sku" />
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" asp-page-handler="Preview">Preview differences</button>
+                <a role="button" class="secondary" asp-page="Movements">Cancel</a>
+            </div>
+        </form>
+    }
+}

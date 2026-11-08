@@ -45,6 +45,12 @@ public sealed class ProductService(AppDbContext db) : IProductService
             products = products.Where(p => p.CategoryId == categoryId);
         }
 
+        if (query.BinTerm is { } bin)
+        {
+            var binPattern = LikePattern.Contains(bin);
+            products = products.Where(p => p.BinLocation != null && EF.Functions.Like(p.BinLocation, binPattern, LikePattern.Escape));
+        }
+
         if (query.SearchTerm is { } term)
         {
             var pattern = LikePattern.Contains(term);
@@ -63,6 +69,8 @@ public sealed class ProductService(AppDbContext db) : IProductService
             ("onhand", true) => products.OrderByDescending(p => p.QuantityOnHand).ThenBy(p => p.Name),
             ("category", false) => products.OrderBy(p => p.Category!.Name).ThenBy(p => p.Name),
             ("category", true) => products.OrderByDescending(p => p.Category!.Name).ThenBy(p => p.Name),
+            ("bin", false) => products.OrderBy(p => p.BinLocation == null).ThenBy(p => p.BinLocation).ThenBy(p => p.Name),
+            ("bin", true) => products.OrderByDescending(p => p.BinLocation).ThenBy(p => p.Name),
             (_, true) => products.OrderByDescending(p => p.Name),
             _ => products.OrderBy(p => p.Name),
         };

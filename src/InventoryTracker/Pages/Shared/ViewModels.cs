@@ -2,14 +2,31 @@ using InventoryTracker.Services;
 
 namespace InventoryTracker.Pages.Shared;
 
-/// <summary>Model for the <c>_Pager</c> partial. Links keep the current query string and replace only <c>page</c>.</summary>
-public sealed record PagerModel(int Page, int PageSize, int TotalCount, string Target = "#results")
+/// <summary>
+/// Model for the <c>_Pager</c> partial. Links keep the current query string and replace only <c>page</c>.
+/// For a list that is a fragment of a bigger page (<paramref name="Handler"/> = the page handler that renders just the
+/// fragment, e.g. a tab) the <c>href</c> stays the full-page URL (works without JavaScript) while htmx fetches the
+/// fragment and does not touch the address bar.
+/// </summary>
+public sealed record PagerModel(int Page, int PageSize, int TotalCount, string Target = "#results", string? Handler = null)
 {
     public int TotalPages => PageSize <= 0 ? 0 : (int)Math.Ceiling(TotalCount / (double)PageSize);
 
-    public static PagerModel From<T>(PagedResult<T> result, string target = "#results")
-        => new(result.Page, result.PageSize, result.TotalCount, target);
+    public static PagerModel From<T>(PagedResult<T> result, string target = "#results", string? handler = null)
+        => new(result.Page, result.PageSize, result.TotalCount, target, handler);
 }
+
+/// <summary>Model for the <c>_MovementTable</c> partial (a product's history tab and the global movements list).</summary>
+/// <param name="ReturnUrl">Where a Reverse button sends a no-JavaScript browser back to (a local URL).</param>
+public sealed record MovementTableModel(
+    PagedResult<StockMovementItem> Page,
+    bool ShowProduct,
+    bool CanEdit,
+    string ReturnUrl,
+    string PagerTarget = "#results",
+    string? PagerHandler = null,
+    string? EmptyTitle = null,
+    string? EmptyMessage = null);
 
 /// <summary>Model for the <c>_SortHeader</c> partial: a <c>&lt;th&gt;</c> that toggles sorting by <paramref name="Column"/>.</summary>
 public sealed record SortHeaderModel(string Column, string Label, ListQuery Query, string Target = "#results");
@@ -52,3 +69,6 @@ public sealed record ConfirmButtonModel(
     string? Target = null,
     string? Swap = null,
     string CssClass = "secondary");
+
+/// <summary>Model for the <c>_MoveButtons</c> partial: the "+ In / − Out / Adjust" buttons that open the quick stock-movement dialog.</summary>
+public sealed record MoveButtonsModel(int ProductId, string Sku);

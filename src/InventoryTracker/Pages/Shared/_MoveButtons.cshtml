@@ -1,0 +1,12 @@
+@model MoveButtonsModel
+@* Each is a real link to the full /Stock/Move page (no JavaScript needed); htmx upgrades it to open the dialog. *@
+@foreach (var (label, type, title) in new[]
+{
+    ("+ In", "Receive", "Receive stock"),
+    ("− Out", "Issue", "Issue stock"),
+    ("Adjust", "Adjust", "Adjust stock"),
+})
+{
+    var url = Url.Page("/Stock/Move", new { productId = Model.ProductId, type });
+    <a href="@url" hx-get="@url" hx-target="#modal" class="move-button" title="@title @Model.Sku" aria-label="@title @Model.Sku">@label</a>
+}

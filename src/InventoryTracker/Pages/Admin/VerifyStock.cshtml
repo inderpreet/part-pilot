@@ -1,0 +1,67 @@
+@page "/Admin/VerifyStock"
+@model InventoryTracker.Pages.Admin.VerifyStockModel
+@using System.Globalization
+@{
+    ViewData["Title"] = "Verify stock";
+}
+
+<p>
+    Every product keeps a running on-hand quantity, and every change is also written to the stock ledger.
+    This check adds the ledger up again and compares it with each product's quantity. They should always agree;
+    if they do not, the ledger is the truth and the fix rewrites the quantity from it.
+</p>
+
+<form method="post" asp-page-handler="Check" class="form-actions">
+    <button type="submit">Run check</button>
+    <a role="button" class="secondary" asp-page="/Admin/Index">Back to Administration</a>
+</form>
+
+@if (Model.Report is { } report)
+{
+    @if (report.IsConsistent)
+    {
+        <article class="verify-result verify-ok" role="status">
+            <strong>All good.</strong>
+            All @report.ProductsChecked @(report.ProductsChecked == 1 ? "product matches" : "products match") its ledger.
+        </article>
+    }
+    else
+    {
+        <article class="verify-result verify-bad" role="alert">
+            <strong>Mismatch found:</strong>
+            @report.Mismatches.Count of @report.ProductsChecked @(report.Mismatches.Count == 1 ? "product has" : "products have") a quantity that does not match the ledger.
+        </article>
+
+        <div class="table-wrap">
+            <table class="striped compact">
+                <thead>
+                    <tr>
+                        <th scope="col">SKU</th>
+                        <th scope="col">Name</th>
+                        <th scope="col" class="num">On hand</th>
+                        <th scope="col" class="num">Ledger total</th>
+                        <th scope="col" class="num">Difference</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var m in report.Mismatches)
+                    {
+                        <tr>
+                            <td><a asp-page="/Products/Detail" asp-route-id="@m.ProductId">@m.Sku</a></td>
+                            <td>@m.Name</td>
+                            <td class="num">@m.Cached</td>
+                            <td class="num">@m.Ledger</td>
+                            <td class="num">@((m.Cached - m.Ledger).ToString("+#;-#;0", CultureInfo.InvariantCulture))</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+
+        <form method="post" asp-page-handler="Fix">
+            <button type="submit" class="secondary"
+                    hx-post="@Url.Page("/Admin/VerifyStock", "Fix")"
+                    hx-confirm="Set the on-hand quantity of @report.Mismatches.Count @(report.Mismatches.Count == 1 ? "product" : "products") to the ledger total?">Fix: set on hand to the ledger total</button>
+        </form>
+    }
+}

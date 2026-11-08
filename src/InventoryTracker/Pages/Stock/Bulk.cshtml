@@ -1,0 +1,64 @@
+@page
+@model InventoryTracker.Pages.Stock.BulkModel
+@using InventoryTracker.Data.Entities
+@using InventoryTracker.Pages.Stock
+@{
+    ViewData["Title"] = "Bulk stock movement";
+    var input = Model.Input;
+
+    string TypeLabel(StockTransactionType type) => type switch
+    {
+        StockTransactionType.Receive => "In (receive)",
+        StockTransactionType.Issue => "Out (issue)",
+        StockTransactionType.Adjust => "Adjust (±, signed quantity)",
+        _ => "Return to stock",
+    };
+}
+
+<p class="muted">Record several products at once. Every line is posted together: if one line is wrong, nothing is saved.</p>
+
+<form method="post" novalidate class="bulk-form">
+    <partial name="_ValidationSummary" model="Model.ModelState" />
+
+    <div class="grid">
+        <label>
+            Type
+            <select name="Input.Type" aria-invalid="@Html.AriaInvalid("Input.Type")">
+                @foreach (var type in MoveModel.Types)
+                {
+                    <option value="@type" selected="@(input.Type == type)">@TypeLabel(type)</option>
+                }
+            </select>
+        </label>
+        <label>
+            Reason <small>(required for adjustments)</small>
+            <input name="Input.Reason" value="@input.Reason" maxlength="@StockTransaction.ReasonMaxLength" autocomplete="off"
+                   aria-invalid="@Html.AriaInvalid("Input.Reason")" />
+        </label>
+        <label>
+            Reference <small>(optional)</small>
+            <input name="Input.Reference" value="@input.Reference" maxlength="@StockTransaction.ReferenceMaxLength" autocomplete="off"
+                   placeholder="Delivery note, job or order no." aria-invalid="@Html.AriaInvalid("Input.Reference")" />
+        </label>
+        <label>
+            Date and time <small>(blank = now)</small>
+            <input type="datetime-local" name="Input.OccurredAt" value="@input.OccurredAt?.ToString("yyyy-MM-dd'T'HH:mm")"
+                   aria-invalid="@Html.AriaInvalid("Input.OccurredAt")" />
+        </label>
+    </div>
+    <input type="hidden" name="Input.Tz" value="@input.Tz" data-tz-offset />
+
+    <label>
+        Note <small>(optional, applies to every line)</small>
+        <input name="Input.Note" value="@input.Note" maxlength="@StockTransaction.NoteMaxLength" autocomplete="off"
+               aria-invalid="@Html.AriaInvalid("Input.Note")" />
+    </label>
+
+    <h2 class="section-title">Lines</h2>
+    <partial name="_BulkLines" model="Model" />
+
+    <div class="form-actions">
+        <button type="submit">Record all lines</button>
+        <a role="button" class="secondary" asp-page="Movements">Cancel</a>
+    </div>
+</form>

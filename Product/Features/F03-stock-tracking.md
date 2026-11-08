@@ -1,6 +1,6 @@
 # F03 — Stock tracking
 
-- **Status:** Planned
+- **Status:** Done
 - **Depends on:** F02
 - **Roles:** Admin/Staff record movements; Viewer reads history
 
@@ -65,9 +65,9 @@ adjustments (damage, loss, found) and physical counts. On-hand is cached on the 
 |---|---|---|
 | [WI-03-1](../work-items/F03-stock-tracking/WI-03-1-db-schema.md) | StockTransaction ledger | Done |
 | [WI-03-2](../work-items/F03-stock-tracking/WI-03-2-api.md) | StockService | Done |
-| [WI-03-3](../work-items/F03-stock-tracking/WI-03-3-frontend.md) | Movements, history, stock count | Planned |
+| [WI-03-3](../work-items/F03-stock-tracking/WI-03-3-frontend.md) | Movements, history, stock count | Done |
 
 ## Open questions
 
-- Fixed reason list for Adjust/Issue (e.g. Damaged, Lost, Used in job) or free text?
+- [x] Fixed reason list for Adjust/Issue or free text? Decided: free text with a suggestion list (WI-03-3).
 - Should PO receipts update Product.UnitCost (last cost) automatically?

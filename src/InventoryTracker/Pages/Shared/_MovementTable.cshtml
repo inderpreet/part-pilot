@@ -1,0 +1,99 @@
+@using System.Globalization
+@using InventoryTracker.Data.Entities
+@model MovementTableModel
+@{
+    string TypeBadge(StockTransactionType type) => type switch
+    {
+        StockTransactionType.Receive or StockTransactionType.Return => "badge-ok",
+        StockTransactionType.Issue => "badge-out",
+        StockTransactionType.Adjust => "badge-low",
+        StockTransactionType.Count => "badge-submitted",
+        _ => "badge-draft",
+    };
+}
+@if (Model.Page.TotalCount == 0)
+{
+    <partial name="_EmptyState" model="@(new EmptyStateModel(Model.EmptyTitle ?? "No movements", Model.EmptyMessage ?? "Nothing has been recorded yet."))" />
+}
+else
+{
+    <div class="table-wrap">
+        <table class="striped compact movements">
+            <thead>
+                <tr>
+                    <th scope="col">When</th>
+                    @if (Model.ShowProduct)
+                    {
+                        <th scope="col">Product</th>
+                    }
+                    <th scope="col">Type</th>
+                    <th scope="col" class="num">Change</th>
+                    <th scope="col" class="num">On hand after</th>
+                    <th scope="col">Details</th>
+                    <th scope="col">By</th>
+                    @if (Model.CanEdit)
+                    {
+                        <th scope="col"><span class="visually-hidden">Actions</span></th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var m in Model.Page.Items)
+                {
+                    <tr id="tx-@m.Id" class="@(m.IsReversed ? "row-reversed" : null)">
+                        <td>@Html.LocalTime(m.OccurredAt)</td>
+                        @if (Model.ShowProduct)
+                        {
+                            <td><a asp-page="/Products/Detail" asp-route-id="@m.ProductId">@m.Sku</a> <small class="muted">@m.ProductName</small></td>
+                        }
+                        <td><span class="badge @TypeBadge(m.Type)">@m.Type</span></td>
+                        <td class="num"><span class="@(m.QuantityDelta > 0 ? "delta-up" : "delta-down")">@m.QuantityDelta.ToString("+#;-#;0", CultureInfo.InvariantCulture)</span></td>
+                        <td class="num">@m.QuantityAfter</td>
+                        <td>
+                            @if (!string.IsNullOrEmpty(m.Reason))
+                            {
+                                <span>@m.Reason</span>
+                            }
+                            @if (!string.IsNullOrEmpty(m.Reference))
+                            {
+                                <small class="muted">ref @m.Reference</small>
+                            }
+                            @if (m.PurchaseOrderLineId is { } line)
+                            {
+                                <small class="muted">PO line #@line</small>
+                            }
+                            @if (m.ReversesTransactionId is { } original)
+                            {
+                                <small><a href="#tx-@original">reverses #@original</a></small>
+                            }
+                            @if (m.ReversedByTransactionId is { } reversal)
+                            {
+                                <span class="badge badge-draft" title="Cancelled by reversal #@reversal">Reversed</span>
+                            }
+                            @if (!string.IsNullOrEmpty(m.Note))
+                            {
+                                <br /><small class="muted">@m.Note</small>
+                            }
+                        </td>
+                        <td>@m.UserName</td>
+                        @if (Model.CanEdit)
+                        {
+                            <td class="row-actions">
+                                @if (m.CanReverse)
+                                {
+                                    <form method="post" asp-page="/Stock/Reverse" asp-route-id="@m.Id" class="inline-form">
+                                        <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
+                                        <button type="submit" class="secondary outline"
+                                                hx-post="@Url.Page("/Stock/Reverse", new { id = m.Id })" hx-include="closest form" hx-swap="none"
+                                                hx-confirm="Reverse #@m.Id (@m.Type @m.QuantityDelta.ToString("+#;-#;0", CultureInfo.InvariantCulture) of @m.Sku)? A new opposite entry is added; the original stays in the history.">Reverse</button>
+                                    </form>
+                                }
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <partial name="_Pager" model="@PagerModel.From(Model.Page, Model.PagerTarget, Model.PagerHandler)" />
+}

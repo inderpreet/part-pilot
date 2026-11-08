@@ -1,0 +1,10 @@
+@model InventoryTracker.Pages.Products.DetailModel
+<partial name="_MovementTable" model="@(new MovementTableModel(
+    Model.History,
+    ShowProduct: false,
+    CanEdit: Model.CanEdit,
+    ReturnUrl: Url.Page("/Products/Detail", new { id = Model.Product.Id })!,
+    PagerTarget: "#history",
+    PagerHandler: "History",
+    EmptyTitle: "No stock history yet",
+    EmptyMessage: Model.CanEdit && Model.Product.IsActive ? "Use + In, − Out or Adjust above to record the first movement." : "Nothing has been recorded for this product."))" />

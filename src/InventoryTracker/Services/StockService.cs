@@ -31,6 +31,9 @@ public interface IStockService
     /// <summary>The global ledger with filters, newest posting first.</summary>
     Task<PagedResult<StockMovementItem>> SearchMovementsAsync(MovementQuery query, CancellationToken cancellationToken = default);
 
+    /// <summary>Everyone who has posted at least one transaction, by display name (for the movements filter).</summary>
+    Task<IReadOnlyList<MovementUser>> ListMovementUsersAsync(CancellationToken cancellationToken = default);
+
     /// <summary>Shows what posting these counts would change. Unknown products are left out. Writes nothing.</summary>
     Task<IReadOnlyList<CountPreviewLine>> PreviewCountAsync(IReadOnlyList<CountEntry> entries, CancellationToken cancellationToken = default);
 
@@ -151,6 +154,13 @@ public sealed class StockService(AppDbContext db, ISettingsService settings, ICl
 
         return PagedResult<StockMovementItem>.CreateAsync(Project(rows.OrderByDescending(t => t.Id)), query, cancellationToken);
     }
+
+    public async Task<IReadOnlyList<MovementUser>> ListMovementUsersAsync(CancellationToken cancellationToken = default)
+        => await db.Users.AsNoTracking()
+            .Where(u => db.StockTransactions.Any(t => t.UserId == u.Id))
+            .OrderBy(u => u.DisplayName).ThenBy(u => u.Id)
+            .Select(u => new MovementUser(u.Id, u.DisplayName))
+            .ToListAsync(cancellationToken);
 
     public async Task<IReadOnlyList<CountPreviewLine>> PreviewCountAsync(IReadOnlyList<CountEntry> entries, CancellationToken cancellationToken = default)
     {

@@ -72,6 +72,9 @@ public class MovementQuery : ListQuery
     public DateTime? To { get; set; }
 }
 
+/// <summary>A user who appears in the ledger.</summary>
+public sealed record MovementUser(string Id, string Name);
+
 /// <summary>A counted quantity for one product (stock count page).</summary>
 public sealed record CountEntry(int ProductId, int Counted);
 

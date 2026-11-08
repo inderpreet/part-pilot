@@ -21,6 +21,12 @@
     @if (Model.CanEdit)
     {
         <div class="form-actions">
+            @if (p.IsActive)
+            {
+                <div class="move-buttons" role="group" aria-label="Record stock movement">
+                    <partial name="_MoveButtons" model="@(new MoveButtonsModel(p.Id, p.Sku))" />
+                </div>
+            }
             <a role="button" asp-page="Edit" asp-route-id="@p.Id">Edit</a>
             <form method="post" asp-page-handler="Archive" asp-route-id="@p.Id">
                 <input type="hidden" name="active" value="@(p.IsActive ? "false" : "true")" />
@@ -101,9 +107,16 @@
 @* Tab area: each tab is switched on by the feature that fills it (History: F03, Suppliers: F04, Purchase orders: F05, Audit: F08). *@
 <nav class="tabs-soon" aria-label="More about this product">
     <ul>
-        <li><span aria-disabled="true" title="Coming soon">History</span></li>
+        <li><a href="#history" aria-current="true">History</a></li>
         <li><span aria-disabled="true" title="Coming soon">Suppliers</span></li>
         <li><span aria-disabled="true" title="Coming soon">Purchase orders</span></li>
         <li><span aria-disabled="true" title="Coming soon">Audit</span></li>
     </ul>
 </nav>
+
+<section aria-label="Stock history">
+    <p class="muted history-link"><a asp-page="/Stock/Movements" asp-route-productId="@p.Id">All movements for this product, with filters</a></p>
+    <div id="history">
+        <partial name="_StockHistory" model="Model" />
+    </div>
+</section>

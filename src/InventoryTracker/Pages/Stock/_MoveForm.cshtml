@@ -1,0 +1,105 @@
+@model InventoryTracker.Pages.Stock.MoveModel
+@using InventoryTracker.Data.Entities
+@using InventoryTracker.Pages.Stock
+@{
+    // In the dialog the form posts with htmx and replaces itself when the server answers 422 with the errors;
+    // as a full page it is an ordinary form post.
+    var modal = Model.IsModal;
+    var input = Model.Input;
+
+    string TypeLabel(StockTransactionType type) => type switch
+    {
+        StockTransactionType.Receive => "In (receive)",
+        StockTransactionType.Issue => "Out (issue)",
+        StockTransactionType.Adjust => "Adjust (±)",
+        _ => "Return to stock",
+    };
+}
+<form method="post" novalidate class="@(modal ? null : "form-narrow")"
+      hx-post="@(modal ? Url.Page("/Stock/Move") : null)" hx-target="@(modal ? "this" : null)" hx-swap="@(modal ? "outerHTML" : null)">
+    <partial name="_ValidationSummary" model="Model.ModelState" />
+
+    @if (Model.Product is { } product)
+    {
+        <input type="hidden" name="Input.ProductId" value="@product.Id" />
+        <p class="move-product">
+            <strong>@product.Sku</strong> — @product.Name
+            <br /><small class="muted">On hand: @product.QuantityOnHand @product.Unit</small>
+            @if (!product.IsActive)
+            {
+                <span class="badge badge-inactive">Archived</span>
+            }
+        </p>
+    }
+    else
+    {
+        <partial name="_ProductPicker" model="@(new ProductPickerModel("Input.ProductId", input.ProductId))" />
+    }
+
+    <fieldset class="segmented">
+        <legend>Type</legend>
+        @foreach (var type in MoveModel.Types)
+        {
+            <label>
+                <input type="radio" name="Input.Type" value="@type" checked="@(input.Type == type)" />
+                @TypeLabel(type)
+            </label>
+        }
+    </fieldset>
+
+    <label>
+        Quantity
+        <input type="number" name="Input.Quantity" value="@input.Quantity" step="1" inputmode="numeric" required
+               autofocus="@(Model.Product is not null)" data-focus-after-pick aria-invalid="@Html.AriaInvalid("Input.Quantity")" />
+        <small>Adjust takes a signed number: negative removes stock.</small>
+    </label>
+
+    <label>
+        Reason <small>(required for an adjustment)</small>
+        <input name="Input.Reason" value="@input.Reason" maxlength="@StockTransaction.ReasonMaxLength" list="move-reasons" autocomplete="off"
+               aria-invalid="@Html.AriaInvalid("Input.Reason")" />
+        <datalist id="move-reasons">
+            <option value="Damaged"></option>
+            <option value="Lost"></option>
+            <option value="Found"></option>
+            <option value="Used on a job"></option>
+            <option value="Returned from a job"></option>
+            <option value="Delivery"></option>
+            <option value="Sample"></option>
+        </datalist>
+    </label>
+
+    <div class="grid">
+        <label>
+            Reference <small>(optional)</small>
+            <input name="Input.Reference" value="@input.Reference" maxlength="@StockTransaction.ReferenceMaxLength" autocomplete="off"
+                   placeholder="Delivery note, job or order no." aria-invalid="@Html.AriaInvalid("Input.Reference")" />
+        </label>
+        <label>
+            Date and time <small>(blank = now)</small>
+            <input type="datetime-local" name="Input.OccurredAt" value="@input.OccurredAt?.ToString("yyyy-MM-dd'T'HH:mm")"
+                   aria-invalid="@Html.AriaInvalid("Input.OccurredAt")" />
+        </label>
+    </div>
+    <input type="hidden" name="Input.Tz" value="@input.Tz" data-tz-offset />
+
+    <label>
+        Note <small>(optional)</small>
+        <textarea name="Input.Note" rows="2" maxlength="@StockTransaction.NoteMaxLength" aria-invalid="@Html.AriaInvalid("Input.Note")">@input.Note</textarea>
+    </label>
+
+    @if (modal)
+    {
+        <footer>
+            <button type="button" class="secondary" data-close-modal>Cancel</button>
+            <button type="submit">Record</button>
+        </footer>
+    }
+    else
+    {
+        <div class="form-actions">
+            <button type="submit">Record</button>
+            <a role="button" class="secondary" href="@(Model.Product is { } p ? Url.Page("/Products/Detail", new { id = p.Id }) : Url.Page("/Stock/Movements"))">Cancel</a>
+        </div>
+    }
+</form>

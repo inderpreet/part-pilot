@@ -3,12 +3,20 @@
 @{
     var path = Context.Request.Path.Value ?? "/";
     var carried = Context.Request.Query
-        .Where(q => !q.Key.Equals("page", StringComparison.OrdinalIgnoreCase))
+        .Where(q => !q.Key.Equals("page", StringComparison.OrdinalIgnoreCase) && !q.Key.Equals("handler", StringComparison.OrdinalIgnoreCase))
         .SelectMany(q => q.Value.Select(v => KeyValuePair.Create(q.Key, v)))
         .ToList();
 
     string Link(int page)
         => QueryHelpers.AddQueryString(path, carried.Append(KeyValuePair.Create("page", (string?)page.ToString())));
+
+    // What htmx fetches: the same URL, plus the fragment handler when this list is a fragment of a bigger page.
+    string Fetch(int page)
+        => Model.Handler is null
+            ? Link(page)
+            : QueryHelpers.AddQueryString(path, carried.Append(KeyValuePair.Create("handler", (string?)Model.Handler)).Append(KeyValuePair.Create("page", (string?)page.ToString())));
+
+    var pushUrl = Model.Handler is null ? "true" : "false";
 
     var total = Model.TotalPages;
     var first = Model.TotalCount == 0 ? 0 : ((Model.Page - 1) * Model.PageSize) + 1;
@@ -29,7 +37,7 @@
                 <li>
                     @if (Model.Page > 1)
                     {
-                        <a href="@Link(Model.Page - 1)" hx-get="@Link(Model.Page - 1)" hx-target="@Model.Target" hx-push-url="true" rel="prev">‹ Prev</a>
+                        <a href="@Link(Model.Page - 1)" hx-get="@Fetch(Model.Page - 1)" hx-target="@Model.Target" hx-push-url="@pushUrl" rel="prev">‹ Prev</a>
                     }
                     else
                     {
@@ -44,14 +52,14 @@
                         <li><span aria-hidden="true">…</span></li>
                     }
                     <li>
-                        <a href="@Link(p)" hx-get="@Link(p)" hx-target="@Model.Target" hx-push-url="true"
+                        <a href="@Link(p)" hx-get="@Fetch(p)" hx-target="@Model.Target" hx-push-url="@pushUrl"
                            aria-current="@(p == Model.Page ? "page" : null)" aria-label="Page @p">@p</a>
                     </li>
                 }
                 <li>
                     @if (Model.Page < total)
                     {
-                        <a href="@Link(Model.Page + 1)" hx-get="@Link(Model.Page + 1)" hx-target="@Model.Target" hx-push-url="true" rel="next">Next ›</a>
+                        <a href="@Link(Model.Page + 1)" hx-get="@Fetch(Model.Page + 1)" hx-target="@Model.Target" hx-push-url="@pushUrl" rel="next">Next ›</a>
                     }
                     else
                     {
