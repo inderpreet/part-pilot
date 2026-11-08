@@ -54,7 +54,7 @@ supplier SKU and lead time. Feeds purchase orders (F05) and reorder suggestions 
 | ID | Title | Status |
 |---|---|---|
 | [WI-04-1](../work-items/F04-suppliers/WI-04-1-db-schema.md) | Supplier, ProductSupplier schema | Done |
-| [WI-04-2](../work-items/F04-suppliers/WI-04-2-api.md) | SupplierService | Planned |
+| [WI-04-2](../work-items/F04-suppliers/WI-04-2-api.md) | SupplierService | Done |
 | [WI-04-3](../work-items/F04-suppliers/WI-04-3-frontend.md) | Supplier list/detail/edit, product links | Planned |
 
 ## Open questions
