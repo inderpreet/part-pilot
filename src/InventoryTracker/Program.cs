@@ -51,6 +51,7 @@ builder.Services.AddSingleton<ISettingsService, SettingsService>();
 
 builder.Services.AddInventoryAuth();
 builder.Services.AddCatalog();
+builder.Services.AddStock();
 
 builder.Services.AddHealthChecks().AddCheck<DatabaseHealthCheck>(DatabaseHealthCheck.Name);
 builder.Services.AddRazorPages();

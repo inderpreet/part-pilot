@@ -214,9 +214,9 @@ public sealed class ProductService(AppDbContext db) : IProductService
 
     /// <summary>
     /// A product's SKU becomes read-only once it has stock transactions (keeps history and exports consistent).
-    /// TODO(WI-03-2): return <c>StockTransactions.AnyAsync(t =&gt; t.ProductId == id)</c> once the ledger exists.
     /// </summary>
-    private static Task<bool> IsSkuLockedAsync(int productId, CancellationToken cancellationToken) => Task.FromResult(false);
+    private Task<bool> IsSkuLockedAsync(int productId, CancellationToken cancellationToken)
+        => db.StockTransactions.AnyAsync(t => t.ProductId == productId, cancellationToken);
 
     private static string? Clean(string? text)
     {

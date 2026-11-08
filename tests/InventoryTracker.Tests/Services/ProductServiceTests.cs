@@ -734,7 +734,7 @@ public class ProductServiceTests(ITestOutputHelper output) : CatalogTestBase
     [Fact]
     public async Task Sku_is_editable_until_stock_history_exists()
     {
-        // TODO(WI-03-2): once the ledger exists, add the "locked after a transaction" case here.
+        // The "locked after a transaction" case lives in StockServiceTests.
         var created = await CreateProductAsync(Input(sku: "EDITABLE"));
         var (context, products, _) = NewRequest();
         await using var _ = context;

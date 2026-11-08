@@ -63,8 +63,8 @@ adjustments (damage, loss, found) and physical counts. On-hand is cached on the 
 
 | ID | Title | Status |
 |---|---|---|
-| [WI-03-1](../work-items/F03-stock-tracking/WI-03-1-db-schema.md) | StockTransaction ledger | Planned |
-| [WI-03-2](../work-items/F03-stock-tracking/WI-03-2-api.md) | StockService | Planned |
+| [WI-03-1](../work-items/F03-stock-tracking/WI-03-1-db-schema.md) | StockTransaction ledger | Done |
+| [WI-03-2](../work-items/F03-stock-tracking/WI-03-2-api.md) | StockService | Done |
 | [WI-03-3](../work-items/F03-stock-tracking/WI-03-3-frontend.md) | Movements, history, stock count | Planned |
 
 ## Open questions

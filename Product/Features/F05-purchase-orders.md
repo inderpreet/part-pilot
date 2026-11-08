@@ -75,3 +75,4 @@ partially). Receiving posts `Receive` stock transactions linked to PO lines.
 
 - Need tax and shipping lines on the PO?
 - Should a PO require approval (e.g. Admin) above a value threshold?
+- Reversing a PO receipt: `StockService.ReverseAsync` copies `PurchaseOrderLineId` onto the reversal, but the PO line's cached `QuantityReceived` must be lowered too. Decide in WI-05-2 whether the generic Reverse action is hidden for these rows or routed through `PurchaseOrderService`.
