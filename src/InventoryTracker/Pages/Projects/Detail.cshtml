@@ -1,0 +1,149 @@
+@page "/Projects/{id:int}"
+@model InventoryTracker.Pages.Projects.DetailModel
+@using InventoryTracker.Pages.Projects
+@{
+    var p = Model.Project;
+    ViewData["Title"] = p.Name;
+    ViewData["Crumb"] = p.Number;
+
+    var bom = new BomModel(p, Model.Status, Model.CanEdit, ViewData.ModelState);
+    string Action(string handler) => Url.Page("Detail", handler, new { id = p.Id })!;
+}
+
+@section Leading {
+    <a asp-page="Index">‹ All projects</a>
+}
+
+@section Badges {
+    <partial name="_ProjectChip" model="bom" />
+}
+
+@section Subtitle {
+    <partial name="_ProjectSub" model="bom" />
+}
+
+@section Actions {
+    @if (Model.CanEdit)
+    {
+        <a role="button" class="secondary outline" asp-page="Edit" asp-route-id="@p.Id">Edit</a>
+
+        @* Each item is its own form (or link), so it works without JavaScript; htmx adds the confirmation dialog. *@
+        <details class="menu">
+            <summary class="menu-toggle" aria-label="More actions"><svg class="ico" aria-hidden="true"><use href="#i-dots"/></svg></summary>
+            <div class="menu-pop">
+                @if (Model.IsAdmin)
+                {
+                    <a class="menu-item" href="@Action("ChangeNumber")" hx-get="@Action("ChangeNumber")" hx-target="#modal">Change number…</a>
+                }
+                <form method="post" asp-page-handler="Archive" asp-route-id="@p.Id">
+                    <input type="hidden" name="active" value="@(p.IsActive ? "false" : "true")" />
+                    <input type="hidden" name="rowVersion" value="@p.RowVersion" />
+                    @if (p.IsActive)
+                    {
+                        <button type="submit" class="menu-item" hx-post="@Action("Archive")"
+                                hx-confirm="Archive @p.Name? It moves to the Archived tab; its BOM and builds are kept.">Archive</button>
+                    }
+                    else
+                    {
+                        <button type="submit" class="menu-item" hx-post="@Action("Archive")"
+                                hx-confirm="Restore @p.Name to the active projects?">Restore</button>
+                    }
+                </form>
+                @if (p.CanDelete)
+                {
+                    <hr />
+                    <form method="post" asp-page-handler="Delete" asp-route-id="@p.Id">
+                        <input type="hidden" name="rowVersion" value="@p.RowVersion" />
+                        <button type="submit" class="menu-item danger" hx-post="@Action("Delete")"
+                                hx-confirm="Delete @p.Name and its BOM permanently? This cannot be undone.">Delete project</button>
+                    </form>
+                }
+            </div>
+        </details>
+    }
+}
+
+@* Without JavaScript the dialogs open as a card here instead (the link goes to ?handler=...). *@
+@if (Model.Dialog == DetailModel.ProjectDialog.NewPart)
+{
+    <section id="inline-dialog" class="card form-card" aria-label="New part">
+        <h2 class="card-title">New part</h2>
+        <partial name="_NewPartForm" model="Model" />
+    </section>
+}
+else if (Model.Dialog == DetailModel.ProjectDialog.ChangeNumber)
+{
+    <section id="inline-dialog" class="card form-card" aria-label="Change project number">
+        <h2 class="card-title">Change project number</h2>
+        <partial name="_ChangeNumberForm" model="Model" />
+    </section>
+}
+
+<div class="detail-cols">
+    <div class="detail-main">
+        <partial name="_Bom" model="bom" />
+
+        <section class="card" aria-label="Builds">
+            <div class="card-head">
+                <h2 class="card-title">Builds</h2>
+                @if (Model.Builds.Count > 0)
+                {
+                    <span class="muted">@Model.Builds.Sum(b => b.Units) built so far</span>
+                }
+            </div>
+            @if (Model.Builds.Count == 0)
+            {
+                <p class="card-empty muted">Nothing has been built yet.</p>
+            }
+            else
+            {
+                <div class="table-wrap">
+                    <table class="striped compact">
+                        <thead>
+                            <tr>
+                                <th scope="col">When</th>
+                                <th scope="col" class="num">Units</th>
+                                <th scope="col">Who</th>
+                                <th scope="col">Note</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var build in Model.Builds)
+                            {
+                                <tr>
+                                    <td>@Html.LocalTime(build.CreatedAt)</td>
+                                    <td class="num">@build.Units</td>
+                                    <td>@build.UserName</td>
+                                    <td>@(string.IsNullOrWhiteSpace(build.Note) ? "—" : build.Note)</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+    </div>
+
+    <div class="side-stack">
+        <partial name="_ProjectSummary" model="bom" />
+
+        @if (!string.IsNullOrWhiteSpace(p.Description) || !string.IsNullOrWhiteSpace(p.Notes))
+        {
+            <section class="card" aria-label="Project details">
+                <div class="card-head"><h2 class="card-title">Details</h2></div>
+                <dl class="kv kv-stack">
+                    @if (!string.IsNullOrWhiteSpace(p.Description))
+                    {
+                        <dt>Description</dt>
+                        <dd>@p.Description</dd>
+                    }
+                    @if (!string.IsNullOrWhiteSpace(p.Notes))
+                    {
+                        <dt>Notes</dt>
+                        <dd>@p.Notes</dd>
+                    }
+                </dl>
+            </section>
+        }
+    </div>
+</div>

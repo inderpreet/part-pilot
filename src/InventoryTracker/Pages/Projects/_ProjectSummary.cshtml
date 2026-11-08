@@ -1,0 +1,21 @@
+@model BomModel
+@* Cost of the parts and the build progress. Everyone who can see the project sees the costs (Viewers included). *@
+@{
+    var s = Model.Status;
+}
+<section id="project-summary" class="card" aria-label="Project summary" hx-swap-oob="@(Model.Oob ? "true" : null)">
+    <div class="card-head"><h2 class="card-title">Summary</h2></div>
+    <dl class="kv">
+        <dt>Parts cost per unit</dt>
+        <dd>@Html.Money(s.CostPerUnitCents)</dd>
+        <dt>Parts cost for @s.RemainingUnits remaining @(s.RemainingUnits == 1 ? "unit" : "units")</dt>
+        <dd>@Html.Money(s.RemainingCostCents)</dd>
+        <dt>Target units</dt>
+        <dd>@s.TargetUnits</dd>
+        <dt>Built so far</dt>
+        <dd>@s.BuiltUnits</dd>
+        <dt class="kv-total">Remaining to build</dt>
+        <dd class="kv-total">@s.RemainingUnits</dd>
+    </dl>
+    <p class="card-note muted">Stock is not reserved for a project: two projects can count on the same parts.</p>
+</section>

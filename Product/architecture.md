@@ -56,7 +56,7 @@ Inventory-Tracker/
 │  │  ├─ Shared/                    _Layout, _Flash, _Pager, _ValidationSummary
 │  │  ├─ Account/                   Login, Logout, Setup, ChangePassword
 │  │  ├─ Admin/                     Users, Settings, Audit, Import, Backup
-│  │  ├─ Products/ Categories/ Stock/ Suppliers/ PurchaseOrders/ Reports/
+│  │  ├─ Products/ Categories/ Stock/ Suppliers/ PurchaseOrders/ Projects/ Reports/
 │  │  └─ Index.cshtml               dashboard
 │  └─ wwwroot/                      css/, js/htmx.min.js, lib/pico.min.css (EmbeddedResource)
 └─ tests/InventoryTracker.Tests/

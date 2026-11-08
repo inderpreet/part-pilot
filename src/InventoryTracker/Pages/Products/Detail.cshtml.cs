@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 namespace InventoryTracker.Pages.Products;
 
 [Authorize(Policy = Policies.CanView)]
-public class DetailModel(IProductService products, IStockService stock, ISupplierService suppliers, IPurchaseOrderService purchaseOrders, ICurrentUser currentUser) : PageModel
+public class DetailModel(IProductService products, IStockService stock, ISupplierService suppliers, IPurchaseOrderService purchaseOrders, IProjectService projects, ICurrentUser currentUser) : PageModel
 {
     public ProductDetail Product { get; private set; } = null!;
 
@@ -21,6 +21,12 @@ public class DetailModel(IProductService products, IStockService stock, ISupplie
 
     /// <summary>The Open POs section: order lines for this product that are still expected, soonest first.</summary>
     public IReadOnlyList<OpenOrderLineItem> OpenOrders { get; private set; } = [];
+
+    /// <summary>The Open POs section also says how much of this product sits on Draft orders (intentions, not yet on order), with those drafts.</summary>
+    public InDraftQuantity? InDraft { get; private set; }
+
+    /// <summary>The Used in projects card: the projects whose BOM lists this product. Hidden when there are none.</summary>
+    public IReadOnlyList<ProductProjectUse> UsedInProjects { get; private set; } = [];
 
     /// <summary>Only used to hide edit actions; the handler and the edit page enforce <c>CanEdit</c> themselves.</summary>
     public bool CanEdit => currentUser.CanEdit;
@@ -40,6 +46,8 @@ public class DetailModel(IProductService products, IStockService stock, ISupplie
         History = await stock.GetHistoryAsync(id, query, HttpContext.RequestAborted);
         Suppliers = (await SupplierLinksBuilder.BuildAsync(suppliers, products, LinkView.Product, id, CanEdit, cancellationToken: HttpContext.RequestAborted))!;
         OpenOrders = await purchaseOrders.GetOpenLinesForProductAsync(id, HttpContext.RequestAborted);
+        InDraft = (await purchaseOrders.GetInDraftByProductAsync([id], HttpContext.RequestAborted)).GetValueOrDefault(id);
+        UsedInProjects = await projects.GetProjectsUsingProductAsync(id, HttpContext.RequestAborted);
         return Page();
     }
 

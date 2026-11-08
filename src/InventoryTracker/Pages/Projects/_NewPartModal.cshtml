@@ -1,0 +1,8 @@
+@model InventoryTracker.Pages.Projects.DetailModel
+<article>
+    <header>
+        <button type="button" aria-label="Close" rel="prev" data-close-modal></button>
+        <p><strong>New part for @Model.Project.Name</strong></p>
+    </header>
+    <partial name="_NewPartForm" model="Model" />
+</article>

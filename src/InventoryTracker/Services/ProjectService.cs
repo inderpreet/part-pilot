@@ -20,6 +20,8 @@ public interface IProjectService
     /// <summary>The BOM checked against stock, submitted orders and Draft orders; <c>null</c> when the project does not exist.</summary>
     Task<BomStatus?> GetStatusAsync(int projectId, CancellationToken cancellationToken = default);
 
+    /// <summary>The projects whose BOM lists this product (the product page's "Used in projects"), archived ones last.</summary>
+    Task<IReadOnlyList<ProductProjectUse>> GetProjectsUsingProductAsync(int productId, CancellationToken cancellationToken = default);
     /// <summary>Line-state counts for several projects at once (the list page): a fixed number of queries, not one per project.</summary>
     Task<IReadOnlyDictionary<int, ProjectStatusSummary>> GetStatusSummariesAsync(IReadOnlyCollection<int> projectIds, CancellationToken cancellationToken = default);
 
@@ -194,6 +196,12 @@ public sealed class ProjectService(
             .Select(b => new ProjectBuildItem(b.Id, b.Units, b.User!.DisplayName, b.Note, b.CreatedAt))
             .ToListAsync(cancellationToken);
 
+    public async Task<IReadOnlyList<ProductProjectUse>> GetProjectsUsingProductAsync(int productId, CancellationToken cancellationToken = default)
+        => await db.BomLines.AsNoTracking()
+            .Where(l => l.ProductId == productId)
+            .OrderByDescending(l => l.Project!.IsActive).ThenBy(l => l.Project!.Name)
+            .Select(l => new ProductProjectUse(l.ProjectId, l.Project!.Number, l.Project.Name, l.Project.IsActive, l.QuantityPerUnit))
+            .ToListAsync(cancellationToken);
     public async Task<BomStatus?> GetStatusAsync(int projectId, CancellationToken cancellationToken = default)
     {
         var all = await ComputeStatusAsync([projectId], cancellationToken);

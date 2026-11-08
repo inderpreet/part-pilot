@@ -775,8 +775,12 @@ public partial class PurchaseOrderPagesTests
         var open = await SeedOrderAsync(factory, supplier.Id, [(widget.Id, 7, 1000L)], submit: true);
         var html = await client.GetStringAsync($"/Products/{widget.Id}");
         Assert.Contains(open.Number, html);
-        Assert.DoesNotContain(draft.Number, html);
         Assert.Contains("<strong>7</strong>", html);
+
+        // The draft is named only in the separate "In draft POs" note (F10), never as an open order line.
+        var withoutDraftNote = Regex.Replace(html, "<p class=\"card-note\" id=\"in-draft-pos\">.*?</p>", "", RegexOptions.Singleline);
+        Assert.Contains("In draft POs: 5", html);
+        Assert.DoesNotContain(draft.Number, withoutDraftNote);
     }
 
     // ---- authorization ---------------------------------------------------------------------------------------------

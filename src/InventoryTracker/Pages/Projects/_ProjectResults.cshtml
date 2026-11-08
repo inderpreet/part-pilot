@@ -1,0 +1,65 @@
+@model InventoryTracker.Pages.Projects.IndexModel
+@if (Model.Projects.TotalCount == 0)
+{
+    if (Model.IsFiltered)
+    {
+        <partial name="_EmptyState" model="@(new EmptyStateModel("No projects match", "Try a different name or project number, or another tab."))" />
+    }
+    else if (Model.Query.Tab == ProjectTab.Active && Model.CanEdit)
+    {
+        <partial name="_EmptyState" model="@(new EmptyStateModel("No projects yet", "Create a project to list the parts a job needs and see what is in stock, on order and still to buy.", "New project", "/Projects/Edit"))" />
+    }
+    else if (Model.Query.Tab == ProjectTab.Active)
+    {
+        <partial name="_EmptyState" model="@(new EmptyStateModel("No projects yet", "Ask an Admin or Staff user to create projects."))" />
+    }
+    else
+    {
+        <partial name="_EmptyState" model="@(new EmptyStateModel($"No {ProjectDisplay.TabLabel(Model.Query.Tab).ToLowerInvariant()} projects", "Nothing in this tab right now. Try another tab."))" />
+    }
+}
+else
+{
+    <div class="table-wrap">
+        <table class="striped">
+            <thead>
+                <tr>
+                    <partial name="_SortHeader" model="@(new SortHeaderModel("number", "Number", Model.Query))" />
+                    <partial name="_SortHeader" model="@(new SortHeaderModel("name", "Name", Model.Query))" />
+                    <th scope="col" class="num">Parts</th>
+                    <partial name="_SortHeader" model="@(new SortHeaderModel("target", "Target", Model.Query, Numeric: true))" />
+                    <th scope="col" class="num">Built</th>
+                    <th scope="col">State</th>
+                    <th scope="col" class="num">BOM cost</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var project in Model.Projects.Items)
+                {
+                    <tr>
+                        <td><a asp-page="Detail" asp-route-id="@project.Id">@project.Number</a></td>
+                        <td>
+                            <a asp-page="Detail" asp-route-id="@project.Id">@project.Name</a>
+                            @if (!project.IsActive)
+                            {
+                                <span class="badge badge-inactive">Archived</span>
+                            }
+                        </td>
+                        <td class="num">@project.PartsCount</td>
+                        <td class="num">@project.TargetUnits</td>
+                        <td class="num">@project.BuiltUnits</td>
+                        <td>
+                            <partial name="_ProjectStateBadge" model="project.Status.State" />
+                            @if (project.Status.State is ProjectState.Short or ProjectState.InDraft or ProjectState.Covered)
+                            {
+                                <small class="muted">@ProjectDisplay.Summary(project.Status)</small>
+                            }
+                        </td>
+                        <td class="num">@(project.PartsCount > 0 ? Html.Money(project.BomCostCents) : Html.Raw("—"))</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <partial name="_Pager" model="@PagerModel.From(Model.Projects)" />
+}

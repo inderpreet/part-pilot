@@ -573,12 +573,18 @@ button.star:hover, button.star:focus-visible { color: #d99a00; background: none;
 .po-actions form { margin: 0; }
 .po-actions form button { width: auto; margin: 0; }
 /* Inline editing of a line: compact inputs that sit in the table cell. */
-.po-lines input[type="number"], .po-lines input[type="text"] { width: 7rem; margin: 0; padding: 0.25rem 0.5rem; text-align: right; }
-.po-lines td.row-actions form { margin: 0; }
+.po-lines input[type="number"], .po-lines input[type="text"], .bom-lines input[type="number"] { width: 7rem; margin: 0; padding: 0.25rem 0.5rem; text-align: right; }
+.po-lines td.row-actions form, .bom-lines td.row-actions form { margin: 0; }
 .po-lines tfoot th, .po-lines tfoot td { border-top: 2px solid var(--pico-muted-border-color); }
-.po-add-line { margin-top: var(--pico-spacing); }
-.po-add-line .grid { align-items: end; }
-.po-add-line .grid > button { width: auto; margin-bottom: var(--pico-spacing); }
+.po-add-line, .bom-add-line { margin-top: var(--pico-spacing); }
+.po-add-line .grid, .bom-add-line .grid { align-items: end; }
+.po-add-line .grid > button, .bom-add-line .grid > button { width: auto; margin-bottom: var(--pico-spacing); }
+.bom-lines input[type="number"] { width: 5rem; }
+.bom-lines input.bom-note { display: block; width: 100%; max-width: 18rem; margin: 0.25rem 0 0; padding: 0.2rem 0.5rem; text-align: left; font-size: var(--it-text-sm); }
+.bom-add-hint { margin: 0; font-size: var(--it-text-sm); }
+.card-note { margin: 0; padding: 0 1.1rem 1rem; font-size: var(--it-text-sm); }
+.project-number { font-weight: 600; }
+.form-intro-text { margin-top: 0; font-size: var(--it-text-sm); }
 /* Receive: big touch targets for a tablet at the goods-in door. */
 .po-receive input.receive-qty { width: 8rem; height: 3rem; margin: 0; font-size: var(--it-qty); text-align: right; }
 .po-receive .toolbar button { width: auto; margin: 0; }
@@ -766,7 +772,7 @@ section[id] { scroll-margin-top: 4.5rem; }
 .cell-main { font-weight: 500; }
 .progress-cell { display: inline-flex; align-items: center; gap: 0.6rem; font-variant-numeric: tabular-nums; }
 .progress-cell .meter { width: 3.5rem; }
-.po-lines td:first-child { white-space: normal; }
+.po-lines td:first-child, .bom-lines td:first-child { white-space: normal; }
 
 .on-hand-card { padding: 1.25rem 1rem; text-align: center; align-self: start; }
 .on-hand-card p { margin: 0; }

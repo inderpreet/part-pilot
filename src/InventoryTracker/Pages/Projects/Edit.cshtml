@@ -1,0 +1,106 @@
+@page "/Projects/Edit/{id:int?}"
+@model InventoryTracker.Pages.Projects.EditModel
+@using InventoryTracker.Data.Entities
+@{
+    ViewData["Title"] = Model.IsEdit ? $"Edit project: {Model.Existing!.Name}" : "New project";
+}
+
+<form method="post" novalidate class="form-page">
+    <partial name="_ValidationSummary" model="ViewData.ModelState" />
+
+    @if (Model.Conflict)
+    {
+        <p role="alert">
+            Someone else saved this project while you were editing.
+            <a asp-page="Edit" asp-route-id="@Model.Existing!.Id">Reload the latest version</a> (your unsaved changes will be lost).
+        </p>
+    }
+
+    <input type="hidden" name="Input.RowVersion" value="@Model.Input.RowVersion" />
+
+    <section class="form-row" aria-labelledby="project-details">
+        <div class="form-intro">
+            <h2 id="project-details">Details</h2>
+            <p>What you are building and how many. The parts go in the BOM on the project page.</p>
+        </div>
+        <div class="card form-card">
+            <label>
+                Name
+                <input name="Input.Name" value="@Model.Input.Name" maxlength="@Project.NameMaxLength" required autofocus autocomplete="off"
+                       aria-invalid="@Html.AriaInvalid("Input.Name")" aria-describedby="@Html.DescribedBy("Input.Name")" />
+                @Html.FieldError("Input.Name")
+            </label>
+
+            <div class="field-grid">
+                @if (Model.IsEdit)
+                {
+                    <label>
+                        Project number
+                        <input value="@Model.Existing!.Number" readonly aria-readonly="true" tabindex="-1" aria-describedby="project-number-hint" />
+                        <small id="project-number-hint">
+                            @if (Model.IsAdmin)
+                            {
+                                <span>Change it from the project page (Change number).</span>
+                            }
+                            else
+                            {
+                                <span>Only an Admin can change the project number.</span>
+                            }
+                        </small>
+                    </label>
+                }
+                else
+                {
+                    <label>
+                        Project number <small>(optional)</small>
+                        <input name="Input.Number" value="@Model.Input.Number" maxlength="@Project.NumberMaxLength" autocomplete="off" spellcheck="false"
+                               aria-invalid="@Html.AriaInvalid("Input.Number")" aria-describedby="@Html.DescribedBy("Input.Number")" />
+                        @Html.FieldError("Input.Number")
+                        <small>Leave blank to generate the next number, such as PRJ-@(DateTime.Now.Year)-0001.</small>
+                    </label>
+                }
+                <label>
+                    Target units
+                    <input type="number" name="Input.TargetUnits" value="@Model.Input.TargetUnits" min="1" step="1" inputmode="numeric" required
+                           aria-invalid="@Html.AriaInvalid("Input.TargetUnits")" aria-describedby="@Html.DescribedBy("Input.TargetUnits")" />
+                    @Html.FieldError("Input.TargetUnits")
+                    <small>How many units of this project you plan to build.</small>
+                </label>
+            </div>
+
+            <label>
+                Description <small>(optional)</small>
+                <textarea name="Input.Description" rows="3" maxlength="@Project.DescriptionMaxLength"
+                          aria-invalid="@Html.AriaInvalid("Input.Description")" aria-describedby="@Html.DescribedBy("Input.Description")">@Model.Input.Description</textarea>
+                @Html.FieldError("Input.Description")
+            </label>
+        </div>
+    </section>
+
+    <section class="form-row" aria-labelledby="project-notes">
+        <div class="form-intro">
+            <h2 id="project-notes">Notes</h2>
+            <p>Anything worth remembering about this job.</p>
+        </div>
+        <div class="card form-card">
+            <label>
+                Notes <small>(optional)</small>
+                <textarea name="Input.Notes" rows="4" maxlength="@Project.NotesMaxLength"
+                          aria-invalid="@Html.AriaInvalid("Input.Notes")" aria-describedby="@Html.DescribedBy("Input.Notes")">@Model.Input.Notes</textarea>
+                @Html.FieldError("Input.Notes")
+            </label>
+        </div>
+    </section>
+
+    <div class="action-bar form-actions">
+        @if (Model.IsEdit)
+        {
+            <a role="button" class="text" asp-page="Detail" asp-route-id="@Model.Existing!.Id">Cancel</a>
+        }
+        else
+        {
+            <a role="button" class="text" asp-page="Index">Cancel</a>
+        }
+        <button type="submit">@(Model.IsEdit ? "Save changes" : "Create project")</button>
+    </div>
+</form>

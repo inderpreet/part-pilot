@@ -1,0 +1,7 @@
+@model BomModel
+@* The line under the title: number, target and the one-line summary ("3 short, 2 in draft PO, 1 on order"). *@
+<span id="project-sub" hx-swap-oob="@(Model.Oob ? "true" : null)">
+    <span class="project-number">@Model.Project.Number</span> ·
+    Target @Model.Status.TargetUnits @(Model.Status.TargetUnits == 1 ? "unit" : "units"), @Model.Status.BuiltUnits built ·
+    @ProjectDisplay.Summary(Model.Status.Summary)
+</span>

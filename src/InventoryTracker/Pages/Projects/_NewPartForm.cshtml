@@ -1,0 +1,75 @@
+@model InventoryTracker.Pages.Projects.DetailModel
+@using InventoryTracker.Pages.Projects
+@using InventoryTracker.Data.Entities
+@{
+    // In the dialog the form posts with htmx and replaces itself when the server answers 422 with the errors (on success the
+    // server swaps the BOM instead and closes the dialog); on the page it is an ordinary form post.
+    var modal = Model.IsHtmx();
+    var input = Model.NewPart;
+    string Name(string field) => $"{DetailModel.NewPartPrefix}.{field}";
+    var postUrl = Url.Page("Detail", "NewPart", new { id = Model.Project.Id })!;
+}
+<form method="post" action="@postUrl" novalidate
+      hx-post="@(modal ? postUrl : null)" hx-target="@(modal ? "this" : null)" hx-swap="@(modal ? "outerHTML" : null)">
+    <partial name="_ValidationSummary" model="Model.ModelState" />
+    <p class="form-intro-text muted">Creates the part in the catalog with no stock and adds it to this BOM. Fill in the rest (category, supplier, barcode) later on the product page.</p>
+
+    <div class="grid">
+        <label>
+            SKU
+            <input name="@Name("Sku")" value="@input.Sku" maxlength="@Product.SkuMaxLength" required autofocus autocomplete="off" spellcheck="false"
+                   aria-invalid="@Html.AriaInvalid(Name("Sku"))" aria-describedby="@Html.DescribedBy(Name("Sku"))" />
+            @Html.FieldError(Name("Sku"))
+        </label>
+        <label>
+            Unit
+            <input name="@Name("Unit")" value="@input.Unit" maxlength="@Product.UnitMaxLength" autocomplete="off" list="new-part-units"
+                   aria-invalid="@Html.AriaInvalid(Name("Unit"))" aria-describedby="@Html.DescribedBy(Name("Unit"))" />
+            @Html.FieldError(Name("Unit"))
+            <datalist id="new-part-units">
+                <option value="each"></option>
+                <option value="box"></option>
+                <option value="m"></option>
+                <option value="kg"></option>
+                <option value="pack"></option>
+            </datalist>
+        </label>
+    </div>
+
+    <label>
+        Name
+        <input name="@Name("Name")" value="@input.Name" maxlength="@Product.NameMaxLength" required autocomplete="off"
+               aria-invalid="@Html.AriaInvalid(Name("Name"))" aria-describedby="@Html.DescribedBy(Name("Name"))" />
+        @Html.FieldError(Name("Name"))
+    </label>
+
+    <div class="grid">
+        <label>
+            Unit cost <small>(optional)</small>
+            <input name="@Name("UnitCost")" value="@input.UnitCost" inputmode="decimal" autocomplete="off" placeholder="0.00"
+                   aria-invalid="@Html.AriaInvalid(Name("UnitCost"))" aria-describedby="@Html.DescribedBy(Name("UnitCost"))" />
+            @Html.FieldError(Name("UnitCost"))
+        </label>
+        <label>
+            Quantity per unit
+            <input type="number" name="@Name("QuantityPerUnit")" value="@input.QuantityPerUnit" min="1" step="1" inputmode="numeric" required
+                   aria-invalid="@Html.AriaInvalid(Name("QuantityPerUnit"))" aria-describedby="@Html.DescribedBy(Name("QuantityPerUnit"))" />
+            @Html.FieldError(Name("QuantityPerUnit"))
+        </label>
+    </div>
+
+    @if (modal)
+    {
+        <footer>
+            <button type="button" class="text" data-close-modal>Cancel</button>
+            <button type="submit">Create and add</button>
+        </footer>
+    }
+    else
+    {
+        <div class="form-actions">
+            <button type="submit">Create and add</button>
+            <a role="button" class="text" asp-page="Detail" asp-route-id="@Model.Project.Id">Cancel</a>
+        </div>
+    }
+</form>

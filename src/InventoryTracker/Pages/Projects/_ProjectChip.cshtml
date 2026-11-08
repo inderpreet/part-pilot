@@ -1,0 +1,9 @@
+@model BomModel
+@* The state chip in the page header. When a BOM change comes back through htmx it is swapped in out of band. *@
+<span id="project-state" hx-swap-oob="@(Model.Oob ? "true" : null)">
+    <partial name="_ProjectStateBadge" model="Model.Status.State" />
+    @if (!Model.Project.IsActive)
+    {
+        <span class="badge badge-inactive">Archived</span>
+    }
+</span>

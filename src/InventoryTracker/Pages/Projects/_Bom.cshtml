@@ -1,0 +1,170 @@
+@model BomModel
+@using System.Globalization
+@{
+    var p = Model.Project;
+    var s = Model.Status;
+    string Handler(string name) => Url.Page("Detail", name, new { id = p.Id })!;
+
+    // Messages that belong to the add-part row or to a line (the New part dialog shows its own: keys start with "NewPart.").
+    var errors = Model.ModelState
+        .Where(entry => !entry.Key.StartsWith("NewPart.", StringComparison.Ordinal))
+        .SelectMany(entry => entry.Value!.Errors)
+        .Select(error => error.ErrorMessage)
+        .ToList();
+
+    string Count(int n, string one, string many) => $"{n} {(n == 1 ? one : many)}";
+}
+@if (Model.Oob)
+{
+    <partial name="_ProjectChip" model="Model" />
+    <partial name="_ProjectSub" model="Model" />
+    <partial name="_ProjectSummary" model="Model" />
+}
+<section id="bom" class="card" aria-label="Bill of materials">
+    <div class="card-head">
+        <h2 class="card-title">Bill of materials</h2>
+        <span class="muted">@Count(s.Lines.Count, "part", "parts") · for @Count(s.RemainingUnits, "unit", "units") still to build</span>
+    </div>
+
+    @if (errors.Count > 0)
+    {
+        <article class="validation-summary" role="alert">
+            <ul>
+                @foreach (var message in errors)
+                {
+                    <li>@message</li>
+                }
+            </ul>
+        </article>
+    }
+
+    @if (s.Lines.Count == 0)
+    {
+        <p class="card-empty muted">
+            No parts yet.@(Model.CanEdit ? " Add the first part below, or create one that is not in the catalog yet." : "")
+        </p>
+    }
+    else
+    {
+        <div class="table-wrap">
+            <table class="striped compact bom-lines">
+                <thead>
+                    <tr>
+                        <th scope="col">Part</th>
+                        <th scope="col" class="num">Per unit</th>
+                        <th scope="col" class="num">Needed</th>
+                        <th scope="col" class="num">In stock</th>
+                        <th scope="col" class="num">On order</th>
+                        <th scope="col" class="num">In PO draft</th>
+                        <th scope="col" class="num">Short</th>
+                        <th scope="col">Status</th>
+                        @if (Model.CanEdit)
+                        {
+                            <th scope="col"><span class="visually-hidden">Actions</span></th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var line in s.Lines)
+                    {
+                        var key = InventoryTracker.Pages.Projects.DetailModel.LineKey(line.LineId);
+                        <tr data-line-row>
+                            <td>
+                                <a asp-page="/Products/Detail" asp-route-id="@line.ProductId"><strong>@line.Sku</strong></a> @line.ProductName
+                                @if (!line.ProductIsActive)
+                                {
+                                    <span class="badge badge-inactive" title="This part is archived. Restore it or replace it in the BOM.">Archived</span>
+                                }
+                                <input type="hidden" name="lineId" value="@line.LineId" />
+                                @if (Model.CanEdit)
+                                {
+                                    <input type="text" name="note" value="@line.Note" maxlength="@InventoryTracker.Data.Entities.BomLine.NoteMaxLength" autocomplete="off" placeholder="Note"
+                                           class="bom-note" aria-label="Note for @line.Sku"
+                                           hx-post="@Handler("SaveLine")" hx-trigger="change" hx-include="closest tr" hx-target="#bom" hx-swap="outerHTML" />
+                                }
+                                else if (!string.IsNullOrWhiteSpace(line.Note))
+                                {
+                                    <br /><small class="muted">@line.Note</small>
+                                }
+                            </td>
+                            <td class="num">
+                                @if (Model.CanEdit)
+                                {
+                                    <input type="number" name="quantity" value="@line.QuantityPerUnit.ToString(CultureInfo.InvariantCulture)" min="1" step="1" inputmode="numeric"
+                                           aria-label="Quantity of @line.Sku per unit (@line.Unit)" aria-invalid="@Html.AriaInvalid(key)"
+                                           hx-post="@Handler("SaveLine")" hx-trigger="change" hx-include="closest tr" hx-target="#bom" hx-swap="outerHTML" />
+                                }
+                                else
+                                {
+                                    @line.QuantityPerUnit
+                                }
+                            </td>
+                            <td class="num">@line.Needed</td>
+                            <td class="num">@line.OnHand</td>
+                            <td class="num">@(line.OnOrder > 0 ? line.OnOrder.ToString(CultureInfo.InvariantCulture) : "—")</td>
+                            <td class="num">
+                                @if (line.InDraft > 0)
+                                {
+                                    <strong>@line.InDraft</strong>
+                                    <br />
+                                    <small>
+                                        @for (var i = 0; i < line.DraftOrders.Count; i++)
+                                        {
+                                            var draft = line.DraftOrders[i];
+                                            @if (i > 0)
+                                            {
+                                                <text>, </text>
+                                            }
+                                            <a asp-page="/PurchaseOrders/Detail" asp-route-id="@draft.PurchaseOrderId" title="@draft.Quantity on draft @draft.Number">@draft.Number</a>
+                                        }
+                                    </small>
+                                }
+                                else
+                                {
+                                    <span>—</span>
+                                }
+                            </td>
+                            <td class="num">@(line.Short > 0 ? line.Short.ToString(CultureInfo.InvariantCulture) : "—")</td>
+                            <td><partial name="_LineStateBadge" model="line.State" /></td>
+                            @if (Model.CanEdit)
+                            {
+                                <td class="row-actions">
+                                    <form method="post" asp-page-handler="RemoveLine" asp-route-id="@p.Id" class="inline-form">
+                                        <input type="hidden" name="lineId" value="@line.LineId" />
+                                        <button type="submit" class="text danger" hx-post="@Handler("RemoveLine")" hx-target="#bom" hx-swap="outerHTML"
+                                                hx-confirm="Remove @line.Sku from this BOM?" aria-label="Remove @line.Sku from the BOM">Remove</button>
+                                    </form>
+                                </td>
+                            }
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+
+    @if (Model.CanEdit)
+    {
+        <form method="post" asp-page-handler="AddLine" asp-route-id="@p.Id" class="bom-add-line"
+              hx-post="@Handler("AddLine")" hx-target="#bom" hx-swap="outerHTML">
+            <div class="grid">
+                <partial name="_ProductPicker" model="@(new ProductPickerModel("productId", Model.ProductId, Model.ProductLabel, Label: "Add a part"))" />
+                <label>
+                    Per unit
+                    <input type="number" name="quantity" value="@(Model.Quantity ?? "1")" min="1" step="1" inputmode="numeric" required
+                           data-focus-after-pick aria-invalid="@Html.AriaInvalid("QuantityPerUnit")" />
+                </label>
+                <label>
+                    Note <small>(optional)</small>
+                    <input type="text" name="note" value="@Model.Note" maxlength="@InventoryTracker.Data.Entities.BomLine.NoteMaxLength" autocomplete="off" />
+                </label>
+                <button type="submit">Add part</button>
+            </div>
+            <p class="bom-add-hint muted">
+                Not in the catalog yet?
+                <a href="@Handler("NewPart")" hx-get="@Handler("NewPart")" hx-target="#modal">Create a new part</a>
+                and add it in one step.
+            </p>
+        </form>
+    }
+</section>

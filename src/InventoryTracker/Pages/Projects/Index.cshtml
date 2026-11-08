@@ -1,0 +1,43 @@
+@page "/Projects"
+@model InventoryTracker.Pages.Projects.IndexModel
+@{
+    ViewData["Title"] = "Projects";
+    var tabs = new[] { ProjectTab.Active, ProjectTab.Archived, ProjectTab.All };
+}
+
+@* A plain GET form, so Enter submits normally. Its search box also refreshes #results live through htmx; the form itself has
+   no hx-* attributes. The tabs are ordinary links (a tab change reloads the page, which keeps the hidden tab field right). *@
+<div class="card list-card">
+    <div class="load-bar" role="status" aria-label="Updating"></div>
+
+    <nav class="tabs" aria-label="Project status">
+        <ul>
+            @foreach (var tab in tabs)
+            {
+                <li>
+                    <a asp-page="Index" asp-route-tab="@tab" asp-route-search="@Model.Query.Search"
+                       aria-current="@(Model.Query.Tab == tab ? "page" : null)">@ProjectDisplay.TabLabel(tab)</a>
+                </li>
+            }
+        </ul>
+    </nav>
+
+    <form method="get" action="/Projects" class="toolbar" role="search">
+        <input type="hidden" name="tab" value="@Model.Query.Tab" />
+        <input type="search" name="search" value="@Model.Query.Search" placeholder="Search name or project number…" aria-label="Search projects"
+               autocomplete="off" enterkeyhint="search"
+               hx-get="/Projects" hx-trigger="input changed delay:300ms" hx-target="#results" hx-push-url="true" hx-include="closest form" hx-indicator=".load-bar" />
+        <button type="submit" class="visually-hidden" tabindex="-1">Search</button>
+    </form>
+
+    @section Actions {
+        @if (Model.CanEdit)
+        {
+            <a role="button" asp-page="Edit">New project</a>
+        }
+    }
+
+    <div id="results">
+        <partial name="_ProjectResults" model="Model" />
+    </div>
+</div>

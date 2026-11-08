@@ -162,6 +162,8 @@ public sealed record BomLineInput(int ProductId, int QuantityPerUnit, string? No
 /// <summary>The short form for a part that is not in the catalog yet. Everything else takes the catalog defaults.</summary>
 public sealed record NewPartInput(string? Sku, string? Name, string? Unit, long UnitCostCents);
 
+/// <summary>A project that uses a product, with how many of it one unit takes.</summary>
+public sealed record ProductProjectUse(int ProjectId, string Number, string Name, bool IsActive, int QuantityPerUnit);
 /// <summary>A BOM line checked against stock and orders.</summary>
 public sealed record BomLineStatus(
     long LineId,

@@ -117,6 +117,10 @@
     <a href="#history" aria-current="true">History</a>
     <a href="#suppliers">Suppliers</a>
     <a href="#purchase-orders">Purchase orders</a>
+    @if (Model.UsedInProjects.Count > 0)
+    {
+        <a href="#projects">Projects</a>
+    }
     <span class="section-nav-soon" aria-disabled="true" title="Coming soon">Audit <small>Soon</small></span>
 </nav>
 
@@ -135,6 +139,22 @@
 
 <section id="purchase-orders" class="card" aria-label="Open purchase orders for this product">
     <div class="card-head"><h2 class="card-title">Open purchase orders</h2></div>
+    @if (Model.InDraft is { } inDraft)
+    {
+        <p class="card-note" id="in-draft-pos">
+            <strong>In draft POs: @inDraft.Total @p.Unit</strong>
+            <span class="muted">(not placed yet, so not counted as on order):</span>
+            @for (var i = 0; i < inDraft.Orders.Count; i++)
+            {
+                var draft = inDraft.Orders[i];
+                @if (i > 0)
+                {
+                    <text>, </text>
+                }
+                <a asp-page="/PurchaseOrders/Detail" asp-route-id="@draft.PurchaseOrderId">@draft.Number</a> <small class="muted">(@draft.Quantity)</small>
+            }
+        </p>
+    }
     @if (Model.OpenOrders.Count == 0)
     {
         <p class="card-empty muted">Nothing is on order for this product.</p>
@@ -179,3 +199,35 @@
         </div>
     }
 </section>
+
+@if (Model.UsedInProjects.Count > 0)
+{
+    <section id="projects" class="card" aria-label="Projects that use this product">
+        <div class="card-head"><h2 class="card-title">Used in projects</h2></div>
+        <div class="table-wrap">
+            <table class="striped compact">
+                <thead>
+                    <tr>
+                        <th scope="col">Project</th>
+                        <th scope="col" class="num">Per unit</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var use in Model.UsedInProjects)
+                    {
+                        <tr>
+                            <td>
+                                <a asp-page="/Projects/Detail" asp-route-id="@use.ProjectId">@use.Number</a> @use.Name
+                                @if (!use.IsActive)
+                                {
+                                    <span class="badge badge-inactive">Archived</span>
+                                }
+                            </td>
+                            <td class="num">@use.QuantityPerUnit @p.Unit</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+}
