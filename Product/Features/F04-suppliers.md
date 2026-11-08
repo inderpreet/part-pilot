@@ -1,6 +1,6 @@
 # F04 — Suppliers
 
-- **Status:** In Progress
+- **Status:** Done
 - **Depends on:** F02
 - **Roles:** Admin/Staff create and edit; Viewer reads
 
@@ -42,8 +42,8 @@ supplier SKU and lead time. Feeds purchase orders (F05) and reorder suggestions 
 | `/Suppliers` | List/search | CanView |
 | `/Suppliers/{id}` | Detail + linked products | CanView |
 | `/Suppliers/Edit/{id?}` | Create/edit | CanEdit |
-| `/Suppliers/{id}?handler=Link` / `Unlink` (POST) | Manage product links | CanEdit |
-| `/Products/{id}?handler=Suppliers` | Product's suppliers partial | CanView |
+| `/Suppliers/Links?handler=Save` / `Remove` / `Preferred` (POST), `Edit` / `Row` (GET) | Manage product links from either page; answers with the links block | CanEdit |
+| `/Products/{id}` | Includes the product's Suppliers section | CanView |
 
 ## Out of scope
 
@@ -55,8 +55,8 @@ supplier SKU and lead time. Feeds purchase orders (F05) and reorder suggestions 
 |---|---|---|
 | [WI-04-1](../work-items/F04-suppliers/WI-04-1-db-schema.md) | Supplier, ProductSupplier schema | Done |
 | [WI-04-2](../work-items/F04-suppliers/WI-04-2-api.md) | SupplierService | Done |
-| [WI-04-3](../work-items/F04-suppliers/WI-04-3-frontend.md) | Supplier list/detail/edit, product links | Planned |
+| [WI-04-3](../work-items/F04-suppliers/WI-04-3-frontend.md) | Supplier list/detail/edit, product links | Done |
 
 ## Open questions
 
-- Multiple contacts per supplier needed, or one contact enough?
+- Multiple contacts per supplier needed, or one contact enough? (v1 ships with a single contact; the Notes field covers extras. Revisit if asked.)

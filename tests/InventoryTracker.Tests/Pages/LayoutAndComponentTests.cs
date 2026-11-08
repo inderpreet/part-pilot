@@ -67,13 +67,13 @@ public partial class LayoutAndComponentTests(AppFactory factory) : IClassFixture
         var html = await client.GetStringAsync("/");
 
         // Built sections are links; Admin is visible because the test user is an administrator.
-        foreach (var label in new[] { "Dashboard", "Products", "Stock", "Admin" })
+        foreach (var label in new[] { "Dashboard", "Products", "Stock", "Suppliers", "Admin" })
         {
             Assert.Contains($">{label}</a>", html);
         }
 
         // Sections whose pages do not exist yet are labelled, never linked (they would 404).
-        foreach (var label in new[] { "Suppliers", "Purchase Orders", "Reports" })
+        foreach (var label in new[] { "Purchase Orders", "Reports" })
         {
             Assert.DoesNotContain($">{label}</a>", html);
             Assert.Contains($"aria-disabled=\"true\" title=\"Coming soon\">{label}</span>", html);

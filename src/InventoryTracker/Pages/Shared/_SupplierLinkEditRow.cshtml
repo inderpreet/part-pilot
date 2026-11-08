@@ -1,0 +1,55 @@
+@model SupplierLinkEditRowModel
+@inject ISettingsService Settings
+@using InventoryTracker.Data
+@using InventoryTracker.Data.Entities
+@{
+    var item = Model.Item;
+    var form = Model.Form;
+    var bySupplier = Model.View == LinkView.Supplier;
+    var currency = await Settings.GetStringAsync(SettingKeys.CurrencySymbol);
+    var rowUrl = Url.Page("/Suppliers/Links", "Row", new { view = Model.View, productId = item.ProductId, supplierId = item.SupplierId })!;
+}
+<tr id="@Model.RowId" class="inline-edit">
+    <td colspan="7">
+        <form method="post" novalidate asp-page="/Suppliers/Links" asp-page-handler="Save"
+              hx-post="@Url.Page("/Suppliers/Links", "Save")" hx-target="closest tr" hx-swap="outerHTML">
+            <partial name="_ValidationSummary" model="ViewData.ModelState" />
+            <input type="hidden" name="mode" value="edit" />
+            <input type="hidden" name="view" value="@Model.View" />
+            <input type="hidden" name="productId" value="@item.ProductId" />
+            <input type="hidden" name="supplierId" value="@item.SupplierId" />
+
+            <p><strong>@(bySupplier ? $"{item.Sku} — {item.ProductName}" : item.SupplierName)</strong></p>
+            <div class="grid">
+                <label>
+                    Supplier SKU <small>(optional)</small>
+                    <input name="supplierSku" value="@form.SupplierSku" maxlength="@ProductSupplier.SupplierSkuMaxLength" autocomplete="off" autofocus
+                           aria-invalid="@Html.AriaInvalid("SupplierSku")" />
+                </label>
+                <label>
+                    Unit cost (@currency)
+                    <input name="unitCost" value="@form.UnitCost" inputmode="decimal" autocomplete="off" placeholder="0.00"
+                           aria-invalid="@Html.AriaInvalid("UnitCost")" />
+                </label>
+                <label>
+                    Lead time (days) <small>(optional)</small>
+                    <input name="leadTimeDays" value="@form.LeadTimeDays" type="number" inputmode="numeric" min="0" max="@ProductSupplier.MaxLeadTimeDays" step="1"
+                           aria-invalid="@Html.AriaInvalid("LeadTimeDays")" />
+                </label>
+                <label>
+                    Minimum order
+                    <input name="minOrderQuantity" value="@form.MinOrderQuantity" type="number" inputmode="numeric" min="1" step="1" placeholder="1"
+                           aria-invalid="@Html.AriaInvalid("MinOrderQuantity")" />
+                </label>
+            </div>
+            <label class="inline-check">
+                <input type="checkbox" name="isPreferred" value="true" checked="@form.IsPreferred" />
+                Preferred supplier for this product
+            </label>
+            <div class="form-actions">
+                <button type="submit">Save</button>
+                <button type="button" class="secondary" hx-get="@rowUrl" hx-target="#@Model.RowId" hx-swap="outerHTML">Cancel</button>
+            </div>
+        </form>
+    </td>
+</tr>

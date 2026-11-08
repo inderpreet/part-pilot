@@ -72,3 +72,56 @@ public sealed record ConfirmButtonModel(
 
 /// <summary>Model for the <c>_MoveButtons</c> partial: the "+ In / âˆ’ Out / Adjust" buttons that open the quick stock-movement dialog.</summary>
 public sealed record MoveButtonsModel(int ProductId, string Sku);
+/// <summary>Which side of the product–supplier relationship a links table is shown from: a supplier's products, or a product's suppliers.</summary>
+public enum LinkView
+{
+    Supplier,
+    Product,
+}
+
+/// <summary>Values of a link form (the "add" form, or an inline "edit" row); text fields stay as typed so errors can be shown next to them.</summary>
+public sealed record SupplierLinkFormModel(
+    int? ProductId,
+    int? SupplierId,
+    string? ProductLabel,
+    string? SupplierSku,
+    string? UnitCost,
+    string? LeadTimeDays,
+    string? MinOrderQuantity,
+    bool IsPreferred);
+
+/// <summary>
+/// Model for <c>_SupplierLinks</c>: the table of links plus its "add" form. Used on the supplier page (<see cref="LinkView.Supplier"/>,
+/// <see cref="OwnerId"/> = supplier id) and the product page (<see cref="LinkView.Product"/>, <see cref="OwnerId"/> = product id).
+/// </summary>
+/// <param name="Candidates">Product view only: the suppliers that can still be added.</param>
+/// <param name="OwnerActive">False for an archived supplier / product: existing links can be edited, new ones cannot be added.</param>
+/// <param name="Add">What was typed in the "add" form when it came back with errors.</param>
+public sealed record SupplierLinksModel(
+    LinkView View,
+    int OwnerId,
+    IReadOnlyList<ProductSupplierItem> Items,
+    bool CanEdit,
+    bool OwnerActive,
+    IReadOnlyList<SupplierLookupItem> Candidates,
+    SupplierLinkFormModel? Add = null)
+{
+    /// <summary>The element id of the whole block; every link action swaps this element.</summary>
+    public string SectionId => SectionIdFor(View);
+
+    public static string SectionIdFor(LinkView view) => view == LinkView.Supplier ? "supplier-links" : "product-suppliers";
+}
+
+/// <summary>Model for <c>_SupplierLinkRow</c>.</summary>
+public sealed record SupplierLinkRowModel(LinkView View, ProductSupplierItem Item, bool CanEdit)
+{
+    public string SectionId => SupplierLinksModel.SectionIdFor(View);
+
+    public string RowId => $"link-{Item.ProductId}-{Item.SupplierId}";
+}
+
+/// <summary>Model for <c>_SupplierLinkEditRow</c>: an inline edit form in place of a row.</summary>
+public sealed record SupplierLinkEditRowModel(LinkView View, ProductSupplierItem Item, SupplierLinkFormModel Form)
+{
+    public string RowId => $"link-{Item.ProductId}-{Item.SupplierId}";
+}

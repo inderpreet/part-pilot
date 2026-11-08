@@ -1,0 +1,79 @@
+@model InventoryTracker.Pages.Suppliers.IndexModel
+@if (Model.Suppliers.TotalCount == 0)
+{
+    if (Model.IsFiltered)
+    {
+        <partial name="_EmptyState" model="@(new EmptyStateModel("No suppliers match", "Try a different search, or change the status filter."))" />
+    }
+    else if (Model.CanEdit)
+    {
+        <partial name="_EmptyState" model="@(new EmptyStateModel("No suppliers yet", "Add your first supplier to keep their contact details and prices.", "New supplier", "/Suppliers/Edit"))" />
+    }
+    else
+    {
+        <partial name="_EmptyState" model="@(new EmptyStateModel("No suppliers yet", "Ask an Admin or Staff user to add suppliers."))" />
+    }
+}
+else
+{
+    <div class="table-wrap">
+        <table class="striped">
+            <thead>
+                <tr>
+                    <partial name="_SortHeader" model="@(new SortHeaderModel("name", "Name", Model.Query))" />
+                    <partial name="_SortHeader" model="@(new SortHeaderModel("contact", "Contact", Model.Query))" />
+                    <th scope="col">Phone</th>
+                    <th scope="col">Email</th>
+                    <partial name="_SortHeader" model="@(new SortHeaderModel("products", "Products", Model.Query))" />
+                    @if (Model.CanEdit)
+                    {
+                        <th scope="col"><span class="visually-hidden">Actions</span></th>
+                    }
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var supplier in Model.Suppliers.Items)
+                {
+                    <tr class="@(supplier.IsActive ? null : "row-archived")">
+                        <td>
+                            <a asp-page="/Suppliers/Detail" asp-route-id="@supplier.Id">@supplier.Name</a>
+                            @if (!supplier.IsActive)
+                            {
+                                <span class="badge badge-inactive">Archived</span>
+                            }
+                        </td>
+                        <td>@(supplier.ContactName ?? "—")</td>
+                        <td>
+                            @if (supplier.Phone is { } phone)
+                            {
+                                <a href="tel:@phone">@phone</a>
+                            }
+                            else
+                            {
+                                <span>—</span>
+                            }
+                        </td>
+                        <td>
+                            @if (supplier.Email is { } email)
+                            {
+                                <a href="mailto:@email">@email</a>
+                            }
+                            else
+                            {
+                                <span>—</span>
+                            }
+                        </td>
+                        <td class="num">@supplier.ProductCount</td>
+                        @if (Model.CanEdit)
+                        {
+                            <td class="row-actions">
+                                <a asp-page="/Suppliers/Edit" asp-route-id="@supplier.Id">Edit</a>
+                            </td>
+                        }
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <partial name="_Pager" model="@PagerModel.From(Model.Suppliers)" />
+}

@@ -1,0 +1,122 @@
+@model SupplierLinksModel
+@inject ISettingsService Settings
+@using InventoryTracker.Data
+@using InventoryTracker.Data.Entities
+@* The product–supplier links of one supplier or one product, with the "add" form. Everything inside is swapped as a whole
+   (outerHTML on its own id) by /Suppliers/Links, so the preferred star always agrees with the table. *@
+@{
+    var bySupplier = Model.View == LinkView.Supplier;
+    var add = Model.Add;
+    var target = "#" + Model.SectionId;
+    var currency = await Settings.GetStringAsync(SettingKeys.CurrencySymbol);
+    var saveUrl = Url.Page("/Suppliers/Links", "Save")!;
+}
+<div id="@Model.SectionId" class="supplier-links">
+    @if (Model.Items.Count == 0)
+    {
+        <partial name="_EmptyState" model="@(bySupplier
+            ? new EmptyStateModel("No products linked yet", Model.CanEdit ? "Add the products this supplier provides, with their price and lead time." : "No products have been linked to this supplier.")
+            : new EmptyStateModel("No suppliers yet", Model.CanEdit ? "Add the suppliers that provide this product, with their price and lead time." : "No suppliers have been linked to this product."))" />
+    }
+    else
+    {
+        <div class="table-wrap">
+            <table class="striped compact">
+                <thead>
+                    <tr>
+                        <th scope="col">@(bySupplier ? "Product" : "Supplier")</th>
+                        <th scope="col">Supplier SKU</th>
+                        <th scope="col" class="num">Unit cost</th>
+                        <th scope="col" class="num">Lead time</th>
+                        <th scope="col" class="num">Min. order</th>
+                        <th scope="col" class="num">Preferred</th>
+                        @if (Model.CanEdit)
+                        {
+                            <th scope="col"><span class="visually-hidden">Actions</span></th>
+                        }
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var item in Model.Items)
+                    {
+                        <partial name="_SupplierLinkRow" model="@(new SupplierLinkRowModel(Model.View, item, Model.CanEdit))" />
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+
+    @if (Model.CanEdit && Model.OwnerActive)
+    {
+        <details class="link-add" open="@(Model.Items.Count == 0 || add is not null)">
+            <summary>@(bySupplier ? "Add a product" : "Add a supplier")</summary>
+            <form method="post" novalidate asp-page="/Suppliers/Links" asp-page-handler="Save"
+                  hx-post="@saveUrl" hx-target="@target" hx-swap="outerHTML">
+                <partial name="_ValidationSummary" model="ViewData.ModelState" />
+                <input type="hidden" name="mode" value="add" />
+                <input type="hidden" name="view" value="@Model.View" />
+
+                @if (bySupplier)
+                {
+                    <input type="hidden" name="supplierId" value="@Model.OwnerId" />
+                    <partial name="_ProductPicker" model="@(new ProductPickerModel("productId", add?.ProductId, add?.ProductLabel, ActiveOnly: true, Label: "Product", Required: false))" />
+                }
+                else
+                {
+                    <input type="hidden" name="productId" value="@Model.OwnerId" />
+                    @if (Model.Candidates.Count == 0)
+                    {
+                        <p class="muted">Every active supplier is already linked to this product. <a asp-page="/Suppliers/Edit">Add a new supplier</a> first.</p>
+                    }
+                    else
+                    {
+                        <label>
+                            Supplier
+                            <select name="supplierId" aria-invalid="@Html.AriaInvalid("SupplierId")">
+                                <option value="">— Choose a supplier —</option>
+                                @foreach (var candidate in Model.Candidates)
+                                {
+                                    <option value="@candidate.Id" selected="@(add?.SupplierId == candidate.Id)">@candidate.Name</option>
+                                }
+                            </select>
+                        </label>
+                    }
+                }
+
+                <div class="grid">
+                    <label>
+                        Supplier SKU <small>(optional)</small>
+                        <input name="supplierSku" value="@add?.SupplierSku" maxlength="@ProductSupplier.SupplierSkuMaxLength" autocomplete="off"
+                               aria-invalid="@Html.AriaInvalid("SupplierSku")" />
+                    </label>
+                    <label>
+                        Unit cost (@currency)
+                        <input name="unitCost" value="@add?.UnitCost" inputmode="decimal" autocomplete="off" placeholder="0.00"
+                               aria-invalid="@Html.AriaInvalid("UnitCost")" />
+                    </label>
+                    <label>
+                        Lead time (days) <small>(optional)</small>
+                        <input name="leadTimeDays" value="@add?.LeadTimeDays" type="number" inputmode="numeric" min="0" max="@ProductSupplier.MaxLeadTimeDays" step="1"
+                               aria-invalid="@Html.AriaInvalid("LeadTimeDays")" />
+                    </label>
+                    <label>
+                        Minimum order
+                        <input name="minOrderQuantity" value="@add?.MinOrderQuantity" type="number" inputmode="numeric" min="1" step="1" placeholder="1"
+                               aria-invalid="@Html.AriaInvalid("MinOrderQuantity")" />
+                    </label>
+                </div>
+                <label class="inline-check">
+                    <input type="checkbox" name="isPreferred" value="true" checked="@(add?.IsPreferred ?? false)" />
+                    Preferred supplier for this product
+                </label>
+                <div class="form-actions">
+                    <button type="submit" disabled="@(!bySupplier && Model.Candidates.Count == 0)">@(bySupplier ? "Add product" : "Add supplier")</button>
+                </div>
+            </form>
+        </details>
+    }
+    else if (Model.CanEdit)
+    {
+        <p class="muted">@(bySupplier ? "This supplier is archived. Restore it to link more products." : "This product is archived. Restore it to add suppliers.")</p>
+    }
+</div>

@@ -247,3 +247,17 @@ button.add-line { width: auto; margin-bottom: var(--pico-spacing); }
   .table-wrap { overflow: visible; }
   a { color: inherit; text-decoration: none; }
 }
+
+/* Suppliers (F04) */
+.pre-line { white-space: pre-line; }
+.supplier-links td.row-actions { display: flex; gap: 0.4rem; justify-content: flex-end; }
+.supplier-links td.row-actions > button, .supplier-links td.row-actions form button { width: auto; margin: 0; padding: 0.15rem 0.6rem; font-size: 0.85em; }
+.supplier-links .inline-form { display: inline; }
+button.star { background: none; border: 0; box-shadow: none; padding: 0 0.25rem; margin: 0; width: auto; font-size: 1.25rem; line-height: 1; cursor: pointer; }
+button.star-off { color: var(--it-muted); }
+.star-on { color: #d99a00; }
+button.star:hover, button.star:focus-visible { color: #d99a00; background: none; }
+.link-add { margin-top: var(--pico-spacing); }
+.link-add > summary { cursor: pointer; font-weight: 600; margin-bottom: 0.5rem; }
+.link-add form { margin-top: 0.5rem; }
+.supplier-filters select { min-width: 8rem; }

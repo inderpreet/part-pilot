@@ -1,0 +1,100 @@
+@page "/Suppliers/{id:int}"
+@model InventoryTracker.Pages.Suppliers.DetailModel
+@{
+    var s = Model.Supplier;
+    ViewData["Title"] = s.Name;
+}
+
+<div class="toolbar">
+    <p class="muted">
+        <a asp-page="Index">‹ All suppliers</a>
+        @if (!s.IsActive)
+        {
+            <span class="badge badge-inactive">Archived</span>
+        }
+    </p>
+
+    @if (Model.CanEdit)
+    {
+        <div class="form-actions">
+            <a role="button" asp-page="Edit" asp-route-id="@s.Id">Edit</a>
+            <form method="post" asp-page-handler="Archive" asp-route-id="@s.Id">
+                <input type="hidden" name="active" value="@(s.IsActive ? "false" : "true")" />
+                <input type="hidden" name="rowVersion" value="@s.RowVersion" />
+                @if (s.IsActive)
+                {
+                    <button type="submit" class="secondary outline"
+                            hx-post="@Url.Page("Detail", "Archive", new { id = s.Id })"
+                            hx-confirm="Archive @s.Name? It can no longer be chosen for new purchase orders or product links; existing ones are kept.">Archive</button>
+                }
+                else
+                {
+                    <button type="submit" class="secondary outline"
+                            hx-post="@Url.Page("Detail", "Archive", new { id = s.Id })"
+                            hx-confirm="Restore @s.Name so it can be used again?">Restore</button>
+                }
+            </form>
+        </div>
+    }
+</div>
+
+@if (!s.IsActive)
+{
+    <p role="status" class="muted">This supplier is archived. It cannot be chosen for new purchase orders; existing orders are unaffected.</p>
+}
+
+<article>
+    <dl class="detail-grid">
+        <dt>Name</dt>
+        <dd>@s.Name</dd>
+        <dt>Contact</dt>
+        <dd>@(s.ContactName ?? "—")</dd>
+        <dt>Email</dt>
+        <dd>
+            @if (s.Email is { } email)
+            {
+                <a href="mailto:@email">@email</a>
+            }
+            else
+            {
+                <span>—</span>
+            }
+        </dd>
+        <dt>Phone</dt>
+        <dd>
+            @if (s.Phone is { } phone)
+            {
+                <a href="tel:@phone">@phone</a>
+            }
+            else
+            {
+                <span>—</span>
+            }
+        </dd>
+        <dt>Website</dt>
+        <dd>
+            @if (s.Website is { } website)
+            {
+                <a href="@website" target="_blank" rel="noopener noreferrer">@website</a>
+            }
+            else
+            {
+                <span>—</span>
+            }
+        </dd>
+        <dt>Address</dt>
+        <dd class="pre-line">@(s.Address ?? "—")</dd>
+        <dt>Notes</dt>
+        <dd class="pre-line">@(s.Notes ?? "—")</dd>
+        <dt>Added</dt>
+        <dd>@Html.LocalTime(s.CreatedAt)</dd>
+        <dt>Last changed</dt>
+        <dd>@Html.LocalTime(s.UpdatedAt)</dd>
+    </dl>
+</article>
+
+@* Recent purchase orders join this page in F05 (WI-05-3). *@
+<section aria-label="Products this supplier provides">
+    <h2 class="section-title">Products</h2>
+    <partial name="_SupplierLinks" model="Model.Links" />
+</section>

@@ -1,5 +1,6 @@
 using InventoryTracker.Auth;
 using InventoryTracker.Hosting;
+using InventoryTracker.Pages.Shared;
 using InventoryTracker.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -8,12 +9,15 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 namespace InventoryTracker.Pages.Products;
 
 [Authorize(Policy = Policies.CanView)]
-public class DetailModel(IProductService products, IStockService stock, ICurrentUser currentUser) : PageModel
+public class DetailModel(IProductService products, IStockService stock, ISupplierService suppliers, ICurrentUser currentUser) : PageModel
 {
     public ProductDetail Product { get; private set; } = null!;
 
     /// <summary>The History tab: this product's ledger, newest posting first.</summary>
     public PagedResult<StockMovementItem> History { get; private set; } = new([], 1, ListQuery.DefaultPageSize, 0);
+
+    /// <summary>The Suppliers section: who supplies this product, with terms (managed through <c>/Suppliers/Links</c>).</summary>
+    public SupplierLinksModel Suppliers { get; private set; } = null!;
 
     /// <summary>Only used to hide edit actions; the handler and the edit page enforce <c>CanEdit</c> themselves.</summary>
     public bool CanEdit => currentUser.CanEdit;
@@ -31,6 +35,7 @@ public class DetailModel(IProductService products, IStockService stock, ICurrent
 
         Product = product;
         History = await stock.GetHistoryAsync(id, query, HttpContext.RequestAborted);
+        Suppliers = (await SupplierLinksBuilder.BuildAsync(suppliers, products, LinkView.Product, id, CanEdit, cancellationToken: HttpContext.RequestAborted))!;
         return Page();
     }
 

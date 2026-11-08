@@ -1,0 +1,65 @@
+@model SupplierLinkRowModel
+@* One product–supplier link. The same row is used on the supplier page (first column = product) and on the product page
+   (first column = supplier); every action is answered by /Suppliers/Links, which re-renders the whole block. *@
+@{
+    var item = Model.Item;
+    var bySupplier = Model.View == LinkView.Supplier;
+    var archived = bySupplier ? !item.ProductIsActive : !item.SupplierIsActive;
+    var label = bySupplier ? item.Sku : item.SupplierName;
+    var target = "#" + Model.SectionId;
+    object Scope() => new { view = Model.View, productId = item.ProductId, supplierId = item.SupplierId };
+}
+<tr id="@Model.RowId" class="@(archived ? "row-archived" : null)">
+    <td>
+        @if (bySupplier)
+        {
+            <a asp-page="/Products/Detail" asp-route-id="@item.ProductId">@item.Sku</a>
+            <span>@item.ProductName</span>
+        }
+        else
+        {
+            <a asp-page="/Suppliers/Detail" asp-route-id="@item.SupplierId">@item.SupplierName</a>
+        }
+        @if (archived)
+        {
+            <span class="badge badge-inactive">Archived</span>
+        }
+    </td>
+    <td>@(item.SupplierSku ?? "—")</td>
+    <td class="num">@Html.Money(item.UnitCostCents)</td>
+    <td class="num">@(item.LeadTimeDays is { } days ? $"{days} d" : "—")</td>
+    <td class="num">@item.MinOrderQuantity</td>
+    <td class="num">
+        @if (Model.CanEdit)
+        {
+            <form method="post" class="inline-form" asp-page="/Suppliers/Links" asp-page-handler="Preferred">
+                <input type="hidden" name="view" value="@Model.View" />
+                <input type="hidden" name="productId" value="@item.ProductId" />
+                <input type="hidden" name="supplierId" value="@item.SupplierId" />
+                <input type="hidden" name="preferred" value="@(item.IsPreferred ? "false" : "true")" />
+                <button type="submit" class="star @(item.IsPreferred ? "star-on" : "star-off")" aria-pressed="@(item.IsPreferred ? "true" : "false")"
+                        title="@(item.IsPreferred ? "Preferred supplier. Click to clear." : "Make this the preferred supplier")"
+                        aria-label="@(item.IsPreferred ? $"Clear preferred supplier ({label})" : $"Make {label} the preferred supplier")"
+                        hx-post="@Url.Page("/Suppliers/Links", "Preferred")" hx-target="@target" hx-swap="outerHTML">@(item.IsPreferred ? "★" : "☆")</button>
+            </form>
+        }
+        else if (item.IsPreferred)
+        {
+            <span class="star star-on" title="Preferred supplier">★ <span class="visually-hidden">Preferred</span></span>
+        }
+        else
+        {
+            <span aria-label="Not preferred">—</span>
+        }
+    </td>
+    @if (Model.CanEdit)
+    {
+        <td class="row-actions">
+            <button type="button" class="outline" hx-get="@Url.Page("/Suppliers/Links", "Edit", Scope())"
+                    hx-target="#@Model.RowId" hx-swap="outerHTML" aria-label="Edit terms for @label">Edit</button>
+            <partial name="_ConfirmButton" model="@(new ConfirmButtonModel("Remove",
+                bySupplier ? $"Remove {item.Sku} from {item.SupplierName}? Existing purchase orders are not affected." : $"Remove {item.SupplierName} as a supplier of {item.Sku}? Existing purchase orders are not affected.",
+                Url.Page("/Suppliers/Links", "Remove", Scope())!, target, "outerHTML", "secondary outline"))" />
+        </td>
+    }
+</tr>

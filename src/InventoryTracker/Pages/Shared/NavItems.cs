@@ -22,7 +22,7 @@ public static class NavItems
         new("Dashboard", "/", Policies.CanView),
         new("Products", "/Products", Policies.CanView),
         new("Stock", "/Stock", Policies.CanView),
-        new("Suppliers", "/Suppliers", Policies.CanView, Available: false),
+        new("Suppliers", "/Suppliers", Policies.CanView),
         new("Purchase Orders", "/PurchaseOrders", Policies.CanView, Available: false),
         new("Reports", "/Reports", Policies.CanView, Available: false),
         new("Admin", "/Admin", Policies.RequireAdmin),

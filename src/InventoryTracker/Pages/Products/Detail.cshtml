@@ -108,7 +108,7 @@
 <nav class="tabs-soon" aria-label="More about this product">
     <ul>
         <li><a href="#history" aria-current="true">History</a></li>
-        <li><span aria-disabled="true" title="Coming soon">Suppliers</span></li>
+        <li><a href="#suppliers">Suppliers</a></li>
         <li><span aria-disabled="true" title="Coming soon">Purchase orders</span></li>
         <li><span aria-disabled="true" title="Coming soon">Audit</span></li>
     </ul>
@@ -119,4 +119,9 @@
     <div id="history">
         <partial name="_StockHistory" model="Model" />
     </div>
+</section>
+
+<section id="suppliers" aria-label="Suppliers of this product">
+    <h2 class="section-title">Suppliers</h2>
+    <partial name="_SupplierLinks" model="Model.Suppliers" />
 </section>

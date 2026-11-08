@@ -1,0 +1,74 @@
+@page "{id:int?}"
+@model InventoryTracker.Pages.Suppliers.EditModel
+@using InventoryTracker.Data.Entities
+@{
+    ViewData["Title"] = Model.IsEdit ? $"Edit supplier: {Model.Existing!.Name}" : "New supplier";
+}
+
+<form method="post" novalidate class="form-narrow">
+    <partial name="_ValidationSummary" model="ViewData.ModelState" />
+
+    @if (Model.Conflict)
+    {
+        <p role="alert">
+            Someone else saved this supplier while you were editing.
+            <a asp-page="Edit" asp-route-id="@Model.Existing!.Id">Reload the latest version</a> (your unsaved changes will be lost).
+        </p>
+    }
+
+    <input type="hidden" name="Input.RowVersion" value="@Model.Input.RowVersion" />
+
+    <label>
+        Name
+        <input name="Input.Name" value="@Model.Input.Name" maxlength="@Supplier.NameMaxLength" required autofocus autocomplete="off"
+               aria-invalid="@Html.AriaInvalid("Input.Name")" />
+    </label>
+
+    <div class="grid">
+        <label>
+            Contact name <small>(optional)</small>
+            <input name="Input.ContactName" value="@Model.Input.ContactName" maxlength="@Supplier.ContactNameMaxLength" autocomplete="off"
+                   aria-invalid="@Html.AriaInvalid("Input.ContactName")" />
+        </label>
+        <label>
+            Phone <small>(optional)</small>
+            <input name="Input.Phone" value="@Model.Input.Phone" type="tel" maxlength="@Supplier.PhoneMaxLength" autocomplete="off"
+                   aria-invalid="@Html.AriaInvalid("Input.Phone")" />
+        </label>
+    </div>
+
+    <div class="grid">
+        <label>
+            Email <small>(optional)</small>
+            <input name="Input.Email" value="@Model.Input.Email" type="email" maxlength="@Supplier.EmailMaxLength" autocomplete="off" spellcheck="false"
+                   aria-invalid="@Html.AriaInvalid("Input.Email")" />
+        </label>
+        <label>
+            Website <small>(optional)</small>
+            <input name="Input.Website" value="@Model.Input.Website" inputmode="url" maxlength="@Supplier.WebsiteMaxLength" autocomplete="off" spellcheck="false"
+                   placeholder="https://" aria-invalid="@Html.AriaInvalid("Input.Website")" />
+        </label>
+    </div>
+
+    <label>
+        Address <small>(optional)</small>
+        <textarea name="Input.Address" rows="3" maxlength="@Supplier.AddressMaxLength" aria-invalid="@Html.AriaInvalid("Input.Address")">@Model.Input.Address</textarea>
+    </label>
+
+    <label>
+        Notes <small>(optional)</small>
+        <textarea name="Input.Notes" rows="3" maxlength="@Supplier.NotesMaxLength" aria-invalid="@Html.AriaInvalid("Input.Notes")">@Model.Input.Notes</textarea>
+    </label>
+
+    <div class="form-actions">
+        <button type="submit">@(Model.IsEdit ? "Save changes" : "Create supplier")</button>
+        @if (Model.IsEdit)
+        {
+            <a role="button" class="secondary" asp-page="Detail" asp-route-id="@Model.Existing!.Id">Cancel</a>
+        }
+        else
+        {
+            <a role="button" class="secondary" asp-page="Index">Cancel</a>
+        }
+    </div>
+</form>
