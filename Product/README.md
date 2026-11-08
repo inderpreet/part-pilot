@@ -49,7 +49,7 @@ F00 has an extra packaging item.
 | [WI-02-1](work-items/F02-product-catalog/WI-02-1-db-schema.md) | Catalog — Product, Category schema | Done |
 | [WI-02-2](work-items/F02-product-catalog/WI-02-2-api.md) | Catalog — ProductService, CategoryService | Done |
 | [WI-02-3](work-items/F02-product-catalog/WI-02-3-frontend.md) | Catalog — product list/detail/edit, categories | Done |
-| [WI-03-1](work-items/F03-stock-tracking/WI-03-1-db-schema.md) | Stock — StockTransaction ledger | Planned |
+| [WI-03-1](work-items/F03-stock-tracking/WI-03-1-db-schema.md) | Stock — StockTransaction ledger | Done |
 | [WI-03-2](work-items/F03-stock-tracking/WI-03-2-api.md) | Stock — StockService | Planned |
 | [WI-03-3](work-items/F03-stock-tracking/WI-03-3-frontend.md) | Stock — movements, history, stock count | Planned |
 | [WI-04-1](work-items/F04-suppliers/WI-04-1-db-schema.md) | Suppliers — Supplier, ProductSupplier schema | Planned |

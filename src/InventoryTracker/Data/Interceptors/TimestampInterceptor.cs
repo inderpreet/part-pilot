@@ -31,6 +31,16 @@ public class TimestampInterceptor(TimeProvider? timeProvider = null) : SaveChang
         }
 
         var now = _time.GetUtcNow().UtcDateTime;
+
+        // Insert-only rows (the stock ledger) have CreatedAt but no UpdatedAt.
+        foreach (var entry in context.ChangeTracker.Entries<IHasCreatedAt>())
+        {
+            if (entry.State == EntityState.Added && entry.Entity is not IHasTimestamps)
+            {
+                entry.Entity.CreatedAt = now;
+            }
+        }
+
         foreach (var entry in context.ChangeTracker.Entries<IHasTimestamps>())
         {
             switch (entry.State)

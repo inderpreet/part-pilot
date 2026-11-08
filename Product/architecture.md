@@ -227,6 +227,7 @@ dotnet publish src/InventoryTracker -c Release -r <rid> --self-contained true
 | D11 | Vendored front-end assets pinned: htmx **2.0.11**, Pico CSS **2.1.1** (`wwwroot/lib/`, copied from the npm packages via jsDelivr) | No Node build; versions recorded here so upgrades are deliberate. htmx runs with `allowEval=false` / `selfRequestsOnly=true` |
 | D12 | Data-protection keys persisted to `<db dir>/keys` (file system, unencrypted) | Without a persisted key ring every restart invalidates sign-in cookies and antiforgery tokens (and a single-file app has no stable default location). Same trust boundary as the DB file: whoever can read the folder already owns the data |
 | D13 | NuGet: `Microsoft.AspNetCore.Identity.EntityFrameworkCore` (+ `Microsoft.EntityFrameworkCore.Design`, build-time only, `PrivateAssets=all`) | Identity stores on EF Core; Design is only for `dotnet ef migrations` |
+| D14 | The stock ledger is made immutable by the database: SQLite `BEFORE UPDATE` / `BEFORE DELETE` triggers on `StockTransactions` (`RAISE(ABORT)`), plus CHECKs (`QuantityDelta <> 0`, `Type` in the enum, `Type = 'Reversal'` ⇔ `ReversesTransactionId IS NOT NULL`) and a filtered unique index on `ReversesTransactionId` | Invariant 2 holds even for code or SQL that bypasses `StockService`. The triggers are hand-written in the `AddStockLedger` migration (EF cannot model them); a future migration that rebuilds the table must re-create them (`StockSchemaTests` fails if it forgets) |
 
 ## 14. Open questions
 

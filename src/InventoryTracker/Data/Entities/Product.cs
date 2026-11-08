@@ -52,6 +52,9 @@ public class Product : IHasTimestamps, IHasRowVersion
 
     public long RowVersion { get; set; }
 
+    /// <summary>The product's stock ledger (F03), oldest first by posting order.</summary>
+    public List<StockTransaction> StockTransactions { get; set; } = [];
+
     public DateTime CreatedAt { get; set; }
 
     public DateTime UpdatedAt { get; set; }

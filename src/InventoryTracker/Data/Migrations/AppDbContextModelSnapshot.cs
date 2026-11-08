@@ -261,6 +261,86 @@ namespace InventoryTracker.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("InventoryTracker.Data.Entities.StockTransaction", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<long?>("ImportBatchId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("OccurredAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long?>("PurchaseOrderLineId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("QuantityAfter")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("QuantityDelta")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Reference")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long?>("ReversesTransactionId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Type")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long?>("UnitCostCents")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("OccurredAt");
+
+                    b.HasIndex("PurchaseOrderLineId");
+
+                    b.HasIndex("ReversesTransactionId")
+                        .IsUnique()
+                        .HasFilter("\"ReversesTransactionId\" IS NOT NULL");
+
+                    b.HasIndex("Type");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("ProductId", "Id");
+
+                    b.ToTable("StockTransactions", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_StockTransactions_QuantityDelta", "\"QuantityDelta\" <> 0");
+
+                            t.HasCheckConstraint("CK_StockTransactions_Reversal", "(\"Type\" = 'Reversal') = (\"ReversesTransactionId\" IS NOT NULL)");
+
+                            t.HasCheckConstraint("CK_StockTransactions_Type", "\"Type\" IN ('Receive', 'Issue', 'Adjust', 'Count', 'Return', 'Reversal')");
+                        });
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
                 {
                     b.Property<string>("Id")
@@ -422,6 +502,32 @@ namespace InventoryTracker.Data.Migrations
                     b.Navigation("Category");
                 });
 
+            modelBuilder.Entity("InventoryTracker.Data.Entities.StockTransaction", b =>
+                {
+                    b.HasOne("InventoryTracker.Data.Entities.Product", "Product")
+                        .WithMany("StockTransactions")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("InventoryTracker.Data.Entities.StockTransaction", "ReversesTransaction")
+                        .WithMany()
+                        .HasForeignKey("ReversesTransactionId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.HasOne("InventoryTracker.Data.Entities.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+
+                    b.Navigation("ReversesTransaction");
+
+                    b.Navigation("User");
+                });
+
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRoleClaim<string>", b =>
                 {
                     b.HasOne("Microsoft.AspNetCore.Identity.IdentityRole", null)
@@ -476,6 +582,11 @@ namespace InventoryTracker.Data.Migrations
             modelBuilder.Entity("InventoryTracker.Data.Entities.Category", b =>
                 {
                     b.Navigation("Products");
+                });
+
+            modelBuilder.Entity("InventoryTracker.Data.Entities.Product", b =>
+                {
+                    b.Navigation("StockTransactions");
                 });
 #pragma warning restore 612, 618
         }
