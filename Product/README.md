@@ -29,13 +29,15 @@ executable: run it, open the browser, sign in. Data lives in a single SQLite fil
 | [F06](Features/F06-dashboard-alerts-reports.md) | Dashboard, alerts & reports | KPIs, low-stock alerts, reorder suggestions, reports | F03, F05 | Planned |
 | [F07](Features/F07-data-import-export.md) | Data import/export & backup | CSV import/export, opening stock, DB backup download | F03, F04 | Planned |
 | [F08](Features/F08-audit-log.md) | Audit log | Who changed what and when; sign-in events | F01 | Planned |
+| [F09](Features/F09-ui-overhaul.md) | UI overhaul | Left rail shell, list cards, actions, forms and detail pages on the screens that exist | F05 | Done |
 
-Suggested build order: F00 → F01 → F02 → F03 → F04 → F05 → F08 → F06 → F07.
+Suggested build order: F00 → F01 → F02 → F03 → F04 → F05 → F09 → F08 → F06 → F07.
+F09 is a presentation overhaul of F00–F05 (shipped; the shared patterns are shown at `/Dev/Components`). F06, F07 and F08 should use its shared patterns (architecture D17) when they build screens.
 
 ## Work items
 
 Each feature is split into three work items, done in order: **1 DB schema → 2 API (services + endpoints) → 3 Frontend**.
-F00 has an extra packaging item.
+F00 has an extra packaging item. F09 has no schema and no service layer; it is split into incremental UI work items (foundation, shell, header, lists, actions, forms, detail, finish) instead.
 
 | ID | Title | Status |
 |---|---|---|
@@ -67,6 +69,15 @@ F00 has an extra packaging item.
 | [WI-08-1](work-items/F08-audit-log/WI-08-1-db-schema.md) | Audit — AuditEntry schema | Planned |
 | [WI-08-2](work-items/F08-audit-log/WI-08-2-api.md) | Audit — SaveChanges interceptor, AuditService | Planned |
 | [WI-08-3](work-items/F08-audit-log/WI-08-3-frontend.md) | Audit — audit log viewer, entity history | Planned |
+| [WI-09-0](work-items/F09-ui-overhaul/WI-09-0-reference.md) | UI — reference page (`/Dev/Overhaul`, retired in WI-09-8) | Done |
+| [WI-09-1](work-items/F09-ui-overhaul/WI-09-1-foundation.md) | UI — foundation: tokens, type, controls, chips, tables | Done |
+| [WI-09-2](work-items/F09-ui-overhaul/WI-09-2-shell.md) | UI — shell: rail, top bar, skip link, drawer | Done |
+| [WI-09-3](work-items/F09-ui-overhaul/WI-09-3-page-header.md) | UI — page header | Done |
+| [WI-09-4](work-items/F09-ui-overhaul/WI-09-4-lists.md) | UI — list cards | Done |
+| [WI-09-5](work-items/F09-ui-overhaul/WI-09-5-actions.md) | UI — button roles, overflow menu, confirm dialog | Done |
+| [WI-09-6](work-items/F09-ui-overhaul/WI-09-6-forms.md) | UI — form sections and field errors | Done |
+| [WI-09-7](work-items/F09-ui-overhaul/WI-09-7-detail.md) | UI — detail pages | Done |
+| [WI-09-8](work-items/F09-ui-overhaul/WI-09-8-finish.md) | UI — narrow screens, print, gallery, clean-up | Done |
 
 ## Non-functional requirements
 

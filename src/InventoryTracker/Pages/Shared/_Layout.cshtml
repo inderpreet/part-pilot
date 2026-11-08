@@ -26,6 +26,33 @@
 
     // Only what this user may use is shown; anonymous pages (login, setup, errors) get no navigation at all.
     var navItems = await NavItems.VisibleToAsync(Authorization, User);
+    var signedIn = CurrentUser.IsAuthenticated;
+
+    // Rail sections: ungrouped items on top, then each named group, then the foot (Admin) above the user card.
+    var topItems = navItems.Where(i => i.Group is null).ToList();
+    var groups = navItems.Where(i => i.Group is not null and not NavGroups.Foot).GroupBy(i => i.Group!).ToList();
+    var footItems = navItems.Where(i => i.Group == NavGroups.Foot).ToList();
+
+    // Top-bar trail: the section, then the page's own crumb when it sets one.
+    var currentItem = navItems.FirstOrDefault(i => i.Available && NavItems.IsCurrent(i, path));
+    var crumb = ViewData["Crumb"] as string;
+
+    var userName = CurrentUser.DisplayName ?? "";
+    var initials = string.Concat(userName.Split(' ', StringSplitOptions.RemoveEmptyEntries).Take(2).Select(w => char.ToUpperInvariant(w[0])));
+
+    // RenderBody may be called once; the page content is the same inside the app shell and the plain layout.
+    var body = RenderBody();
+
+    void IgnoreHeaderSections()
+    {
+        foreach (var name in new[] { "Leading", "Badges", "Subtitle", "Actions" })
+        {
+            if (IsSectionDefined(name))
+            {
+                IgnoreSection(name);
+            }
+        }
+    }
 }
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
@@ -34,75 +61,173 @@
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <meta name="htmx-config" content='{"allowEval":false,"selfRequestsOnly":true}' />
     <title>@(string.IsNullOrEmpty(pageTitle) ? company : $"{pageTitle} · {company}")</title>
+    <script>document.documentElement.className += ' js';</script>
     <link rel="stylesheet" href="~/lib/pico.min.css" />
     <link rel="stylesheet" href="~/css/site.css" />
     <script src="~/lib/htmx.min.js" defer></script>
     <script src="~/js/site.js" defer></script>
 </head>
 <body hx-headers='{"RequestVerificationToken": "@token"}'>
-    <header class="app-header">
-        <div class="container">
-            <nav class="app-bar" aria-label="Account">
-                <ul>
-                    <li><a class="brand" href="~/"><strong>@company</strong></a></li>
-                </ul>
-                @if (CurrentUser.IsAuthenticated)
-                {
-                    <ul class="user-menu">
-                        <li>
-                            <details class="dropdown">
-                                <summary>@CurrentUser.DisplayName <small class="role-label">(@(CurrentUser.Role ?? "no role"))</small></summary>
-                                <ul dir="rtl">
-                                    <li><a asp-page="/Account/ChangePassword">Change password</a></li>
-                                    <li>
-                                        <form method="post" asp-page="/Account/Logout">
-                                            <button type="submit" class="linklike">Sign out</button>
-                                        </form>
-                                    </li>
-                                </ul>
-                            </details>
-                        </li>
-                    </ul>
-                }
-            </nav>
-            @if (navItems.Count > 0)
-            {
-                <nav class="main-nav" aria-label="Main">
-                    <ul>
-                        @foreach (var item in navItems)
-                        {
-                            <li>
-                                @if (item.Available)
-                                {
-                                    <a href="@item.Href" aria-current="@(NavItems.IsCurrent(item, path) ? "page" : null)">@item.Label</a>
-                                }
-                                else
-                                {
-                                    <span class="nav-soon" aria-disabled="true" title="Coming soon">@item.Label</span>
-                                }
-                            </li>
-                        }
-                    </ul>
-                </nav>
-            }
-        </div>
-    </header>
-
+    <a class="skip-link" href="#content">Skip to content</a>
     <partial name="_Flash" />
 
-    <main class="container">
-        @if (!string.IsNullOrEmpty(pageTitle))
-        {
-            <h1 class="page-title">@pageTitle</h1>
-        }
-        @RenderBody()
-    </main>
+    @if (signedIn)
+    {
+        <partial name="_Icons" />
+        <div class="scrim" data-rail-close></div>
+        <div class="app">
+            <aside class="rail" id="rail" aria-label="Application">
+                <a class="rail-brand" href="~/">
+                    <span class="mark" aria-hidden="true">@(company.Length > 0 ? char.ToUpperInvariant(company[0]) : 'I')</span>
+                    <strong class="brand-name">@company</strong>
+                </a>
 
-    <footer class="container app-footer">
-        <small>@company · Inventory Tracker v@(HealthEndpoint.Version)</small>
-    </footer>
+                <nav class="rail-nav" aria-label="Main">
+                    @if (topItems.Count > 0)
+                    {
+                        <ul>
+                            @foreach (var item in topItems)
+                            {
+                                <partial name="_RailItem" model="item" />
+                            }
+                        </ul>
+                    }
+                    @foreach (var group in groups)
+                    {
+                        <p class="rail-label">@group.Key</p>
+                        <ul>
+                            @foreach (var item in group)
+                            {
+                                <partial name="_RailItem" model="item" />
+                            }
+                        </ul>
+                    }
+                </nav>
+
+                <div class="rail-foot">
+                    <ul>
+                        @foreach (var item in footItems)
+                        {
+                            <partial name="_RailItem" model="item" />
+                        }
+                        <li><a asp-page="/Account/ChangePassword"><svg class="ico" aria-hidden="true"><use href="#i-lock"/></svg><span>Change password</span></a></li>
+                    </ul>
+                    <div class="user-card">
+                        <span class="avatar" aria-hidden="true">@initials</span>
+                        <span class="user-text"><strong>@userName</strong><small>@(CurrentUser.Role ?? "no role")</small></span>
+                        <form method="post" asp-page="/Account/Logout">
+                            <button type="submit" class="rail-icon-btn" title="Sign out" aria-label="Sign out"><svg class="ico" aria-hidden="true"><use href="#i-logout"/></svg></button>
+                        </form>
+                    </div>
+                </div>
+            </aside>
+
+            <div class="stage">
+                <header class="topbar">
+                    <button type="button" class="text menu-btn" data-rail-open aria-label="Open menu" aria-controls="rail"><svg class="ico" aria-hidden="true"><use href="#i-menu"/></svg></button>
+                    <div class="crumbs">
+                        @if (currentItem is not null)
+                        {
+                            <span aria-current="@(crumb is null ? "page" : null)">@currentItem.Label</span>
+                        }
+                        @if (crumb is not null)
+                        {
+                            <span aria-current="page">@crumb</span>
+                        }
+                        @if (currentItem is null && crumb is null && !string.IsNullOrEmpty(pageTitle))
+                        {
+                            <span aria-current="page">@pageTitle</span>
+                        }
+                    </div>
+                </header>
+
+                <main id="content" tabindex="-1">
+                    @if (!string.IsNullOrEmpty(pageTitle))
+                    {
+                        @if ((ViewData["Header"] as string) == "plain")
+                        {
+                            <h1 class="page-title">@pageTitle</h1>
+                            IgnoreHeaderSections();
+                        }
+                        else
+                        {
+                            <div class="page-head">
+                                <div class="page-head-main">
+                                    @if (IsSectionDefined("Leading"))
+                                    {
+                                        <div class="page-lead">@await RenderSectionAsync("Leading")</div>
+                                    }
+                                    <div class="title-row">
+                                        <h1 class="page-title">@pageTitle</h1>
+                                        @if (IsSectionDefined("Badges"))
+                                        {
+                                            <span class="title-badges">@await RenderSectionAsync("Badges")</span>
+                                        }
+                                    </div>
+                                    @if (IsSectionDefined("Subtitle"))
+                                    {
+                                        <p class="page-sub">@await RenderSectionAsync("Subtitle")</p>
+                                    }
+                                </div>
+                                @if (IsSectionDefined("Actions"))
+                                {
+                                    <div class="page-actions">@await RenderSectionAsync("Actions")</div>
+                                }
+                            </div>
+                        }
+                    }
+                    else
+                    {
+                        IgnoreHeaderSections();
+                    }
+                    @body
+                </main>
+
+                <footer class="app-footer">
+                    <small>@company · Inventory Tracker v@(HealthEndpoint.Version)</small>
+                </footer>
+            </div>
+        </div>
+    }
+    else
+    {
+        <header class="plain-head container">
+            <a class="brand" href="~/"><strong>@company</strong></a>
+        </header>
+
+        <main id="content" class="container" tabindex="-1">
+            @if (!string.IsNullOrEmpty(pageTitle))
+            {
+                <h1 class="page-title">@pageTitle</h1>
+            }
+            @{ IgnoreHeaderSections(); }
+            @body
+        </main>
+
+        <footer class="container app-footer">
+            <small>@company · Inventory Tracker v@(HealthEndpoint.Version)</small>
+        </footer>
+    }
 
     <dialog id="modal" aria-label="Dialog"></dialog>
+
+    @if (signedIn)
+    {
+        @* Confirmation for hx-confirm (site.js, htmx:confirm). Separate from #modal, which holds server-rendered forms. *@
+        <dialog id="confirm" aria-labelledby="confirm-title" aria-describedby="confirm-message">
+            <div class="dialog-card">
+                <span class="dialog-icon" aria-hidden="true"><svg class="ico"><use href="#i-alert"/></svg></span>
+                <div class="dialog-body">
+                    <h3 id="confirm-title">Please confirm</h3>
+                    <p id="confirm-message"></p>
+                </div>
+                <div class="dialog-actions">
+                    <button type="button" class="secondary outline" id="confirm-cancel">Cancel</button>
+                    <button type="button" id="confirm-ok">Confirm</button>
+                </div>
+            </div>
+        </dialog>
+    }
 
     @await RenderSectionAsync("Scripts", required: false)
 </body>

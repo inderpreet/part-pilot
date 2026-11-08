@@ -12,7 +12,7 @@
     var link = QueryHelpers.AddQueryString(Context.Request.Path.Value ?? "/", carried);
     var ariaSort = !active ? "none" : Model.Query.Desc ? "descending" : "ascending";
 }
-<th scope="col" aria-sort="@ariaSort">
+<th scope="col" aria-sort="@ariaSort" class="@(Model.Numeric ? "num" : null)">
     <a href="@link" hx-get="@link" hx-target="@Model.Target" hx-push-url="true" class="sort-link">
         @Model.Label@if (active)
         {

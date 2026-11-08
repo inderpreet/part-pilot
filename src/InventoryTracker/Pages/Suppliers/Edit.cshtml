@@ -5,7 +5,7 @@
     ViewData["Title"] = Model.IsEdit ? $"Edit supplier: {Model.Existing!.Name}" : "New supplier";
 }
 
-<form method="post" novalidate class="form-narrow">
+<form method="post" novalidate class="form-page">
     <partial name="_ValidationSummary" model="ViewData.ModelState" />
 
     @if (Model.Conflict)
@@ -18,57 +18,82 @@
 
     <input type="hidden" name="Input.RowVersion" value="@Model.Input.RowVersion" />
 
-    <label>
-        Name
-        <input name="Input.Name" value="@Model.Input.Name" maxlength="@Supplier.NameMaxLength" required autofocus autocomplete="off"
-               aria-invalid="@Html.AriaInvalid("Input.Name")" />
-    </label>
+    <section class="form-row" aria-labelledby="supplier-contact">
+        <div class="form-intro">
+            <h2 id="supplier-contact">Contact</h2>
+            <p>Who the supplier is and how to reach them.</p>
+        </div>
+        <div class="card form-card">
+            <label>
+                Name
+                <input name="Input.Name" value="@Model.Input.Name" maxlength="@Supplier.NameMaxLength" required autofocus autocomplete="off"
+                       aria-invalid="@Html.AriaInvalid("Input.Name")" aria-describedby="@Html.DescribedBy("Input.Name")" />
+                @Html.FieldError("Input.Name")
+            </label>
 
-    <div class="grid">
-        <label>
-            Contact name <small>(optional)</small>
-            <input name="Input.ContactName" value="@Model.Input.ContactName" maxlength="@Supplier.ContactNameMaxLength" autocomplete="off"
-                   aria-invalid="@Html.AriaInvalid("Input.ContactName")" />
-        </label>
-        <label>
-            Phone <small>(optional)</small>
-            <input name="Input.Phone" value="@Model.Input.Phone" type="tel" maxlength="@Supplier.PhoneMaxLength" autocomplete="off"
-                   aria-invalid="@Html.AriaInvalid("Input.Phone")" />
-        </label>
-    </div>
+            <div class="field-grid">
+                <label>
+                    Contact name <small>(optional)</small>
+                    <input name="Input.ContactName" value="@Model.Input.ContactName" maxlength="@Supplier.ContactNameMaxLength" autocomplete="off"
+                           aria-invalid="@Html.AriaInvalid("Input.ContactName")" aria-describedby="@Html.DescribedBy("Input.ContactName")" />
+                    @Html.FieldError("Input.ContactName")
+                </label>
+                <label>
+                    Phone <small>(optional)</small>
+                    <input name="Input.Phone" value="@Model.Input.Phone" type="tel" maxlength="@Supplier.PhoneMaxLength" autocomplete="off"
+                           aria-invalid="@Html.AriaInvalid("Input.Phone")" aria-describedby="@Html.DescribedBy("Input.Phone")" />
+                    @Html.FieldError("Input.Phone")
+                </label>
+            </div>
 
-    <div class="grid">
-        <label>
-            Email <small>(optional)</small>
-            <input name="Input.Email" value="@Model.Input.Email" type="email" maxlength="@Supplier.EmailMaxLength" autocomplete="off" spellcheck="false"
-                   aria-invalid="@Html.AriaInvalid("Input.Email")" />
-        </label>
-        <label>
-            Website <small>(optional)</small>
-            <input name="Input.Website" value="@Model.Input.Website" inputmode="url" maxlength="@Supplier.WebsiteMaxLength" autocomplete="off" spellcheck="false"
-                   placeholder="https://" aria-invalid="@Html.AriaInvalid("Input.Website")" />
-        </label>
-    </div>
+            <div class="field-grid">
+                <label>
+                    Email <small>(optional)</small>
+                    <input name="Input.Email" value="@Model.Input.Email" type="email" maxlength="@Supplier.EmailMaxLength" autocomplete="off" spellcheck="false"
+                           aria-invalid="@Html.AriaInvalid("Input.Email")" aria-describedby="@Html.DescribedBy("Input.Email")" />
+                    @Html.FieldError("Input.Email")
+                </label>
+                <label>
+                    Website <small>(optional)</small>
+                    <input name="Input.Website" value="@Model.Input.Website" inputmode="url" maxlength="@Supplier.WebsiteMaxLength" autocomplete="off" spellcheck="false"
+                           placeholder="https://" aria-invalid="@Html.AriaInvalid("Input.Website")" aria-describedby="@Html.DescribedBy("Input.Website")" />
+                    @Html.FieldError("Input.Website")
+                </label>
+            </div>
 
-    <label>
-        Address <small>(optional)</small>
-        <textarea name="Input.Address" rows="3" maxlength="@Supplier.AddressMaxLength" aria-invalid="@Html.AriaInvalid("Input.Address")">@Model.Input.Address</textarea>
-    </label>
+            <label>
+                Address <small>(optional)</small>
+                <textarea name="Input.Address" rows="3" maxlength="@Supplier.AddressMaxLength"
+                          aria-invalid="@Html.AriaInvalid("Input.Address")" aria-describedby="@Html.DescribedBy("Input.Address")">@Model.Input.Address</textarea>
+                @Html.FieldError("Input.Address")
+            </label>
+        </div>
+    </section>
 
-    <label>
-        Notes <small>(optional)</small>
-        <textarea name="Input.Notes" rows="3" maxlength="@Supplier.NotesMaxLength" aria-invalid="@Html.AriaInvalid("Input.Notes")">@Model.Input.Notes</textarea>
-    </label>
+    <section class="form-row" aria-labelledby="supplier-notes">
+        <div class="form-intro">
+            <h2 id="supplier-notes">Notes</h2>
+            <p>Anything worth remembering: terms, delivery days, account numbers.</p>
+        </div>
+        <div class="card form-card">
+            <label>
+                Notes <small>(optional)</small>
+                <textarea name="Input.Notes" rows="4" maxlength="@Supplier.NotesMaxLength"
+                          aria-invalid="@Html.AriaInvalid("Input.Notes")" aria-describedby="@Html.DescribedBy("Input.Notes")">@Model.Input.Notes</textarea>
+                @Html.FieldError("Input.Notes")
+            </label>
+        </div>
+    </section>
 
-    <div class="form-actions">
-        <button type="submit">@(Model.IsEdit ? "Save changes" : "Create supplier")</button>
+    <div class="action-bar form-actions">
         @if (Model.IsEdit)
         {
-            <a role="button" class="secondary" asp-page="Detail" asp-route-id="@Model.Existing!.Id">Cancel</a>
+            <a role="button" class="text" asp-page="Detail" asp-route-id="@Model.Existing!.Id">Cancel</a>
         }
         else
         {
-            <a role="button" class="secondary" asp-page="Index">Cancel</a>
+            <a role="button" class="text" asp-page="Index">Cancel</a>
         }
+        <button type="submit">@(Model.IsEdit ? "Save changes" : "Create supplier")</button>
     </div>
 </form>

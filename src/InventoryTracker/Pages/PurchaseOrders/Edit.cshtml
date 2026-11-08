@@ -29,56 +29,80 @@
 
 <partial name="_ValidationSummary" model="ViewData.ModelState" />
 
-<form method="post" asp-page="Edit" asp-route-id="@order?.Id" class="po-header-form">
+<form method="post" asp-page="Edit" asp-route-id="@order?.Id" class="po-header-form form-page">
     <input type="hidden" name="Input.RowVersion" value="@Model.Input.RowVersion" />
 
-    <div class="grid">
-        <label>
-            Supplier
-            <select name="Input.SupplierId" required disabled="@Model.SupplierLocked" aria-invalid="@Html.AriaInvalid("Input.SupplierId")">
-                @if (order is null)
+    <section class="form-row" aria-labelledby="po-supplier-dates">
+        <div class="form-intro">
+            <h2 id="po-supplier-dates">Supplier and dates</h2>
+            <p>Who you are ordering from and when you expect it.</p>
+        </div>
+        <div class="card form-card">
+            <label>
+                Supplier
+                <select name="Input.SupplierId" required disabled="@Model.SupplierLocked"
+                        aria-invalid="@Html.AriaInvalid("Input.SupplierId")" aria-describedby="@Html.DescribedBy("Input.SupplierId")">
+                    @if (order is null)
+                    {
+                        <option value="">Choose a supplier…</option>
+                    }
+                    @foreach (var supplier in Model.Suppliers)
+                    {
+                        <option value="@supplier.Id" selected="@(Model.Input.SupplierId == supplier.Id)">@supplier.Name@(supplier.IsActive ? "" : " (archived)")</option>
+                    }
+                </select>
+                @Html.FieldError("Input.SupplierId")
+                @if (Model.SupplierLocked)
                 {
-                    <option value="">Choose a supplier…</option>
+                    <small class="muted">The supplier is fixed once an order has lines.@(order is { Lines.Count: > 0, CanEditLines: true } ? " Remove every line to change it." : "")</small>
                 }
-                @foreach (var supplier in Model.Suppliers)
-                {
-                    <option value="@supplier.Id" selected="@(Model.Input.SupplierId == supplier.Id)">@supplier.Name@(supplier.IsActive ? "" : " (archived)")</option>
-                }
-            </select>
-            @if (Model.SupplierLocked)
-            {
-                <small class="muted">The supplier is fixed once an order has lines.@(order is { Lines.Count: > 0, CanEditLines: true } ? " Remove every line to change it." : "")</small>
-            }
-        </label>
+            </label>
 
-        <label>
-            Order date
-            <input type="date" name="Input.OrderDate" value="@date(Model.Input.OrderDate)" required disabled="@headerOnly" aria-invalid="@Html.AriaInvalid("Input.OrderDate")" />
-        </label>
+            <div class="field-grid">
+                <label>
+                    Order date
+                    <input type="date" name="Input.OrderDate" value="@date(Model.Input.OrderDate)" required disabled="@headerOnly"
+                           aria-invalid="@Html.AriaInvalid("Input.OrderDate")" aria-describedby="@Html.DescribedBy("Input.OrderDate")" />
+                    @Html.FieldError("Input.OrderDate")
+                </label>
 
-        <label>
-            Expected date
-            <input type="date" name="Input.ExpectedDate" value="@date(Model.Input.ExpectedDate)" aria-invalid="@Html.AriaInvalid("Input.ExpectedDate")"
-                   aria-describedby="expected-help" />
-            <small id="expected-help" class="muted">Leave blank to use the supplier's lead time when you submit.</small>
-        </label>
-    </div>
+                <label>
+                    Expected date
+                    <input type="date" name="Input.ExpectedDate" value="@date(Model.Input.ExpectedDate)" aria-invalid="@Html.AriaInvalid("Input.ExpectedDate")"
+                           aria-describedby="@Html.DescribedBy("Input.ExpectedDate", "expected-help")" />
+                    @Html.FieldError("Input.ExpectedDate")
+                    <small id="expected-help" class="muted">Leave blank to use the supplier's lead time when you submit.</small>
+                </label>
+            </div>
+        </div>
+    </section>
 
-    <label>
-        Notes
-        <textarea name="Input.Notes" rows="3" maxlength="2000" aria-invalid="@Html.AriaInvalid("Input.Notes")">@Model.Input.Notes</textarea>
-    </label>
+    <section class="form-row" aria-labelledby="po-notes">
+        <div class="form-intro">
+            <h2 id="po-notes">Notes</h2>
+            <p>Shown on the order and the printed copy.</p>
+        </div>
+        <div class="card form-card">
+            <label>
+                Notes <small>(optional)</small>
+                <textarea name="Input.Notes" rows="3" maxlength="2000"
+                          aria-invalid="@Html.AriaInvalid("Input.Notes")" aria-describedby="@Html.DescribedBy("Input.Notes")">@Model.Input.Notes</textarea>
+                @Html.FieldError("Input.Notes")
+            </label>
+        </div>
+    </section>
 
-    <div class="form-actions">
-        <button type="submit">@(order is null ? "Create draft" : "Save details")</button>
+    @* Static, not sticky: the line editor sits below this form and a floating bar would sit on top of it. *@
+    <div class="action-bar action-bar-static form-actions">
         @if (order is null)
         {
-            <a role="button" class="secondary outline" asp-page="Index">Cancel</a>
+            <a role="button" class="text" asp-page="Index">Cancel</a>
         }
         else
         {
             <a role="button" class="secondary outline" asp-page="Detail" asp-route-id="@order.Id">@(order.CanEditLines ? "Done — review & submit" : "Back to order")</a>
         }
+        <button type="submit">@(order is null ? "Create draft" : "Save details")</button>
     </div>
 </form>
 

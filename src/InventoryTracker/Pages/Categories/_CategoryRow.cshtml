@@ -34,7 +34,7 @@
             {
                 <partial name="_ConfirmButton" model="@(new ConfirmButtonModel("Archive",
                     $"Archive category '{item.Name}'? Products keep it, but it can no longer be chosen for new ones.",
-                    $"/Categories?handler=SetActive&id={item.Id}&active=false", $"#category-row-{item.Id}", "outerHTML", "secondary outline"))" />
+                    $"/Categories?handler=SetActive&id={item.Id}&active=false", $"#category-row-{item.Id}", "outerHTML", "text danger"))" />
             }
             else
             {

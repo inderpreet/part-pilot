@@ -84,6 +84,9 @@ app.UseStaticFiles(new StaticFileOptions
     FileProvider = app.Environment.IsDevelopment()
         ? app.Environment.WebRootFileProvider
         : new ManifestEmbeddedFileProvider(typeof(Program).Assembly, "wwwroot"),
+    // Always revalidate (ETag, so an unchanged file is a cheap 304). Without this browsers apply heuristic freshness
+    // and keep serving an old site.css / site.js against newer markup after an upgrade, which looks like a broken UI.
+    OnPrepareResponse = ctx => ctx.Context.Response.Headers.CacheControl = "no-cache",
 });
 
 // First-run redirect, then authentication + authorization (fallback policy: signed-in and active).

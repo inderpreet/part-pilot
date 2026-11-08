@@ -8,6 +8,9 @@
 
 @* A plain GET form, so Enter submits normally. Its controls also refresh #results live through htmx; the form itself has
    no hx-* attributes. The status tabs are ordinary links (a tab change reloads the page, which keeps the hidden tab field right). *@
+<div class="card list-card">
+    <div class="load-bar" role="status" aria-label="Updating"></div>
+
 <nav class="tabs" aria-label="Order status">
     <ul>
         @foreach (var tab in tabs)
@@ -26,10 +29,10 @@
 
     <input type="search" name="search" value="@Model.Query.Search" placeholder="Order number…" aria-label="Search by order number"
            autocomplete="off" enterkeyhint="search"
-           hx-get="/PurchaseOrders" hx-trigger="input changed delay:300ms" hx-target="#results" hx-push-url="true" hx-include="closest form" />
+           hx-get="/PurchaseOrders" hx-trigger="input changed delay:300ms" hx-target="#results" hx-push-url="true" hx-include="closest form" hx-indicator=".load-bar" />
 
     <select name="supplierId" aria-label="Supplier"
-            hx-get="/PurchaseOrders" hx-trigger="change" hx-target="#results" hx-push-url="true" hx-include="closest form">
+            hx-get="/PurchaseOrders" hx-trigger="change" hx-target="#results" hx-push-url="true" hx-include="closest form" hx-indicator=".load-bar">
         <option value="">All suppliers</option>
         @foreach (var supplier in Model.Suppliers)
         {
@@ -39,21 +42,25 @@
 
     <label class="inline-date">From
         <input type="date" name="from" value="@Model.Query.From?.ToString("yyyy-MM-dd")"
-               hx-get="/PurchaseOrders" hx-trigger="change" hx-target="#results" hx-push-url="true" hx-include="closest form" />
+               hx-get="/PurchaseOrders" hx-trigger="change" hx-target="#results" hx-push-url="true" hx-include="closest form" hx-indicator=".load-bar" />
     </label>
     <label class="inline-date">To
         <input type="date" name="to" value="@Model.Query.To?.ToString("yyyy-MM-dd")"
-               hx-get="/PurchaseOrders" hx-trigger="change" hx-target="#results" hx-push-url="true" hx-include="closest form" />
+               hx-get="/PurchaseOrders" hx-trigger="change" hx-target="#results" hx-push-url="true" hx-include="closest form" hx-indicator=".load-bar" />
     </label>
 
     <button type="submit" class="visually-hidden" tabindex="-1">Apply filters</button>
 
+</form>
+
+@section Actions {
     @if (Model.CanEdit)
     {
         <a role="button" asp-page="Edit">New purchase order</a>
     }
-</form>
+}
 
 <div id="results">
     <partial name="_OrderResults" model="Model" />
+</div>
 </div>

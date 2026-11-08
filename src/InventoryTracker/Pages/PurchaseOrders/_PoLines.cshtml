@@ -68,7 +68,7 @@
                             <td class="row-actions">
                                 <form method="post" asp-page-handler="RemoveLine" asp-route-id="@o.Id" class="inline-form">
                                     <input type="hidden" name="lineId" value="@line.Id" />
-                                    <button type="submit" class="secondary outline" hx-post="@Handler("RemoveLine")" hx-target="#po-lines" hx-swap="outerHTML"
+                                    <button type="submit" class="text danger" hx-post="@Handler("RemoveLine")" hx-target="#po-lines" hx-swap="outerHTML"
                                             aria-label="Remove @line.Sku from the order">Remove</button>
                                 </form>
                             </td>

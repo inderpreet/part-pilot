@@ -222,6 +222,127 @@ public partial class PurchaseOrderPagesTests
         Assert.Contains("Nothing is on order", await client.GetStringAsync($"/Products/{widget.Id}")); // a received order is no longer on order
     }
 
+    // ---- page header (WI-09-3) -------------------------------------------------------------------------------------
+
+    [Fact]
+    public async Task Detail_puts_the_back_link_chips_and_actions_in_the_page_header_and_a_viewer_gets_no_actions()
+    {
+        using var factory = new AppFactory();
+        var acme = await SeedSupplierAsync(factory, "Header Supply");
+        var widget = await SeedProductAsync(factory, "HDR-1", "Header item");
+        var order = await SeedOrderAsync(factory, acme.Id, [(widget.Id, 5, 1000L)], submit: true, orderDate: new DateOnly(2020, 1, 1), expected: new DateOnly(2020, 2, 1));
+
+        using var admin = factory.CreateClientAs("Admin");
+        var html = await admin.GetStringAsync($"/PurchaseOrders/{order.Id}");
+        var head = html[html.IndexOf("class=\"page-head\"", StringComparison.Ordinal)..html.IndexOf("class=\"detail-cols\"", StringComparison.Ordinal)];
+
+        Assert.Contains("‹ All purchase orders", head);
+        Assert.Contains("badge-submitted", head);
+        Assert.Contains("badge-overdue", head);
+        Assert.Contains("Receive goods", head);
+        Assert.Contains("class=\"page-actions\"", head);
+        Assert.Contains($"<span aria-current=\"page\">{order.Number}</span>", html); // top-bar trail: section / record
+
+        using var viewer = factory.CreateClientAs("Viewer");
+        var viewerHtml = await viewer.GetStringAsync($"/PurchaseOrders/{order.Id}");
+
+        Assert.Contains("class=\"page-head\"", viewerHtml);
+        Assert.DoesNotContain("Receive goods", viewerHtml);
+        Assert.DoesNotContain("Cancel order", viewerHtml);
+    }
+
+    // ---- detail cards (WI-09-7) -------------------------------------------------------------------------------------
+
+    [Fact]
+    public async Task An_overdue_open_order_gets_the_overdue_chip_beside_its_status_and_never_the_cancelled_chip()
+    {
+        using var factory = new AppFactory();
+        var acme = await SeedSupplierAsync(factory, "Late Supply");
+        var widget = await SeedProductAsync(factory, "LTE-1", "Late item");
+        var order = await SeedOrderAsync(factory, acme.Id, [(widget.Id, 5, 1000L)], submit: true, orderDate: new DateOnly(2020, 1, 1), expected: new DateOnly(2020, 2, 1));
+
+        using var client = factory.CreateClientAs("Admin");
+        var html = await client.GetStringAsync($"/PurchaseOrders/{order.Id}");
+
+        Assert.Contains("badge-overdue", html);
+        Assert.Contains("badge-submitted", html);
+        Assert.DoesNotContain("badge-cancelled", html);
+        Assert.Contains("class=\"detail-cols\"", html);
+        Assert.Contains("aria-label=\"Order lines\"", html, StringComparison.OrdinalIgnoreCase);
+    }
+
+    [Fact]
+    public async Task A_cancelled_order_gets_the_cancelled_chip_and_never_the_overdue_chip_even_when_its_date_has_passed()
+    {
+        using var factory = new AppFactory();
+        var acme = await SeedSupplierAsync(factory, "Cancelled Supply");
+        var widget = await SeedProductAsync(factory, "CNL-1", "Cancelled item");
+        var order = await SeedOrderAsync(factory, acme.Id, [(widget.Id, 5, 1000L)], submit: true, orderDate: new DateOnly(2020, 1, 1), expected: new DateOnly(2020, 2, 1));
+
+        using var client = factory.CreateClientAs("Admin");
+        var url = $"/PurchaseOrders/{order.Id}";
+        var cancel = await WebForms.PostFormAsync(client, $"{url}?handler=Cancel", [("rowVersion", await RowVersionOfAsync(client, url))], url);
+        Assert.Equal(HttpStatusCode.Redirect, cancel.StatusCode);
+
+        var html = await client.GetStringAsync(url);
+
+        Assert.Contains("badge-cancelled", html);
+        Assert.DoesNotContain("badge-overdue", html);
+    }
+
+    // ---- action roles and overflow menu (WI-09-5) -------------------------------------------------------------------
+
+    [Fact]
+    public async Task A_submitted_order_keeps_Receive_goods_outside_the_menu_and_puts_Cancel_order_inside_it()
+    {
+        using var factory = new AppFactory();
+        var acme = await SeedSupplierAsync(factory, "Menu Supply");
+        var widget = await SeedProductAsync(factory, "MNU-1", "Menu item");
+        var order = await SeedOrderAsync(factory, acme.Id, [(widget.Id, 5, 1000L)], submit: true);
+
+        using var client = factory.CreateClientAs("Admin");
+        var html = await client.GetStringAsync($"/PurchaseOrders/{order.Id}");
+        var menuStart = html.IndexOf("<details class=\"menu\">", StringComparison.Ordinal);
+        var menuEnd = html.IndexOf("</details>", menuStart, StringComparison.Ordinal);
+        Assert.True(menuStart > 0, "the overflow menu is rendered");
+        var menu = html[menuStart..menuEnd];
+
+        Assert.Contains("aria-label=\"More actions\"", menu);
+        Assert.Contains("Cancel order", menu);
+        Assert.DoesNotContain("Close short", menu); // only offered once something has been received
+        Assert.Contains("class=\"menu-item danger\"", menu);
+        Assert.DoesNotContain("Receive goods", menu);
+        Assert.Contains("Receive goods", html[..menuStart]);
+        // each item is still its own form, so it posts without JavaScript
+        Assert.Contains("<form method=\"post\"", menu);
+        Assert.Contains("hx-confirm=\"Cancel ", menu);
+    }
+
+    [Fact]
+    public async Task A_draft_shows_Submit_order_as_the_primary_and_Delete_draft_inside_the_menu_and_a_viewer_gets_no_menu()
+    {
+        using var factory = new AppFactory();
+        var acme = await SeedSupplierAsync(factory, "Draft Menu Supply");
+        var widget = await SeedProductAsync(factory, "DRM-1", "Draft menu item");
+        var order = await SeedOrderAsync(factory, acme.Id, [(widget.Id, 2, 500L)]);
+
+        using var admin = factory.CreateClientAs("Admin");
+        var html = await admin.GetStringAsync($"/PurchaseOrders/{order.Id}");
+        var menuStart = html.IndexOf("<details class=\"menu\">", StringComparison.Ordinal);
+        var menu = html[menuStart..html.IndexOf("</details>", menuStart, StringComparison.Ordinal)];
+
+        Assert.Contains("Delete draft", menu);
+        Assert.Contains("Submit order", html[..menuStart]);
+        Assert.DoesNotContain("Submit order", menu);
+        // the commit action is the solid button: no secondary / text / danger class on it
+        Assert.Matches("<button type=\"submit\" hx-post=\"[^\"]+\"\\s+hx-confirm=\"Submit ", html);
+
+        using var viewer = factory.CreateClientAs("Viewer");
+        var viewerHtml = await viewer.GetStringAsync($"/PurchaseOrders/{order.Id}");
+        Assert.DoesNotContain("class=\"menu\"", viewerHtml);
+        Assert.DoesNotContain("Delete draft", viewerHtml);
+    }
+
     // ---- list ------------------------------------------------------------------------------------------------------
 
     [Fact]
@@ -241,6 +362,10 @@ public partial class PurchaseOrderPagesTests
         Assert.Contains(overdue.Number, open);
         Assert.DoesNotContain(draft.Number, open);
         Assert.Contains("po-overdue", open);
+        Assert.Contains("badge-overdue", open);           // overdue is its own chip, no longer the red "cancelled" chip
+        Assert.DoesNotContain("badge-cancelled", open);
+        Assert.Contains("class=\"card list-card\"", open);
+        Assert.Contains("class=\"load-bar\"", open);
         Assert.Contains("50.00", open); // total and outstanding: 5 x 10.00
 
         var drafts = await client.GetStringAsync("/PurchaseOrders?tab=Draft");
@@ -591,6 +716,9 @@ public partial class PurchaseOrderPagesTests
         Assert.Contains("print-sheet", html);
         Assert.DoesNotContain("main-nav", html);
         Assert.DoesNotContain("app-header", html);
+        Assert.DoesNotContain("class=\"rail\"", html);   // WI-09-8: the sheet never carries the app shell
+        Assert.DoesNotContain("class=\"topbar\"", html);
+        Assert.DoesNotContain("id=\"confirm\"", html);
         Assert.Contains(order.Number, html);
         Assert.Contains("Acme Tools", html);
         Assert.Contains("1 Anvil Way", html);
@@ -720,7 +848,7 @@ public partial class PurchaseOrderPagesTests
 
         var html = await client.GetStringAsync("/PurchaseOrders");
 
-        Assert.Contains("href=\"/PurchaseOrders\" aria-current=\"page\">Purchase Orders</a>", html);
+        Assert.Matches("href=\"/PurchaseOrders\" aria-current=\"page\"><svg[^>]*>.*?</svg><span>Purchase Orders</span></a>", html);
     }
 
     [Fact]

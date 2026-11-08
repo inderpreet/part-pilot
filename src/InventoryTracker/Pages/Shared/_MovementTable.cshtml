@@ -87,7 +87,7 @@ else
                                 {
                                     <form method="post" asp-page="/Stock/Reverse" asp-route-id="@m.Id" class="inline-form">
                                         <input type="hidden" name="returnUrl" value="@Model.ReturnUrl" />
-                                        <button type="submit" class="secondary outline"
+                                        <button type="submit" class="text danger"
                                                 hx-post="@Url.Page("/Stock/Reverse", new { id = m.Id })" hx-include="closest form" hx-swap="none"
                                                 hx-confirm="Reverse #@m.Id (@m.Type @m.QuantityDelta.ToString("+#;-#;0", CultureInfo.InvariantCulture) of @m.Sku)? A new opposite entry is added; the original stays in the history.">Reverse</button>
                                     </form>

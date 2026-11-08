@@ -5,6 +5,9 @@
 //  - 4xx/5xx handling so server error partials and 422 validation responses are actually shown
 //  - <time data-local> is upgraded to the browser's local time zone
 //  - product picker ([data-product-picker]): select a result, scanner-style Enter, keyboard navigation
+//  - rail drawer below 64rem: [data-rail-open] opens, [data-rail-close] (scrim), Escape or a rail link click close
+//  - `.section-nav`: aria-current follows the URL hash (first link when there is none)
+//  - `htmx:confirm`: hx-confirm text opens <dialog id="confirm"> (Cancel / Confirm); <details class="menu"> closes on outside click / Escape
 (() => {
   'use strict';
 
@@ -263,9 +266,110 @@
     if (document.readyState === 'complete') setTimeout(() => window.print(), 250);
   }
 
+  // ---------- Rail drawer ----------
+  // Below 64rem the rail is off-canvas (css, only when the `js` class is on <html>). `rail-open` on <body> slides it in.
+  const railToggle = () => document.querySelector('[data-rail-open]');
+
+  function setRail(open) {
+    document.body.classList.toggle('rail-open', open);
+    railToggle()?.setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (!open) return;
+    document.querySelector('#rail a')?.focus();
+  }
+
+  document.addEventListener('click', event => {
+    if (event.target.closest?.('[data-rail-open]')) setRail(true);
+    else if (event.target.closest?.('[data-rail-close]') || event.target.closest?.('#rail a')) setRail(false);
+  });
+
+  document.addEventListener('keydown', event => {
+    if (event.key === 'Escape' && document.body.classList.contains('rail-open')) {
+      setRail(false);
+      railToggle()?.focus();
+    }
+  });
+  // ---------- Confirm dialog + overflow menus ----------
+  // hx-confirm text is shown in <dialog id="confirm"> instead of window.confirm. Cancel / Escape / backdrop do nothing;
+  // Confirm continues the request. Without the dialog element htmx falls back to window.confirm; without JavaScript the
+  // form posts directly and there is no prompt.
+  let pendingRequest = null;
+
+  const confirmDialog = () => document.getElementById('confirm');
+
+  document.addEventListener('htmx:confirm', event => {
+    const dialog = confirmDialog();
+    const question = event.detail.question;
+    if (!dialog || !question) return;
+
+    event.preventDefault();
+    const source = event.detail.elt;
+    const isButton = source.matches?.('button, [role="button"], input[type="submit"], input[type="button"]');
+    const label = isButton ? (source.value || source.textContent || '').trim() : '';
+    const danger = !!source.closest?.('.danger, .menu');
+
+    pendingRequest = event.detail.issueRequest;
+    dialog.querySelector('#confirm-message').textContent = question;
+    dialog.querySelector('#confirm-ok').textContent = label || 'Confirm';
+    dialog.classList.toggle('is-danger', danger);
+    source.closest?.('details.menu')?.removeAttribute('open');
+
+    dialog.showModal();
+    dialog.querySelector(danger ? '#confirm-cancel' : '#confirm-ok').focus();
+  });
+
+  document.addEventListener('click', event => {
+    const dialog = confirmDialog();
+    if (!dialog?.open) return;
+    if (event.target.closest?.('#confirm-ok')) {
+      const issue = pendingRequest;
+      pendingRequest = null;
+      dialog.close();
+      issue?.(true);
+    } else if (event.target === dialog || event.target.closest?.('#confirm-cancel')) {
+      pendingRequest = null;
+      dialog.close();
+    }
+  });
+
+  // Escape closes the native dialog; make sure a stale request is never left behind.
+  document.addEventListener('close', event => {
+    if (event.target?.id === 'confirm') pendingRequest = null;
+  }, true);
+
+  // <details class="menu"> closes on an outside click or Escape.
+  document.addEventListener('click', event => {
+    document.querySelectorAll('details.menu[open]').forEach(menu => {
+      if (!menu.contains(event.target)) menu.removeAttribute('open');
+    });
+  });
+
+  document.addEventListener('keydown', event => {
+    if (event.key !== 'Escape') return;
+    document.querySelectorAll('details.menu[open]').forEach(menu => {
+      menu.removeAttribute('open');
+      menu.querySelector('summary')?.focus();
+    });
+  });
+
+  // ---------- Section nav ----------
+  // <nav class="section-nav"> links point at #ids on the same page. Mark the one for the current hash (History when empty).
+  function markSectionNav() {
+    const nav = document.querySelector('.section-nav');
+    if (!nav) return;
+    const links = [...nav.querySelectorAll('a[href^="#"]')];
+    const hash = location.hash || links[0]?.getAttribute('href');
+    links.forEach(link => {
+      if (link.getAttribute('href') === hash) link.setAttribute('aria-current', 'true');
+      else link.removeAttribute('aria-current');
+    });
+  }
+
+  window.addEventListener('hashchange', markSectionNav);
+
   // ---------- Boot ----------
   function init() {
     autoPrint();
+    markSectionNav();
     watchFlashArea();
     bindModalClose();
     upgradeTimes(document);

@@ -5,83 +5,119 @@
     ViewData["Title"] = Model.IsEdit ? $"Edit user: {Model.Existing!.UserName}" : "New user";
 }
 
-<form method="post" novalidate class="form-narrow">
+<form method="post" novalidate class="form-page">
     <partial name="_ValidationSummary" model="ViewData.ModelState" />
 
-    @if (Model.IsEdit)
-    {
-        <label>
-            User name
-            <input value="@Model.Existing!.UserName" disabled />
-            <small>The user name cannot be changed.</small>
-        </label>
-    }
-    else
-    {
-        <label>
-            User name
-            <input name="Input.UserName" value="@Model.Input.UserName" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="50"
-                   autofocus required aria-invalid="@Html.AriaInvalid("Input.UserName")" />
-            <small>Letters, digits and - . _ @@ + only. Case does not matter.</small>
-        </label>
-    }
-
-    <label>
-        Display name
-        <input name="Input.DisplayName" value="@Model.Input.DisplayName" maxlength="100" required aria-invalid="@Html.AriaInvalid("Input.DisplayName")" />
-    </label>
-    <label>
-        Email <small>(optional)</small>
-        <input name="Input.Email" type="email" value="@Model.Input.Email" maxlength="256" aria-invalid="@Html.AriaInvalid("Input.Email")" />
-    </label>
-
-    <label>
-        Role
-        <select name="Input.Role" aria-invalid="@Html.AriaInvalid("Input.Role")">
-            @foreach (var role in Roles.All)
+    <section class="form-row" aria-labelledby="user-account">
+        <div class="form-intro">
+            <h2 id="user-account">Account</h2>
+            <p>How the person signs in and how they appear in history.</p>
+        </div>
+        <div class="card form-card">
+            @if (Model.IsEdit)
             {
-                <option value="@role" selected="@(role == Model.Input.Role)">@role</option>
+                <label>
+                    User name
+                    <input value="@Model.Existing!.UserName" disabled />
+                    <small>The user name cannot be changed.</small>
+                </label>
             }
-        </select>
-        <small>Admin: everything, including users and settings. Staff: can change data. Viewer: read only.</small>
-    </label>
+            else
+            {
+                <label>
+                    User name
+                    <input name="Input.UserName" value="@Model.Input.UserName" autocomplete="off" autocapitalize="none" spellcheck="false" maxlength="50"
+                           autofocus required aria-invalid="@Html.AriaInvalid("Input.UserName")" aria-describedby="@Html.DescribedBy("Input.UserName")" />
+                    @Html.FieldError("Input.UserName")
+                    <small>Letters, digits and - . _ @@ + only. Case does not matter.</small>
+                </label>
+            }
 
-    <label>
-        <input type="checkbox" name="Input.IsActive" value="true" role="switch" checked="@Model.Input.IsActive"
-               aria-invalid="@Html.AriaInvalid("Input.IsActive")" />
-        Active
-        <input type="hidden" name="Input.IsActive" value="false" />
-        <small>Inactive users cannot sign in, but their history is kept.</small>
-    </label>
+            <div class="field-grid">
+                <label>
+                    Display name
+                    <input name="Input.DisplayName" value="@Model.Input.DisplayName" maxlength="100" required
+                           aria-invalid="@Html.AriaInvalid("Input.DisplayName")" aria-describedby="@Html.DescribedBy("Input.DisplayName")" />
+                    @Html.FieldError("Input.DisplayName")
+                </label>
+                <label>
+                    Email <small>(optional)</small>
+                    <input name="Input.Email" type="email" value="@Model.Input.Email" maxlength="256"
+                           aria-invalid="@Html.AriaInvalid("Input.Email")" aria-describedby="@Html.DescribedBy("Input.Email")" />
+                    @Html.FieldError("Input.Email")
+                </label>
+            </div>
+        </div>
+    </section>
+
+    <section class="form-row" aria-labelledby="user-access">
+        <div class="form-intro">
+            <h2 id="user-access">Access</h2>
+            <p>What the person is allowed to do, and whether they can sign in.</p>
+        </div>
+        <div class="card form-card">
+            <label>
+                Role
+                <select name="Input.Role" aria-invalid="@Html.AriaInvalid("Input.Role")" aria-describedby="@Html.DescribedBy("Input.Role")">
+                    @foreach (var role in Roles.All)
+                    {
+                        <option value="@role" selected="@(role == Model.Input.Role)">@role</option>
+                    }
+                </select>
+                @Html.FieldError("Input.Role")
+                <small>Admin: everything, including users and settings. Staff: can change data. Viewer: read only.</small>
+            </label>
+
+            <label>
+                <input type="checkbox" name="Input.IsActive" value="true" role="switch" checked="@Model.Input.IsActive"
+                       aria-invalid="@Html.AriaInvalid("Input.IsActive")" />
+                Active
+                <input type="hidden" name="Input.IsActive" value="false" />
+                <small>Inactive users cannot sign in, but their history is kept.</small>
+            </label>
+
+            @if (Model.IsSelf)
+            {
+                <p><small>This is your own account. Changing your role or deactivating yourself signs you out.</small></p>
+            }
+        </div>
+    </section>
 
     @if (!Model.IsEdit)
     {
-        <div class="grid">
-            <label>
-                Initial password
-                <input name="Input.Password" type="password" autocomplete="new-password" minlength="8" required aria-invalid="@Html.AriaInvalid("Input.Password")" />
-                <small>At least 8 characters. Share it securely; the user can change it after signing in.</small>
-            </label>
-            <label>
-                Confirm password
-                <input name="Input.ConfirmPassword" type="password" autocomplete="new-password" required aria-invalid="@Html.AriaInvalid("Input.ConfirmPassword")" />
-            </label>
-        </div>
+        <section class="form-row" aria-labelledby="user-password">
+            <div class="form-intro">
+                <h2 id="user-password">Password</h2>
+                <p>The first password. The person can change it after signing in.</p>
+            </div>
+            <div class="card form-card">
+                <div class="field-grid">
+                    <label>
+                        Initial password
+                        <input name="Input.Password" type="password" autocomplete="new-password" minlength="8" required
+                               aria-invalid="@Html.AriaInvalid("Input.Password")" aria-describedby="@Html.DescribedBy("Input.Password")" />
+                        @Html.FieldError("Input.Password")
+                        <small>At least 8 characters. Share it securely.</small>
+                    </label>
+                    <label>
+                        Confirm password
+                        <input name="Input.ConfirmPassword" type="password" autocomplete="new-password" required
+                               aria-invalid="@Html.AriaInvalid("Input.ConfirmPassword")" aria-describedby="@Html.DescribedBy("Input.ConfirmPassword")" />
+                        @Html.FieldError("Input.ConfirmPassword")
+                    </label>
+                </div>
+            </div>
+        </section>
     }
 
-    <div class="form-actions">
-        <button type="submit">@(Model.IsEdit ? "Save changes" : "Create user")</button>
-        <a role="button" class="secondary" asp-page="Index">Cancel</a>
+    <div class="action-bar form-actions">
         @if (Model.IsEdit)
         {
-            <button type="button" class="secondary outline" hx-get="@Url.Page("/Admin/Users/Edit", "ResetPassword", new { id = Model.Existing!.Id })" hx-target="#modal">
+            <button type="button" class="secondary outline action-start" hx-get="@Url.Page("/Admin/Users/Edit", "ResetPassword", new { id = Model.Existing!.Id })" hx-target="#modal">
                 Reset password
             </button>
         }
+        <a role="button" class="text" asp-page="Index">Cancel</a>
+        <button type="submit">@(Model.IsEdit ? "Save changes" : "Create user")</button>
     </div>
-
-    @if (Model.IsSelf)
-    {
-        <p><small>This is your own account. Changing your role or deactivating yourself signs you out.</small></p>
-    }
 </form>

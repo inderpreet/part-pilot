@@ -4,40 +4,72 @@
     ViewData["Title"] = "Settings";
 }
 
-<form method="post" novalidate class="form-narrow">
+<form method="post" novalidate class="form-page">
     <partial name="_ValidationSummary" model="ViewData.ModelState" />
 
-    <label>
-        Company name
-        <input name="Input.CompanyName" value="@Model.Input.CompanyName" maxlength="100" required aria-invalid="@Html.AriaInvalid("Input.CompanyName")" />
-        <small>Shown in the header and on printed documents.</small>
-    </label>
+    <section class="form-row" aria-labelledby="settings-company">
+        <div class="form-intro">
+            <h2 id="settings-company">Company</h2>
+            <p>The name people see across the app.</p>
+        </div>
+        <div class="card form-card">
+            <label>
+                Company name
+                <input name="Input.CompanyName" value="@Model.Input.CompanyName" maxlength="100" required
+                       aria-invalid="@Html.AriaInvalid("Input.CompanyName")" aria-describedby="@Html.DescribedBy("Input.CompanyName")" />
+                @Html.FieldError("Input.CompanyName")
+                <small>Shown in the header and on printed documents.</small>
+            </label>
+        </div>
+    </section>
 
-    <div class="grid">
-        <label>
-            Currency code
-            <input name="Input.CurrencyCode" value="@Model.Input.CurrencyCode" maxlength="3" minlength="3" autocapitalize="characters" required
-                   aria-invalid="@Html.AriaInvalid("Input.CurrencyCode")" />
-            <small>Three letters, e.g. USD, EUR, GBP.</small>
-        </label>
-        <label>
-            Currency symbol
-            <input name="Input.CurrencySymbol" value="@Model.Input.CurrencySymbol" maxlength="5" required aria-invalid="@Html.AriaInvalid("Input.CurrencySymbol")" />
-        </label>
+    <section class="form-row" aria-labelledby="settings-money">
+        <div class="form-intro">
+            <h2 id="settings-money">Currency</h2>
+            <p>How amounts are written.</p>
+        </div>
+        <div class="card form-card">
+            <div class="field-grid">
+                <label>
+                    Currency code
+                    <input name="Input.CurrencyCode" value="@Model.Input.CurrencyCode" maxlength="3" minlength="3" autocapitalize="characters" required
+                           aria-invalid="@Html.AriaInvalid("Input.CurrencyCode")" aria-describedby="@Html.DescribedBy("Input.CurrencyCode")" />
+                    @Html.FieldError("Input.CurrencyCode")
+                    <small>Three letters, e.g. USD, EUR, GBP.</small>
+                </label>
+                <label>
+                    Currency symbol
+                    <input name="Input.CurrencySymbol" value="@Model.Input.CurrencySymbol" maxlength="5" required
+                           aria-invalid="@Html.AriaInvalid("Input.CurrencySymbol")" aria-describedby="@Html.DescribedBy("Input.CurrencySymbol")" />
+                    @Html.FieldError("Input.CurrencySymbol")
+                </label>
+            </div>
+        </div>
+    </section>
+
+    <section class="form-row" aria-labelledby="settings-ops">
+        <div class="form-intro">
+            <h2 id="settings-ops">Orders and stock</h2>
+            <p>Numbering for purchase orders and how strictly stock is checked.</p>
+        </div>
+        <div class="card form-card">
+            <label>
+                PO number prefix
+                <input name="Input.PurchaseOrderNumberPrefix" value="@Model.Input.PurchaseOrderNumberPrefix" maxlength="10"
+                       aria-invalid="@Html.AriaInvalid("Input.PurchaseOrderNumberPrefix")" aria-describedby="@Html.DescribedBy("Input.PurchaseOrderNumberPrefix")" />
+                @Html.FieldError("Input.PurchaseOrderNumberPrefix")
+                <small>Put in front of purchase order numbers, e.g. <code>PO-</code>. Up to 10 characters, no spaces.</small>
+            </label>
+
+            <label>
+                <input type="checkbox" name="Input.AllowNegativeStock" value="true" role="switch" checked="@Model.Input.AllowNegativeStock" />
+                Allow stock to go negative
+                <input type="hidden" name="Input.AllowNegativeStock" value="false" />
+            </label>
+        </div>
+    </section>
+
+    <div class="action-bar form-actions">
+        <button type="submit">Save settings</button>
     </div>
-
-    <label>
-        PO number prefix
-        <input name="Input.PurchaseOrderNumberPrefix" value="@Model.Input.PurchaseOrderNumberPrefix" maxlength="10"
-               aria-invalid="@Html.AriaInvalid("Input.PurchaseOrderNumberPrefix")" />
-        <small>Put in front of purchase order numbers, e.g. <code>PO-</code>. Up to 10 characters, no spaces.</small>
-    </label>
-
-    <label>
-        <input type="checkbox" name="Input.AllowNegativeStock" value="true" role="switch" checked="@Model.Input.AllowNegativeStock" />
-        Allow stock to go negative
-        <input type="hidden" name="Input.AllowNegativeStock" value="false" />
-    </label>
-
-    <button type="submit">Save settings</button>
 </form>

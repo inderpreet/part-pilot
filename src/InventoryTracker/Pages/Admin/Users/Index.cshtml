@@ -4,13 +4,20 @@
     ViewData["Title"] = "Users";
 }
 
+<div class="card list-card">
+    <div class="load-bar" role="status" aria-label="Updating"></div>
+
 <div class="toolbar">
     <input type="search" name="search" value="@Model.Query.Search" placeholder="Search users…" aria-label="Search users"
            hx-get="/Admin/Users" hx-trigger="input changed delay:300ms, search" hx-target="#results" hx-push-url="true"
-           hx-include="this" autocomplete="off" />
-    <a role="button" asp-page="/Admin/Users/Edit">New user</a>
+           hx-include="this" hx-indicator=".load-bar" autocomplete="off" />
 </div>
+
+@section Actions {
+    <a role="button" asp-page="/Admin/Users/Edit">New user</a>
+}
 
 <div id="results">
     <partial name="_UserTable" model="Model" />
+</div>
 </div>

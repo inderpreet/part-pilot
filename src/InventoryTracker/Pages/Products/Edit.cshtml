@@ -9,7 +9,7 @@
     var currency = await Settings.GetStringAsync(SettingKeys.CurrencySymbol);
 }
 
-<form method="post" novalidate class="form-narrow">
+<form method="post" novalidate class="form-page">
     <partial name="_ValidationSummary" model="ViewData.ModelState" />
 
     @if (Model.Conflict)
@@ -22,103 +22,138 @@
 
     <input type="hidden" name="Input.RowVersion" value="@Model.Input.RowVersion" />
 
-    <div class="grid">
-        <label>
-            SKU
-            <input name="Input.Sku" value="@Model.Input.Sku" maxlength="@Product.SkuMaxLength" required autocomplete="off" autocapitalize="characters" spellcheck="false"
-                   autofocus="@(!skuLocked)" readonly="@skuLocked" aria-invalid="@Html.AriaInvalid("Input.Sku")" />
-            @if (skuLocked)
+    <section class="form-row" aria-labelledby="product-identity">
+        <div class="form-intro">
+            <h2 id="product-identity">Identity</h2>
+            <p>How the product is found and what it is called.</p>
+        </div>
+        <div class="card form-card">
+            <div class="field-grid">
+                <label>
+                    SKU
+                    <input name="Input.Sku" value="@Model.Input.Sku" maxlength="@Product.SkuMaxLength" required autocomplete="off" autocapitalize="characters" spellcheck="false"
+                           autofocus="@(!skuLocked)" readonly="@skuLocked" aria-invalid="@Html.AriaInvalid("Input.Sku")" aria-describedby="@Html.DescribedBy("Input.Sku")" />
+                    @Html.FieldError("Input.Sku")
+                    @if (skuLocked)
+                    {
+                        <small>The SKU cannot be changed because this product has stock history.</small>
+                    }
+                </label>
+                <label>
+                    Barcode <small>(optional)</small>
+                    <input name="Input.Barcode" value="@Model.Input.Barcode" maxlength="@Product.BarcodeMaxLength" autocomplete="off" spellcheck="false"
+                           aria-invalid="@Html.AriaInvalid("Input.Barcode")" aria-describedby="@Html.DescribedBy("Input.Barcode")" />
+                    @Html.FieldError("Input.Barcode")
+                </label>
+            </div>
+
+            <label>
+                Name
+                <input name="Input.Name" value="@Model.Input.Name" maxlength="@Product.NameMaxLength" required
+                       aria-invalid="@Html.AriaInvalid("Input.Name")" aria-describedby="@Html.DescribedBy("Input.Name")" />
+                @Html.FieldError("Input.Name")
+            </label>
+
+            <label>
+                Description <small>(optional)</small>
+                <textarea name="Input.Description" rows="3" maxlength="@Product.DescriptionMaxLength"
+                          aria-invalid="@Html.AriaInvalid("Input.Description")" aria-describedby="@Html.DescribedBy("Input.Description")">@Model.Input.Description</textarea>
+                @Html.FieldError("Input.Description")
+            </label>
+        </div>
+    </section>
+
+    <section class="form-row" aria-labelledby="product-stock">
+        <div class="form-intro">
+            <h2 id="product-stock">Stock</h2>
+            <p>Where it lives, how it is counted and when it needs restocking.</p>
+        </div>
+        <div class="card form-card">
+            <div class="field-grid">
+                <label>
+                    Category <small>(optional)</small>
+                    <select name="Input.CategoryId" aria-invalid="@Html.AriaInvalid("Input.CategoryId")" aria-describedby="@Html.DescribedBy("Input.CategoryId")">
+                        <option value="">— None —</option>
+                        @foreach (var category in Model.CategoryOptions)
+                        {
+                            <option value="@category.Id" selected="@(Model.Input.CategoryId == category.Id)">@category.Name@(category.IsActive ? "" : " (archived)")</option>
+                        }
+                    </select>
+                    @Html.FieldError("Input.CategoryId")
+                    <small><a asp-page="/Categories/Index" target="_blank" rel="noopener">Add or edit categories</a> (opens in a new tab; reload this page to see changes)</small>
+                </label>
+                <label>
+                    Unit
+                    <input name="Input.Unit" value="@Model.Input.Unit" maxlength="@Product.UnitMaxLength" list="unit-suggestions" autocomplete="off"
+                           aria-invalid="@Html.AriaInvalid("Input.Unit")" aria-describedby="@Html.DescribedBy("Input.Unit")" />
+                    @Html.FieldError("Input.Unit")
+                    <datalist id="unit-suggestions">
+                        <option value="each"></option>
+                        <option value="box"></option>
+                        <option value="pack"></option>
+                        <option value="pair"></option>
+                        <option value="kg"></option>
+                        <option value="m"></option>
+                        <option value="litre"></option>
+                    </datalist>
+                </label>
+            </div>
+
+            <label>
+                Bin location <small>(optional)</small>
+                <input name="Input.BinLocation" value="@Model.Input.BinLocation" maxlength="@Product.BinLocationMaxLength" autocomplete="off"
+                       aria-invalid="@Html.AriaInvalid("Input.BinLocation")" aria-describedby="@Html.DescribedBy("Input.BinLocation")" />
+                @Html.FieldError("Input.BinLocation")
+            </label>
+
+            <div class="field-grid">
+                <label>
+                    Reorder point
+                    <input name="Input.ReorderPoint" value="@Model.Input.ReorderPoint" type="number" inputmode="numeric" min="0" step="1" placeholder="0"
+                           aria-invalid="@Html.AriaInvalid("Input.ReorderPoint")" aria-describedby="@Html.DescribedBy("Input.ReorderPoint")" />
+                    @Html.FieldError("Input.ReorderPoint")
+                    <small>Flagged as low stock when on hand falls to this number or below. 0 turns the alert off.</small>
+                </label>
+                <label>
+                    Reorder quantity
+                    <input name="Input.ReorderQuantity" value="@Model.Input.ReorderQuantity" type="number" inputmode="numeric" min="0" step="1" placeholder="0"
+                           aria-invalid="@Html.AriaInvalid("Input.ReorderQuantity")" aria-describedby="@Html.DescribedBy("Input.ReorderQuantity")" />
+                    @Html.FieldError("Input.ReorderQuantity")
+                    <small>How many to order when restocking.</small>
+                </label>
+            </div>
+
+            @if (Model.IsEdit)
             {
-                <small>The SKU cannot be changed because this product has stock history.</small>
+                <p><small class="muted">On hand: <strong>@Model.Existing!.QuantityOnHand</strong> @Model.Existing.Unit. Quantity changes through stock movements, not here.</small></p>
             }
-        </label>
-        <label>
-            Barcode <small>(optional)</small>
-            <input name="Input.Barcode" value="@Model.Input.Barcode" maxlength="@Product.BarcodeMaxLength" autocomplete="off" spellcheck="false"
-                   aria-invalid="@Html.AriaInvalid("Input.Barcode")" />
-        </label>
-    </div>
+        </div>
+    </section>
 
-    <label>
-        Name
-        <input name="Input.Name" value="@Model.Input.Name" maxlength="@Product.NameMaxLength" required aria-invalid="@Html.AriaInvalid("Input.Name")" />
-    </label>
+    <section class="form-row" aria-labelledby="product-cost">
+        <div class="form-intro">
+            <h2 id="product-cost">Cost</h2>
+            <p>What one unit costs you. Used to value your stock.</p>
+        </div>
+        <div class="card form-card">
+            <label>
+                Unit cost (@currency)
+                <input name="Input.UnitCost" value="@Model.Input.UnitCost" inputmode="decimal" autocomplete="off" placeholder="0.00"
+                       aria-invalid="@Html.AriaInvalid("Input.UnitCost")" aria-describedby="@Html.DescribedBy("Input.UnitCost")" />
+                @Html.FieldError("Input.UnitCost")
+            </label>
+        </div>
+    </section>
 
-    <label>
-        Description <small>(optional)</small>
-        <textarea name="Input.Description" rows="3" maxlength="@Product.DescriptionMaxLength" aria-invalid="@Html.AriaInvalid("Input.Description")">@Model.Input.Description</textarea>
-    </label>
-
-    <div class="grid">
-        <label>
-            Category <small>(optional)</small>
-            <select name="Input.CategoryId" aria-invalid="@Html.AriaInvalid("Input.CategoryId")">
-                <option value="">— None —</option>
-                @foreach (var category in Model.CategoryOptions)
-                {
-                    <option value="@category.Id" selected="@(Model.Input.CategoryId == category.Id)">@category.Name@(category.IsActive ? "" : " (archived)")</option>
-                }
-            </select>
-            <small><a asp-page="/Categories/Index" target="_blank" rel="noopener">Add or edit categories</a> (opens in a new tab; reload this page to see changes)</small>
-        </label>
-        <label>
-            Unit
-            <input name="Input.Unit" value="@Model.Input.Unit" maxlength="@Product.UnitMaxLength" list="unit-suggestions" autocomplete="off"
-                   aria-invalid="@Html.AriaInvalid("Input.Unit")" />
-            <datalist id="unit-suggestions">
-                <option value="each"></option>
-                <option value="box"></option>
-                <option value="pack"></option>
-                <option value="pair"></option>
-                <option value="kg"></option>
-                <option value="m"></option>
-                <option value="litre"></option>
-            </datalist>
-        </label>
-    </div>
-
-    <div class="grid">
-        <label>
-            Bin location <small>(optional)</small>
-            <input name="Input.BinLocation" value="@Model.Input.BinLocation" maxlength="@Product.BinLocationMaxLength" autocomplete="off"
-                   aria-invalid="@Html.AriaInvalid("Input.BinLocation")" />
-        </label>
-        <label>
-            Unit cost (@currency)
-            <input name="Input.UnitCost" value="@Model.Input.UnitCost" inputmode="decimal" autocomplete="off" placeholder="0.00"
-                   aria-invalid="@Html.AriaInvalid("Input.UnitCost")" />
-        </label>
-    </div>
-
-    <div class="grid">
-        <label>
-            Reorder point
-            <input name="Input.ReorderPoint" value="@Model.Input.ReorderPoint" type="number" inputmode="numeric" min="0" step="1" placeholder="0"
-                   aria-invalid="@Html.AriaInvalid("Input.ReorderPoint")" />
-            <small>Flagged as low stock when on hand falls to this number or below. 0 turns the alert off.</small>
-        </label>
-        <label>
-            Reorder quantity
-            <input name="Input.ReorderQuantity" value="@Model.Input.ReorderQuantity" type="number" inputmode="numeric" min="0" step="1" placeholder="0"
-                   aria-invalid="@Html.AriaInvalid("Input.ReorderQuantity")" />
-            <small>How many to order when restocking.</small>
-        </label>
-    </div>
-
-    @if (Model.IsEdit)
-    {
-        <p><small class="muted">On hand: <strong>@Model.Existing!.QuantityOnHand</strong> @Model.Existing.Unit. Quantity changes through stock movements, not here.</small></p>
-    }
-
-    <div class="form-actions">
-        <button type="submit">@(Model.IsEdit ? "Save changes" : "Create product")</button>
+    <div class="action-bar form-actions">
         @if (Model.IsEdit)
         {
-            <a role="button" class="secondary" asp-page="Detail" asp-route-id="@Model.Existing!.Id">Cancel</a>
+            <a role="button" class="text" asp-page="Detail" asp-route-id="@Model.Existing!.Id">Cancel</a>
         }
         else
         {
-            <a role="button" class="secondary" asp-page="Index">Cancel</a>
+            <a role="button" class="text" asp-page="Index">Cancel</a>
         }
+        <button type="submit">@(Model.IsEdit ? "Save changes" : "Create product")</button>
     </div>
 </form>

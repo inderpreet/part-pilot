@@ -3,47 +3,50 @@
 @{
     var s = Model.Supplier;
     ViewData["Title"] = s.Name;
+    ViewData["Crumb"] = s.Name;
 }
 
-<div class="toolbar">
-    <p class="muted">
-        <a asp-page="Index">‹ All suppliers</a>
-        @if (!s.IsActive)
-        {
-            <span class="badge badge-inactive">Archived</span>
-        }
-    </p>
+@section Leading {
+    <a asp-page="Index">‹ All suppliers</a>
+}
 
+@section Badges {
+    @if (!s.IsActive)
+    {
+        <span class="badge badge-inactive">Archived</span>
+    }
+}
+
+@section Actions {
     @if (Model.CanEdit)
     {
-        <div class="form-actions">
-            <a role="button" asp-page="Edit" asp-route-id="@s.Id">Edit</a>
-            <form method="post" asp-page-handler="Archive" asp-route-id="@s.Id">
-                <input type="hidden" name="active" value="@(s.IsActive ? "false" : "true")" />
-                <input type="hidden" name="rowVersion" value="@s.RowVersion" />
-                @if (s.IsActive)
-                {
-                    <button type="submit" class="secondary outline"
-                            hx-post="@Url.Page("Detail", "Archive", new { id = s.Id })"
-                            hx-confirm="Archive @s.Name? It can no longer be chosen for new purchase orders or product links; existing ones are kept.">Archive</button>
-                }
-                else
-                {
-                    <button type="submit" class="secondary outline"
-                            hx-post="@Url.Page("Detail", "Archive", new { id = s.Id })"
-                            hx-confirm="Restore @s.Name so it can be used again?">Restore</button>
-                }
-            </form>
-        </div>
+        <a role="button" class="secondary outline" asp-page="Edit" asp-route-id="@s.Id">Edit</a>
+        <form method="post" asp-page-handler="Archive" asp-route-id="@s.Id">
+            <input type="hidden" name="active" value="@(s.IsActive ? "false" : "true")" />
+            <input type="hidden" name="rowVersion" value="@s.RowVersion" />
+            @if (s.IsActive)
+            {
+                <button type="submit" class="text danger"
+                        hx-post="@Url.Page("Detail", "Archive", new { id = s.Id })"
+                        hx-confirm="Archive @s.Name? It can no longer be chosen for new purchase orders or product links; existing ones are kept.">Archive</button>
+            }
+            else
+            {
+                <button type="submit" class="secondary outline"
+                        hx-post="@Url.Page("Detail", "Archive", new { id = s.Id })"
+                        hx-confirm="Restore @s.Name so it can be used again?">Restore</button>
+            }
+        </form>
     }
-</div>
+}
 
 @if (!s.IsActive)
 {
     <p role="status" class="muted">This supplier is archived. It cannot be chosen for new purchase orders; existing orders are unaffected.</p>
 }
 
-<article>
+<section class="card" aria-label="Supplier details">
+    <div class="card-head"><h2 class="card-title">Details</h2></div>
     <dl class="detail-grid">
         <dt>Name</dt>
         <dd>@s.Name</dd>
@@ -91,22 +94,24 @@
         <dt>Last changed</dt>
         <dd>@Html.LocalTime(s.UpdatedAt)</dd>
     </dl>
-</article>
+</section>
 
-<section id="orders" aria-label="Recent purchase orders">
-    <h2 class="section-title">Recent purchase orders</h2>
-    @if (Model.CanEdit && s.IsActive)
-    {
-        <p><a role="button" class="outline" asp-page="/PurchaseOrders/Edit" asp-route-supplierId="@s.Id">New purchase order</a></p>
-    }
+<section id="orders" class="card" aria-label="Recent purchase orders">
+    <div class="card-head">
+        <h2 class="card-title">Recent purchase orders</h2>
+        @if (Model.CanEdit && s.IsActive)
+        {
+            <a role="button" class="secondary outline" asp-page="/PurchaseOrders/Edit" asp-route-supplierId="@s.Id">New purchase order</a>
+        }
+    </div>
     @if (Model.RecentOrders.Count == 0)
     {
-        <p class="muted">No purchase orders for this supplier yet.</p>
+        <p class="card-empty muted">No purchase orders for this supplier yet.</p>
     }
     else
     {
         <div class="table-wrap">
-            <table class="striped compact">
+            <table>
                 <thead>
                     <tr>
                         <th scope="col">Number</th>
@@ -130,11 +135,13 @@
                 </tbody>
             </table>
         </div>
-        <p><a asp-page="/PurchaseOrders/Index" asp-route-supplierId="@s.Id" asp-route-tab="All">All orders for this supplier</a></p>
+        <div class="card-foot">
+            <a asp-page="/PurchaseOrders/Index" asp-route-supplierId="@s.Id" asp-route-tab="All">All orders for this supplier</a>
+        </div>
     }
 </section>
 
-<section aria-label="Products this supplier provides">
-    <h2 class="section-title">Products</h2>
+<section class="card" aria-label="Products this supplier provides">
+    <div class="card-head"><h2 class="card-title">Products</h2></div>
     <partial name="_SupplierLinks" model="Model.Links" />
 </section>

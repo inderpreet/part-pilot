@@ -5,265 +5,316 @@
 @{
     var o = Model.Order;
     ViewData["Title"] = $"Purchase order {o.Number}";
+    ViewData["Crumb"] = o.Number;
 
     string Action(string handler) => Url.Page("Detail", handler, new { id = o.Id })!;
 }
 
-<div class="toolbar">
-    <p class="muted">
-        <a asp-page="Index">‹ All purchase orders</a>
-        <partial name="_PoStatusBadge" model="o.Status" />
-        @if (Model.IsOverdue)
+@section Leading {
+    <a asp-page="Index">‹ All purchase orders</a>
+}
+
+@section Badges {
+    <partial name="_PoStatusBadge" model="o.Status" />
+    @if (Model.IsOverdue)
+    {
+        <span class="badge badge-overdue">Overdue</span>
+    }
+}
+
+@section Actions {
+    <a role="button" class="secondary outline" asp-page="Print" asp-route-id="@o.Id" target="_blank" rel="noopener">Print</a>
+
+    @if (Model.CanEdit)
+    {
+        @if (o.CanEditHeader)
         {
-            <span class="badge badge-cancelled">Overdue</span>
+            <a role="button" class="secondary outline" asp-page="Edit" asp-route-id="@o.Id">@(o.CanEditLines ? "Edit order" : "Edit dates & notes")</a>
         }
-    </p>
 
-    <div class="form-actions po-actions">
-        <a role="button" class="outline" asp-page="Print" asp-route-id="@o.Id" target="_blank" rel="noopener">Print</a>
-
-        @if (Model.CanEdit)
+        @if (o.CanReceive)
         {
-            @if (o.CanReceive)
-            {
-                <a role="button" asp-page="Receive" asp-route-id="@o.Id">Receive goods</a>
-            }
-
-            @if (o.CanEditHeader)
-            {
-                <a role="button" class="outline" asp-page="Edit" asp-route-id="@o.Id">@(o.CanEditLines ? "Edit order" : "Edit dates & notes")</a>
-            }
-
-            @if (o.CanSubmit)
-            {
-                <form method="post" asp-page-handler="Submit" asp-route-id="@o.Id">
-                    <input type="hidden" name="rowVersion" value="@o.RowVersion" />
-                    <button type="submit" hx-post="@Action("Submit")"
-                            hx-confirm="Submit @o.Number to @o.SupplierName? Its lines will count as on order, and the lines can no longer be edited.">Submit order</button>
-                </form>
-            }
-
-            @if (o.CanCloseShort)
-            {
-                <form method="post" asp-page-handler="CloseShort" asp-route-id="@o.Id">
-                    <input type="hidden" name="rowVersion" value="@o.RowVersion" />
-                    <button type="submit" class="secondary outline" hx-post="@Action("CloseShort")"
-                            hx-confirm="Close @o.Number short? The @(o.Lines.Sum(l => l.Outstanding)) unit(s) still outstanding will no longer be expected. Receipts already posted stay.">Close short</button>
-                </form>
-            }
-
-            @if (o.CanCancel)
-            {
-                <form method="post" asp-page-handler="Cancel" asp-route-id="@o.Id">
-                    <input type="hidden" name="rowVersion" value="@o.RowVersion" />
-                    <button type="submit" class="secondary outline" hx-post="@Action("Cancel")"
-                            hx-confirm="Cancel @o.Number? It stays in the list as Cancelled and can no longer be received.">Cancel order</button>
-                </form>
-            }
-
-            @if (o.CanDelete)
-            {
-                <form method="post" asp-page-handler="Delete" asp-route-id="@o.Id">
-                    <input type="hidden" name="rowVersion" value="@o.RowVersion" />
-                    <button type="submit" class="secondary outline" hx-post="@Action("Delete")"
-                            hx-confirm="Delete draft @o.Number permanently? This cannot be undone.">Delete draft</button>
-                </form>
-            }
+            <a role="button" asp-page="Receive" asp-route-id="@o.Id">Receive goods</a>
         }
-    </div>
-</div>
+
+        @if (o.CanSubmit)
+        {
+            <form method="post" asp-page-handler="Submit" asp-route-id="@o.Id">
+                <input type="hidden" name="rowVersion" value="@o.RowVersion" />
+                <button type="submit" hx-post="@Action("Submit")"
+                        hx-confirm="Submit @o.Number to @o.SupplierName? Its lines will count as on order, and the lines can no longer be edited.">Submit order</button>
+            </form>
+        }
+
+        @if (o.CanCloseShort || o.CanCancel || o.CanDelete)
+        {
+            @* Rarely used and hard to undo: tucked into a menu. Each item is still its own form, so it posts without JavaScript. *@
+            <details class="menu">
+                <summary class="menu-toggle" aria-label="More actions"><svg class="ico" aria-hidden="true"><use href="#i-dots"/></svg></summary>
+                <div class="menu-pop">
+                    @if (o.CanCloseShort)
+                    {
+                        <form method="post" asp-page-handler="CloseShort" asp-route-id="@o.Id">
+                            <input type="hidden" name="rowVersion" value="@o.RowVersion" />
+                            <button type="submit" class="menu-item" hx-post="@Action("CloseShort")"
+                                    hx-confirm="Close @o.Number short? The @(o.Lines.Sum(l => l.Outstanding)) unit(s) still outstanding will no longer be expected. Receipts already posted stay.">Close short</button>
+                        </form>
+                    }
+                    @if (o.CanCancel)
+                    {
+                        <form method="post" asp-page-handler="Cancel" asp-route-id="@o.Id">
+                            <input type="hidden" name="rowVersion" value="@o.RowVersion" />
+                            <button type="submit" class="menu-item danger" hx-post="@Action("Cancel")"
+                                    hx-confirm="Cancel @o.Number? It stays in the list as Cancelled and can no longer be received.">Cancel order</button>
+                        </form>
+                    }
+                    @if (o.CanDelete)
+                    {
+                        @if (o.CanCloseShort || o.CanCancel)
+                        {
+                            <hr />
+                        }
+                        <form method="post" asp-page-handler="Delete" asp-route-id="@o.Id">
+                            <input type="hidden" name="rowVersion" value="@o.RowVersion" />
+                            <button type="submit" class="menu-item danger" hx-post="@Action("Delete")"
+                                    hx-confirm="Delete draft @o.Number permanently? This cannot be undone.">Delete draft</button>
+                        </form>
+                    }
+                </div>
+            </details>
+        }
+    }
+}
 
 @if (o.Status == InventoryTracker.Data.Entities.PurchaseOrderStatus.Draft && o.Lines.Count == 0)
 {
     <p class="muted" role="status">This draft has no lines yet@(Model.CanEdit ? ". Edit the order to add products, then submit it." : ".")</p>
 }
 
-<div class="po-header-grid">
-    <article>
-        <header><strong>Supplier</strong></header>
-        <p>
-            <a asp-page="/Suppliers/Detail" asp-route-id="@o.SupplierId">@o.SupplierName</a>
-            @if (!o.SupplierIsActive)
+@{
+    var percentReceived = o.TotalOrdered > 0 ? Math.Min(100, (int)Math.Round(o.TotalReceived * 100.0 / o.TotalOrdered)) : 0;
+    var isOpen = PurchaseOrderRules.IsOpen(o.Status);
+}
+
+<div class="detail-cols">
+    <div class="detail-main">
+        <section class="card" aria-label="Order lines">
+            <div class="card-head">
+                <h2 class="card-title">Lines</h2>
+                @if (o.Lines.Count > 0)
+                {
+                    <span class="muted">@o.Lines.Count @(o.Lines.Count == 1 ? "line" : "lines") · @percentReceived% received</span>
+                }
+            </div>
+            @if (o.Lines.Count == 0)
             {
-                <span class="badge badge-inactive">Archived</span>
+                <p class="card-empty muted">No lines.</p>
             }
-        </p>
-        <dl class="detail-grid">
-            <dt>Contact</dt>
-            <dd>@(o.SupplierContactName ?? "—")</dd>
-            <dt>Email</dt>
-            <dd>
-                @if (o.SupplierEmail is { } email)
-                {
-                    <a href="mailto:@email">@email</a>
-                }
-                else
-                {
-                    <span>—</span>
-                }
-            </dd>
-            <dt>Phone</dt>
-            <dd>
-                @if (o.SupplierPhone is { } phone)
-                {
-                    <a href="tel:@phone">@phone</a>
-                }
-                else
-                {
-                    <span>—</span>
-                }
-            </dd>
-        </dl>
-    </article>
-
-    <article>
-        <header><strong>Order</strong></header>
-        <dl class="detail-grid">
-            <dt>Number</dt>
-            <dd>@o.Number</dd>
-            <dt>Order date</dt>
-            <dd>@PurchaseOrderDisplay.Date(o.OrderDate)</dd>
-            <dt>Expected</dt>
-            <dd class="@(Model.IsOverdue ? "po-overdue" : null)">@PurchaseOrderDisplay.Date(o.ExpectedDate)</dd>
-            <dt>Created by</dt>
-            <dd>@o.CreatedByName, @Html.LocalTime(o.CreatedAt)</dd>
-            <dt>Submitted</dt>
-            <dd>@Html.LocalTime(o.SubmittedAt)</dd>
-            @if (o.ClosedAt is not null)
+            else
             {
-                <dt>Closed</dt>
-                <dd>@Html.LocalTime(o.ClosedAt)</dd>
-            }
-            <dt>Notes</dt>
-            <dd class="pre-line">@(string.IsNullOrWhiteSpace(o.Notes) ? "—" : o.Notes)</dd>
-        </dl>
-    </article>
-</div>
-
-<section aria-label="Order lines">
-    <h2 class="section-title">Lines</h2>
-    @if (o.Lines.Count == 0)
-    {
-        <p class="muted">No lines.</p>
-    }
-    else
-    {
-        <div class="table-wrap">
-            <table class="striped compact po-lines">
-                <thead>
-                    <tr>
-                        <th scope="col">Product</th>
-                        <th scope="col">Supplier SKU</th>
-                        <th scope="col" class="num">Ordered</th>
-                        <th scope="col" class="num">Received</th>
-                        <th scope="col" class="num">Outstanding</th>
-                        <th scope="col" class="num">Unit cost</th>
-                        <th scope="col" class="num">Line total</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var line in o.Lines)
-                    {
-                        <tr>
-                            <td>
-                                <a asp-page="/Products/Detail" asp-route-id="@line.ProductId"><strong>@line.Sku</strong></a> @line.ProductName
-                                @if (!line.ProductIsActive)
-                                {
-                                    <span class="badge badge-inactive">Archived</span>
-                                }
-                            </td>
-                            <td>@(line.SupplierSku ?? "—")</td>
-                            <td class="num">@line.QuantityOrdered @line.Unit</td>
-                            <td class="num">@line.QuantityReceived</td>
-                            <td class="num">@(PurchaseOrderRules.IsOpen(o.Status) ? line.Outstanding.ToString(CultureInfo.CurrentCulture) : "—")</td>
-                            <td class="num">@Html.Money(line.UnitCostCents)</td>
-                            <td class="num">@Html.Money(line.LineTotalCents)</td>
-                        </tr>
-                    }
-                </tbody>
-                <tfoot>
-                    <tr>
-                        <th scope="row" colspan="2">Total</th>
-                        <td class="num">@o.TotalOrdered</td>
-                        <td class="num">@o.TotalReceived</td>
-                        <td class="num">@(o.OutstandingCents > 0 ? Html.Money(o.OutstandingCents) : Html.Raw("—"))</td>
-                        <td></td>
-                        <td class="num"><strong>@Html.Money(o.TotalCents)</strong></td>
-                    </tr>
-                </tfoot>
-            </table>
-        </div>
-    }
-</section>
-
-<section id="receipts" aria-label="Receipts">
-    <h2 class="section-title">Receipts</h2>
-    @if (Model.Receipts.Count == 0)
-    {
-        <p class="muted">Nothing has been received against this order yet.</p>
-    }
-    else
-    {
-        <div class="table-wrap">
-            <table class="striped compact movements">
-                <thead>
-                    <tr>
-                        <th scope="col">#</th>
-                        <th scope="col">When</th>
-                        <th scope="col">Product</th>
-                        <th scope="col" class="num">Quantity</th>
-                        <th scope="col">Reference / note</th>
-                        <th scope="col">By</th>
-                        @if (Model.CanEdit)
-                        {
-                            <th scope="col"><span class="visually-hidden">Actions</span></th>
-                        }
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var r in Model.Receipts)
-                    {
-                        <tr id="tx-@r.TransactionId" class="@(r.IsReversed ? "row-reversed" : null)">
-                            <td>@r.TransactionId</td>
-                            <td>@Html.LocalTime(r.OccurredAt)</td>
-                            <td><strong>@r.Sku</strong> @r.ProductName</td>
-                            <td class="num"><span class="@(r.QuantityDelta >= 0 ? "delta-up" : "delta-down")">@r.QuantityDelta.ToString("+#;-#;0", CultureInfo.InvariantCulture)</span></td>
-                            <td>
-                                @if (!string.IsNullOrEmpty(r.Reference))
-                                {
-                                    <span>ref @r.Reference</span>
-                                }
-                                @if (r.Type == InventoryTracker.Data.Entities.StockTransactionType.Reversal)
-                                {
-                                    <small class="muted">reversal</small>
-                                }
-                                @if (r.IsReversed)
-                                {
-                                    <span class="badge badge-draft">Reversed</span>
-                                }
-                                @if (!string.IsNullOrEmpty(r.Note))
-                                {
-                                    <br /><small class="muted">@r.Note</small>
-                                }
-                            </td>
-                            <td>@r.UserName</td>
-                            @if (Model.CanEdit)
+                <div class="table-wrap">
+                    <table class="po-lines">
+                        <thead>
+                            <tr>
+                                <th scope="col">Product</th>
+                                <th scope="col">Supplier SKU</th>
+                                <th scope="col" class="num">Ordered</th>
+                                <th scope="col">Received</th>
+                                <th scope="col" class="num">Outstanding</th>
+                                <th scope="col" class="num">Unit cost</th>
+                                <th scope="col" class="num">Line total</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var line in o.Lines)
                             {
-                                <td class="row-actions">
-                                    @if (r.CanReverse)
-                                    {
-                                        <form method="post" asp-page-handler="Reverse" asp-route-id="@o.Id" class="inline-form">
-                                            <input type="hidden" name="transactionId" value="@r.TransactionId" />
-                                            <button type="submit" class="secondary outline" hx-post="@Action("Reverse")"
-                                                    hx-confirm="Reverse receipt #@r.TransactionId (@r.QuantityDelta.ToString("+#;-#;0", CultureInfo.InvariantCulture) of @r.Sku)? Stock goes back down and the order line is reopened; the receipt stays in the history.">Reverse</button>
-                                        </form>
-                                    }
-                                </td>
+                                var linePercent = line.QuantityOrdered > 0 ? Math.Min(100, line.QuantityReceived * 100 / line.QuantityOrdered) : 0;
+                                <tr>
+                                    <td>
+                                        <span class="cell-main"><a asp-page="/Products/Detail" asp-route-id="@line.ProductId"><strong>@line.Sku</strong></a> @line.ProductName
+                                        @if (!line.ProductIsActive)
+                                        {
+                                            <span class="badge badge-inactive">Archived</span>
+                                        }</span>
+                                    </td>
+                                    <td>@(line.SupplierSku ?? "—")</td>
+                                    <td class="num">@line.QuantityOrdered @line.Unit</td>
+                                    <td>
+                                        <span class="progress-cell">
+                                            <span class="meter" aria-hidden="true"><span class="@(line.QuantityReceived >= line.QuantityOrdered ? "ok" : null)" style="width:@(linePercent)%"></span></span>
+                                            @line.QuantityReceived
+                                        </span>
+                                    </td>
+                                    <td class="num">@(isOpen ? line.Outstanding.ToString(CultureInfo.CurrentCulture) : "—")</td>
+                                    <td class="num">@Html.Money(line.UnitCostCents)</td>
+                                    <td class="num">@Html.Money(line.LineTotalCents)</td>
+                                </tr>
                             }
-                        </tr>
+                        </tbody>
+                        <tfoot>
+                            <tr>
+                                <th scope="row" colspan="2">Total</th>
+                                <td class="num">@o.TotalOrdered</td>
+                                <td>@o.TotalReceived</td>
+                                <td class="num">@(o.OutstandingCents > 0 ? Html.Money(o.OutstandingCents) : Html.Raw("—"))</td>
+                                <td></td>
+                                <td class="num"><strong>@Html.Money(o.TotalCents)</strong></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            }
+        </section>
+
+        <section id="receipts" class="card" aria-label="Receipts">
+            <div class="card-head">
+                <h2 class="card-title">Receipts</h2>
+                @if (Model.Receipts.Count > 0)
+                {
+                    <span class="muted">@Model.Receipts.Count @(Model.Receipts.Count == 1 ? "entry" : "entries")</span>
+                }
+            </div>
+            @if (Model.Receipts.Count == 0)
+            {
+                <p class="card-empty muted">Nothing has been received against this order yet.</p>
+            }
+            else
+            {
+                <div class="table-wrap">
+                    <table class="movements">
+                        <thead>
+                            <tr>
+                                <th scope="col">#</th>
+                                <th scope="col">When</th>
+                                <th scope="col">Product</th>
+                                <th scope="col" class="num">Quantity</th>
+                                <th scope="col">Reference / note</th>
+                                <th scope="col">By</th>
+                                @if (Model.CanEdit)
+                                {
+                                    <th scope="col"><span class="visually-hidden">Actions</span></th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var r in Model.Receipts)
+                            {
+                                <tr id="tx-@r.TransactionId" class="@(r.IsReversed ? "row-reversed" : null)">
+                                    <td>@r.TransactionId</td>
+                                    <td>@Html.LocalTime(r.OccurredAt)</td>
+                                    <td><strong>@r.Sku</strong> @r.ProductName</td>
+                                    <td class="num"><span class="@(r.QuantityDelta >= 0 ? "delta-up" : "delta-down")">@r.QuantityDelta.ToString("+#;-#;0", CultureInfo.InvariantCulture)</span></td>
+                                    <td>
+                                        @if (!string.IsNullOrEmpty(r.Reference))
+                                        {
+                                            <span>ref @r.Reference</span>
+                                        }
+                                        @if (r.Type == InventoryTracker.Data.Entities.StockTransactionType.Reversal)
+                                        {
+                                            <small class="muted">reversal</small>
+                                        }
+                                        @if (r.IsReversed)
+                                        {
+                                            <span class="badge badge-draft">Reversed</span>
+                                        }
+                                        @if (!string.IsNullOrEmpty(r.Note))
+                                        {
+                                            <br /><small class="muted">@r.Note</small>
+                                        }
+                                    </td>
+                                    <td>@r.UserName</td>
+                                    @if (Model.CanEdit)
+                                    {
+                                        <td class="row-actions">
+                                            @if (r.CanReverse)
+                                            {
+                                                <form method="post" asp-page-handler="Reverse" asp-route-id="@o.Id" class="inline-form">
+                                                    <input type="hidden" name="transactionId" value="@r.TransactionId" />
+                                                    <button type="submit" class="text danger" hx-post="@Action("Reverse")"
+                                                            hx-confirm="Reverse receipt #@r.TransactionId (@r.QuantityDelta.ToString("+#;-#;0", CultureInfo.InvariantCulture) of @r.Sku)? Stock goes back down and the order line is reopened; the receipt stays in the history.">Reverse</button>
+                                                </form>
+                                            }
+                                        </td>
+                                    }
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+    </div>
+
+    <div class="side-stack">
+        <section class="card" aria-label="Summary">
+            <div class="card-head"><h2 class="card-title">Summary</h2></div>
+            <dl class="kv">
+                <dt>Total</dt>
+                <dd>@Html.Money(o.TotalCents)</dd>
+                <dt>Units ordered</dt>
+                <dd>@o.TotalOrdered</dd>
+                <dt>Units received</dt>
+                <dd>@o.TotalReceived</dd>
+                <dt class="kv-total">Outstanding</dt>
+                <dd class="kv-total">@(o.OutstandingCents > 0 ? Html.Money(o.OutstandingCents) : Html.Raw("—"))</dd>
+            </dl>
+        </section>
+
+        <section class="card" aria-label="Supplier">
+            <div class="card-head"><h2 class="card-title">Supplier</h2></div>
+            <dl class="kv kv-stack">
+                <dt>
+                    <a asp-page="/Suppliers/Detail" asp-route-id="@o.SupplierId">@o.SupplierName</a>
+                    @if (!o.SupplierIsActive)
+                    {
+                        <span class="badge badge-inactive">Archived</span>
                     }
-                </tbody>
-            </table>
-        </div>
-    }
-</section>
+                </dt>
+                <dd>@(o.SupplierContactName ?? "No contact name")</dd>
+                <dd>
+                    @if (o.SupplierEmail is { } email)
+                    {
+                        <a href="mailto:@email">@email</a>
+                    }
+                    else
+                    {
+                        <span class="muted">No email</span>
+                    }
+                </dd>
+                <dd>
+                    @if (o.SupplierPhone is { } phone)
+                    {
+                        <a href="tel:@phone">@phone</a>
+                    }
+                    else
+                    {
+                        <span class="muted">No phone</span>
+                    }
+                </dd>
+            </dl>
+        </section>
+
+        <section class="card" aria-label="Order">
+            <div class="card-head"><h2 class="card-title">Order</h2></div>
+            <dl class="kv">
+                <dt>Number</dt>
+                <dd>@o.Number</dd>
+                <dt>Order date</dt>
+                <dd>@PurchaseOrderDisplay.Date(o.OrderDate)</dd>
+                <dt>Expected</dt>
+                <dd class="@(Model.IsOverdue ? "po-overdue" : null)">@PurchaseOrderDisplay.Date(o.ExpectedDate)</dd>
+                <dt>Created by</dt>
+                <dd>@o.CreatedByName, @Html.LocalTime(o.CreatedAt)</dd>
+                <dt>Submitted</dt>
+                <dd>@Html.LocalTime(o.SubmittedAt)</dd>
+                @if (o.ClosedAt is not null)
+                {
+                    <dt>Closed</dt>
+                    <dd>@Html.LocalTime(o.ClosedAt)</dd>
+                }
+                <dt>Notes</dt>
+                <dd class="pre-line kv-note">@(string.IsNullOrWhiteSpace(o.Notes) ? "—" : o.Notes)</dd>
+            </dl>
+        </section>
+    </div>
+</div>

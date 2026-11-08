@@ -3,63 +3,70 @@
 @{
     var p = Model.Product;
     ViewData["Title"] = $"{p.Sku} · {p.Name}";
+    ViewData["Crumb"] = p.Sku;
 }
 
-<div class="toolbar">
-    <p class="muted">
-        <a asp-page="Index">‹ All products</a>
-        @if (!p.IsActive)
-        {
-            <span class="badge badge-inactive">Archived</span>
-        }
-        @if (p.IsLowStock)
-        {
-            <span class="badge badge-low">Low stock</span>
-        }
-    </p>
+@section Leading {
+    <a asp-page="Index">‹ All products</a>
+}
 
+@section Badges {
+    @if (!p.IsActive)
+    {
+        <span class="badge badge-inactive">Archived</span>
+    }
+    @if (p.IsLowStock)
+    {
+        <span class="badge badge-low">Low stock</span>
+    }
+}
+
+@section Actions {
     @if (Model.CanEdit)
     {
-        <div class="form-actions">
+        @if (p.IsActive)
+        {
+            <div class="move-buttons" role="group" aria-label="Record stock movement">
+                <partial name="_MoveButtons" model="@(new MoveButtonsModel(p.Id, p.Sku))" />
+            </div>
+        }
+        <a role="button" class="secondary outline" asp-page="Edit" asp-route-id="@p.Id">Edit</a>
+        <form method="post" asp-page-handler="Archive" asp-route-id="@p.Id">
+            <input type="hidden" name="active" value="@(p.IsActive ? "false" : "true")" />
+            <input type="hidden" name="rowVersion" value="@p.RowVersion" />
             @if (p.IsActive)
             {
-                <div class="move-buttons" role="group" aria-label="Record stock movement">
-                    <partial name="_MoveButtons" model="@(new MoveButtonsModel(p.Id, p.Sku))" />
-                </div>
+                <button type="submit" class="text danger"
+                        hx-post="@Url.Page("Detail", "Archive", new { id = p.Id })"
+                        hx-confirm="Archive @p.Sku? It will be hidden from pickers and the default list, and its history is kept.">Archive</button>
             }
-            <a role="button" asp-page="Edit" asp-route-id="@p.Id">Edit</a>
-            <form method="post" asp-page-handler="Archive" asp-route-id="@p.Id">
-                <input type="hidden" name="active" value="@(p.IsActive ? "false" : "true")" />
-                <input type="hidden" name="rowVersion" value="@p.RowVersion" />
-                @if (p.IsActive)
-                {
-                    <button type="submit" class="secondary outline"
-                            hx-post="@Url.Page("Detail", "Archive", new { id = p.Id })"
-                            hx-confirm="Archive @p.Sku? It will be hidden from pickers and the default list, and its history is kept.">Archive</button>
-                }
-                else
-                {
-                    <button type="submit" class="secondary outline"
-                            hx-post="@Url.Page("Detail", "Archive", new { id = p.Id })"
-                            hx-confirm="Restore @p.Sku so it can be used again?">Restore</button>
-                }
-            </form>
-        </div>
+            else
+            {
+                <button type="submit" class="secondary outline"
+                        hx-post="@Url.Page("Detail", "Archive", new { id = p.Id })"
+                        hx-confirm="Restore @p.Sku so it can be used again?">Restore</button>
+            }
+        </form>
     }
-</div>
+}
+
+@{
+    var stockTone = p.QuantityOnHand <= 0 ? "is-zero" : p.IsLowStock ? "is-low" : null;
+}
 
 <div class="detail-layout">
-    <article class="on-hand-card" aria-label="Quantity on hand">
-        <small class="muted">On hand</small>
+    <article class="card on-hand-card @stockTone" aria-label="Quantity on hand">
+        <p class="stat-label">On hand</p>
         <p class="on-hand-number">@p.QuantityOnHand</p>
-        <small class="muted">@p.Unit</small>
+        <p class="on-hand-unit">@p.Unit</p>
         @if (p.ReorderPoint > 0)
         {
-            <small class="muted">Reorder at @p.ReorderPoint</small>
+            <p class="on-hand-note">Reorder at @p.ReorderPoint</p>
         }
     </article>
 
-    <article>
+    <section class="card" aria-label="Product details">
+        <div class="card-head"><h2 class="card-title">Details</h2></div>
         <dl class="detail-grid">
             <dt>SKU</dt>
             <dd>@p.Sku</dd>
@@ -101,41 +108,41 @@
             <dt>Last changed</dt>
             <dd>@Html.LocalTime(p.UpdatedAt)</dd>
         </dl>
-    </article>
+    </section>
 </div>
 
-@* Tab area: each tab is switched on by the feature that fills it (History: F03, Suppliers: F04, Purchase orders: F05, Audit: F08). *@
-<nav class="tabs-soon" aria-label="More about this product">
-    <ul>
-        <li><a href="#history" aria-current="true">History</a></li>
-        <li><a href="#suppliers">Suppliers</a></li>
-        <li><a href="#purchase-orders">Purchase orders</a></li>
-        <li><span aria-disabled="true" title="Coming soon">Audit</span></li>
-    </ul>
+@* In-page navigation: each section is switched on by the feature that fills it (History: F03, Suppliers: F04, Purchase orders: F05,
+   Audit: F08). site.js marks the link for the current hash; without JavaScript History stays marked. *@
+<nav class="section-nav" aria-label="More about this product">
+    <a href="#history" aria-current="true">History</a>
+    <a href="#suppliers">Suppliers</a>
+    <a href="#purchase-orders">Purchase orders</a>
+    <span class="section-nav-soon" aria-disabled="true" title="Coming soon">Audit <small>Soon</small></span>
 </nav>
 
-<section aria-label="Stock history">
-    <p class="muted history-link"><a asp-page="/Stock/Movements" asp-route-productId="@p.Id">All movements for this product, with filters</a></p>
-    <div id="history">
-        <partial name="_StockHistory" model="Model" />
+<section id="history" class="card" aria-label="Stock history">
+    <div class="card-head">
+        <h2 class="card-title">History</h2>
+        <a asp-page="/Stock/Movements" asp-route-productId="@p.Id">All movements for this product, with filters</a>
     </div>
+    <partial name="_StockHistory" model="Model" />
 </section>
 
-<section id="suppliers" aria-label="Suppliers of this product">
-    <h2 class="section-title">Suppliers</h2>
+<section id="suppliers" class="card" aria-label="Suppliers of this product">
+    <div class="card-head"><h2 class="card-title">Suppliers</h2></div>
     <partial name="_SupplierLinks" model="Model.Suppliers" />
 </section>
 
-<section id="purchase-orders" aria-label="Open purchase orders for this product">
-    <h2 class="section-title">Open purchase orders</h2>
+<section id="purchase-orders" class="card" aria-label="Open purchase orders for this product">
+    <div class="card-head"><h2 class="card-title">Open purchase orders</h2></div>
     @if (Model.OpenOrders.Count == 0)
     {
-        <p class="muted">Nothing is on order for this product.</p>
+        <p class="card-empty muted">Nothing is on order for this product.</p>
     }
     else
     {
         <div class="table-wrap">
-            <table class="striped compact">
+            <table>
                 <thead>
                     <tr>
                         <th scope="col">Order</th>

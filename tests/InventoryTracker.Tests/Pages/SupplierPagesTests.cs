@@ -130,7 +130,7 @@ public partial class SupplierPagesTests
         using var factory = new AppFactory();
         using var client = factory.CreateClientAs("Viewer");
 
-        Assert.Contains(">Suppliers</a>", await client.GetStringAsync("/"));
+        Assert.Contains("<span>Suppliers</span></a>", await client.GetStringAsync("/"));
     }
 
     // ---- create / edit / archive ------------------------------------------------------------------------------------
@@ -176,6 +176,29 @@ public partial class SupplierPagesTests
         var badEmail = await WebForms.PostFormAsync(client, "/Suppliers/Edit", [("Input.Name", "Other"), ("Input.Email", "nope"), ("Input.RowVersion", "0")]);
         Assert.Equal(HttpStatusCode.OK, badEmail.StatusCode);
         Assert.Contains("aria-invalid=\"true\"", await badEmail.Content.ReadAsStringAsync());
+    }
+
+    [Fact]
+    public async Task The_supplier_form_has_Contact_and_Notes_sections_and_shows_field_errors_beside_the_control()
+    {
+        using var factory = new AppFactory();
+        using var client = factory.CreateClientAs("Admin");
+
+        var fresh = await client.GetStringAsync("/Suppliers/Edit");
+        Assert.Contains(">Contact</h2>", fresh);
+        Assert.Contains(">Notes</h2>", fresh);
+        Assert.DoesNotContain("class=\"field-error\"", fresh);
+
+        var bad = await WebForms.PostFormAsync(client, "/Suppliers/Edit", [("Input.Name", "Other"), ("Input.Email", "nope"), ("Input.RowVersion", "0")]);
+        var html = await bad.Content.ReadAsStringAsync();
+
+        Assert.Equal(HttpStatusCode.OK, bad.StatusCode);
+        Assert.Contains("id=\"Input_Email-error\"", html);
+        Assert.Matches("name=\"Input.Email\"[^>]*aria-invalid=\"true\"[^>]*aria-describedby=\"Input_Email-error\"", html);
+        Assert.Contains("alert alert-error", html);
+
+        var ok = await WebForms.PostFormAsync(client, "/Suppliers/Edit", [("Input.Name", "Fine Supply"), ("Input.RowVersion", "0")]);
+        Assert.Equal(HttpStatusCode.Redirect, ok.StatusCode);
     }
 
     [Fact]

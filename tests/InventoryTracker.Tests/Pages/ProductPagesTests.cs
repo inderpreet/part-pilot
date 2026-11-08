@@ -1,6 +1,7 @@
 using System.Net;
 using System.Text.RegularExpressions;
 using InventoryTracker.Data;
+using InventoryTracker.Data.Entities;
 using InventoryTracker.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -369,7 +370,121 @@ public partial class ProductPagesTests
         Assert.Equal(HttpStatusCode.NotFound, (await admin.GetAsync("/Products/Edit/99999")).StatusCode);
     }
 
+    // ---- sections and field errors (WI-09-6) -----------------------------------------------------------------------
+
+    [Fact]
+    public async Task The_product_form_is_split_into_Identity_Stock_and_Cost_sections_with_one_sticky_action_bar()
+    {
+        using var factory = new AppFactory();
+        using var client = factory.CreateClientAs("Admin");
+
+        var html = await client.GetStringAsync("/Products/Edit");
+
+        Assert.Contains(">Identity</h2>", html);
+        Assert.Contains(">Stock</h2>", html);
+        Assert.Contains(">Cost</h2>", html);
+        Assert.Equal(1, Regex.Count(html, "class=\"action-bar form-actions\""));
+        Assert.Equal(1, Regex.Count(html, "<form method=\"post\" novalidate"));
+        Assert.DoesNotContain("class=\"field-error\"", html); // a fresh form shows no errors
+    }
+
+    [Fact]
+    public async Task An_invalid_product_shows_the_message_next_to_the_field_and_in_the_summary()
+    {
+        using var factory = new AppFactory();
+        using var client = factory.CreateClientAs("Admin");
+
+        var response = await WebForms.PostFormAsync(client, "/Products/Edit", Fields("FE-1", name: ""));
+        var html = await response.Content.ReadAsStringAsync();
+
+        Assert.Equal(HttpStatusCode.OK, response.StatusCode);
+        Assert.Contains("alert alert-error", html);               // the summary at the top
+        Assert.Contains("<small class=\"field-error\" id=\"Input_Name-error\">", html);
+        Assert.Matches("name=\"Input.Name\"[^>]*aria-invalid=\"true\"[^>]*aria-describedby=\"Input_Name-error\"", html);
+        Assert.DoesNotContain("id=\"Input_Sku-error\"", html);    // fields without an error stay clean
+    }
+
+    [Fact]
+    public async Task A_valid_product_still_redirects_after_the_form_restyle()
+    {
+        using var factory = new AppFactory();
+        using var client = factory.CreateClientAs("Admin");
+
+        var response = await WebForms.PostFormAsync(client, "/Products/Edit", Fields("FE-2"));
+
+        Assert.Equal(HttpStatusCode.Redirect, response.StatusCode);
+    }
+
+    // ---- detail cards (WI-09-7) ------------------------------------------------------------------------------------
+
+    [Fact]
+    public async Task Product_detail_has_an_in_page_section_nav_with_Audit_as_an_inert_label()
+    {
+        using var factory = new AppFactory();
+        using var client = factory.CreateClientAs("Viewer");
+        var product = await SeedAsync(factory, "NAV-1");
+
+        var html = await client.GetStringAsync($"/Products/{product.Id}");
+        var nav = html[html.IndexOf("<nav class=\"section-nav\"", StringComparison.Ordinal)..];
+        nav = nav[..nav.IndexOf("</nav>", StringComparison.Ordinal)];
+
+        Assert.Contains("href=\"#history\"", nav);
+        Assert.Contains("href=\"#suppliers\"", nav);
+        Assert.Contains("href=\"#purchase-orders\"", nav);
+        Assert.Matches("<span class=\"section-nav-soon\"[^>]*aria-disabled=\"true\"[^>]*>Audit", nav);
+        Assert.DoesNotMatch("<a [^>]*>Audit", nav);
+        foreach (var id in new[] { "history", "suppliers", "purchase-orders" })
+        {
+            Assert.Contains($"id=\"{id}\"", html); // every nav target exists
+        }
+    }
+
+    [Fact]
+    public async Task The_on_hand_card_is_coloured_when_stock_is_low_or_zero_and_plain_otherwise()
+    {
+        using var factory = new AppFactory();
+        using var client = factory.CreateClientAs("Admin");
+        var empty = await SeedAsync(factory, "ZERO-1", reorderPoint: 5);   // on hand 0
+        var low = await SeedAsync(factory, "LOW-2", reorderPoint: 5);
+        var healthy = await SeedAsync(factory, "OK-1", reorderPoint: 5);
+        var userId = await WebForms.UserIdAsync(factory, TestAuth.Users.Admin);
+        await factory.WithScopeAsync(async sp => Assert.True((await sp.GetRequiredService<IStockService>().PostAsync(
+            [new StockMovement(low.Id, StockTransactionType.Receive, 3), new StockMovement(healthy.Id, StockTransactionType.Receive, 50)],
+            new StockContext(userId))).Succeeded));
+
+        string Card(string html)
+        {
+            var start = html.IndexOf("<article class=\"card on-hand-card", StringComparison.Ordinal);
+            return html[start..html.IndexOf('>', start)];
+        }
+
+        Assert.Contains("is-zero", Card(await client.GetStringAsync($"/Products/{empty.Id}")));
+        var lowCard = Card(await client.GetStringAsync($"/Products/{low.Id}"));
+        Assert.Contains("is-low", lowCard);
+        Assert.DoesNotContain("is-zero", lowCard);
+        var okCard = Card(await client.GetStringAsync($"/Products/{healthy.Id}"));
+        Assert.DoesNotContain("is-low", okCard);
+        Assert.DoesNotContain("is-zero", okCard);
+    }
+
     // ---- archive ---------------------------------------------------------------------------------------------------
+
+    [Fact]
+    public async Task Archive_is_a_danger_text_button_and_Restore_stays_secondary()
+    {
+        using var factory = new AppFactory();
+        using var client = factory.CreateClientAs("Staff");
+        var product = await SeedAsync(factory, "DNG-1");
+
+        var active = await client.GetStringAsync($"/Products/{product.Id}");
+        Assert.Matches("<button type=\"submit\" class=\"text danger\"\\s+hx-post=\"[^\"]+\"\\s+hx-confirm=\"Archive DNG-1", active);
+
+        await WebForms.PostFormAsync(client, $"/Products/{product.Id}?handler=Archive",
+            [("active", "false"), ("rowVersion", product.RowVersion.ToString())], tokenPage: $"/Products/{product.Id}");
+
+        var archived = await client.GetStringAsync($"/Products/{product.Id}");
+        Assert.Matches("<button type=\"submit\" class=\"secondary outline\"\\s+hx-post=\"[^\"]+\"\\s+hx-confirm=\"Restore DNG-1", archived);
+    }
 
     [Fact]
     public async Task Archiving_hides_a_product_from_the_default_list_and_restoring_brings_it_back()

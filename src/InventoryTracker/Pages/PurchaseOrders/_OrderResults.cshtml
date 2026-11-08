@@ -30,8 +30,8 @@ else
                     <partial name="_SortHeader" model="@(new SortHeaderModel("status", "Status", Model.Query))" />
                     <partial name="_SortHeader" model="@(new SortHeaderModel("date", "Ordered", Model.Query))" />
                     <partial name="_SortHeader" model="@(new SortHeaderModel("expected", "Expected", Model.Query))" />
-                    <partial name="_SortHeader" model="@(new SortHeaderModel("total", "Total", Model.Query))" />
-                    <partial name="_SortHeader" model="@(new SortHeaderModel("outstanding", "Outstanding", Model.Query))" />
+                    <partial name="_SortHeader" model="@(new SortHeaderModel("total", "Total", Model.Query, Numeric: true))" />
+                    <partial name="_SortHeader" model="@(new SortHeaderModel("outstanding", "Outstanding", Model.Query, Numeric: true))" />
                 </tr>
             </thead>
             <tbody>
@@ -43,11 +43,11 @@ else
                         <td><a asp-page="/Suppliers/Detail" asp-route-id="@order.SupplierId">@order.SupplierName</a></td>
                         <td><partial name="_PoStatusBadge" model="order.Status" /></td>
                         <td>@PurchaseOrderDisplay.Date(order.OrderDate)</td>
-                        <td class="@(overdue ? "po-overdue" : null)">
+                        <td>
                             @PurchaseOrderDisplay.Date(order.ExpectedDate)
                             @if (overdue)
                             {
-                                <span class="badge badge-cancelled" title="Expected @PurchaseOrderDisplay.Date(order.ExpectedDate); not fully received yet">Overdue</span>
+                                <span class="badge badge-overdue po-overdue" title="Expected @PurchaseOrderDisplay.Date(order.ExpectedDate); not fully received yet">Overdue</span>
                             }
                         </td>
                         <td class="num">@Html.Money(order.TotalCents)</td>

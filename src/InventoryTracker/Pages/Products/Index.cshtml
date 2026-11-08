@@ -7,13 +7,16 @@
 
 @* A plain GET form, so Enter submits normally (with go=true -> open an exact SKU/barcode match). The controls also
    update #results live through htmx; the form itself deliberately has no hx-* attributes. *@
+<div class="card list-card">
+    <div class="load-bar" role="status" aria-label="Updating"></div>
+
 <form method="get" action="/Products" class="toolbar product-filters" role="search">
     <input type="search" name="search" value="@Model.Query.Search" placeholder="Search SKU, name or barcode…" aria-label="Search products"
            autofocus autocomplete="off" enterkeyhint="search"
-           hx-get="/Products" hx-trigger="input changed delay:300ms" hx-target="#results" hx-push-url="true" hx-include="closest form" />
+           hx-get="/Products" hx-trigger="input changed delay:300ms" hx-target="#results" hx-push-url="true" hx-include="closest form" hx-indicator=".load-bar" />
 
     <select name="categoryId" aria-label="Category"
-            hx-get="/Products" hx-trigger="change" hx-target="#results" hx-push-url="true" hx-include="closest form">
+            hx-get="/Products" hx-trigger="change" hx-target="#results" hx-push-url="true" hx-include="closest form" hx-indicator=".load-bar">
         <option value="">All categories</option>
         @foreach (var category in Model.Categories)
         {
@@ -22,20 +25,22 @@
     </select>
 
     <select name="status" aria-label="Status"
-            hx-get="/Products" hx-trigger="change" hx-target="#results" hx-push-url="true" hx-include="closest form">
+            hx-get="/Products" hx-trigger="change" hx-target="#results" hx-push-url="true" hx-include="closest form" hx-indicator=".load-bar">
         <option value="@ProductStatus.Active" selected="@(Model.Query.Status == ProductStatus.Active)">Active</option>
         <option value="@ProductStatus.Archived" selected="@(Model.Query.Status == ProductStatus.Archived)">Archived</option>
         <option value="@ProductStatus.All" selected="@(Model.Query.Status == ProductStatus.All)">All</option>
     </select>
 
     <button type="submit" name="go" value="true" class="visually-hidden" tabindex="-1">Open exact match</button>
+</form>
 
+@section Actions {
+    <a role="button" class="outline" asp-page="/Categories/Index">@(Model.CanEdit ? "Manage categories" : "Categories")</a>
     @if (Model.CanEdit)
     {
         <a role="button" asp-page="Edit">New product</a>
     }
-    <a role="button" class="outline" asp-page="/Categories/Index">@(Model.CanEdit ? "Manage categories" : "Categories")</a>
-</form>
+}
 
 @if (Model.UnmatchedCode is { } code)
 {
@@ -44,4 +49,5 @@
 
 <div id="results">
     <partial name="_ProductRows" model="Model" />
+</div>
 </div>

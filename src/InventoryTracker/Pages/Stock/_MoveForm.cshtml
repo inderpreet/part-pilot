@@ -50,14 +50,16 @@
     <label>
         Quantity
         <input type="number" name="Input.Quantity" value="@input.Quantity" step="1" inputmode="numeric" required
-               autofocus="@(Model.Product is not null)" data-focus-after-pick aria-invalid="@Html.AriaInvalid("Input.Quantity")" />
+               autofocus="@(Model.Product is not null)" data-focus-after-pick aria-invalid="@Html.AriaInvalid("Input.Quantity")" aria-describedby="@Html.DescribedBy("Input.Quantity")" />
+        @Html.FieldError("Input.Quantity")
         <small>Adjust takes a signed number: negative removes stock.</small>
     </label>
 
     <label>
         Reason <small>(required for an adjustment)</small>
         <input name="Input.Reason" value="@input.Reason" maxlength="@StockTransaction.ReasonMaxLength" list="move-reasons" autocomplete="off"
-               aria-invalid="@Html.AriaInvalid("Input.Reason")" />
+               aria-invalid="@Html.AriaInvalid("Input.Reason")" aria-describedby="@Html.DescribedBy("Input.Reason")" />
+        @Html.FieldError("Input.Reason")
         <datalist id="move-reasons">
             <option value="Damaged"></option>
             <option value="Lost"></option>
@@ -73,25 +75,28 @@
         <label>
             Reference <small>(optional)</small>
             <input name="Input.Reference" value="@input.Reference" maxlength="@StockTransaction.ReferenceMaxLength" autocomplete="off"
-                   placeholder="Delivery note, job or order no." aria-invalid="@Html.AriaInvalid("Input.Reference")" />
+                   placeholder="Delivery note, job or order no." aria-invalid="@Html.AriaInvalid("Input.Reference")" aria-describedby="@Html.DescribedBy("Input.Reference")" />
+            @Html.FieldError("Input.Reference")
         </label>
         <label>
             Date and time <small>(blank = now)</small>
             <input type="datetime-local" name="Input.OccurredAt" value="@input.OccurredAt?.ToString("yyyy-MM-dd'T'HH:mm")"
-                   aria-invalid="@Html.AriaInvalid("Input.OccurredAt")" />
+                   aria-invalid="@Html.AriaInvalid("Input.OccurredAt")" aria-describedby="@Html.DescribedBy("Input.OccurredAt")" />
+            @Html.FieldError("Input.OccurredAt")
         </label>
     </div>
     <input type="hidden" name="Input.Tz" value="@input.Tz" data-tz-offset />
 
     <label>
         Note <small>(optional)</small>
-        <textarea name="Input.Note" rows="2" maxlength="@StockTransaction.NoteMaxLength" aria-invalid="@Html.AriaInvalid("Input.Note")">@input.Note</textarea>
+        <textarea name="Input.Note" rows="2" maxlength="@StockTransaction.NoteMaxLength" aria-invalid="@Html.AriaInvalid("Input.Note")" aria-describedby="@Html.DescribedBy("Input.Note")">@input.Note</textarea>
+        @Html.FieldError("Input.Note")
     </label>
 
     @if (modal)
     {
         <footer>
-            <button type="button" class="secondary" data-close-modal>Cancel</button>
+            <button type="button" class="text" data-close-modal>Cancel</button>
             <button type="submit">Record</button>
         </footer>
     }
@@ -99,7 +104,7 @@
     {
         <div class="form-actions">
             <button type="submit">Record</button>
-            <a role="button" class="secondary" href="@(Model.Product is { } p ? Url.Page("/Products/Detail", new { id = p.Id }) : Url.Page("/Stock/Movements"))">Cancel</a>
+            <a role="button" class="text" href="@(Model.Product is { } p ? Url.Page("/Products/Detail", new { id = p.Id }) : Url.Page("/Stock/Movements"))">Cancel</a>
         </div>
     }
 </form>

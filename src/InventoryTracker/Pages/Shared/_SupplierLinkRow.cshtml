@@ -59,7 +59,7 @@
                     hx-target="#@Model.RowId" hx-swap="outerHTML" aria-label="Edit terms for @label">Edit</button>
             <partial name="_ConfirmButton" model="@(new ConfirmButtonModel("Remove",
                 bySupplier ? $"Remove {item.Sku} from {item.SupplierName}? Existing purchase orders are not affected." : $"Remove {item.SupplierName} as a supplier of {item.Sku}? Existing purchase orders are not affected.",
-                Url.Page("/Suppliers/Links", "Remove", Scope())!, target, "outerHTML", "secondary outline"))" />
+                Url.Page("/Suppliers/Links", "Remove", Scope())!, target, "outerHTML", "text danger"))" />
         </td>
     }
 </tr>

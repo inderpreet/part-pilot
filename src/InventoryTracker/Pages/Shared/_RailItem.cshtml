@@ -1,0 +1,12 @@
+@model NavItem
+@{
+    var path = Context.Request.Path.Value ?? "/";
+}
+@if (Model.Available)
+{
+    <li><a href="@Model.Href" aria-current="@(NavItems.IsCurrent(Model, path) ? "page" : null)"><svg class="ico" aria-hidden="true"><use href="#i-@Model.Icon"/></svg><span>@Model.Label</span></a></li>
+}
+else
+{
+    <li class="rail-soon"><svg class="ico" aria-hidden="true"><use href="#i-@Model.Icon"/></svg><span aria-disabled="true" title="Coming soon">@Model.Label</span><small>Soon</small></li>
+}

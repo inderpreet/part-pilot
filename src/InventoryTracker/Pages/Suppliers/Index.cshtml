@@ -6,24 +6,31 @@
 }
 
 @* A plain GET form, so Enter submits normally; the controls also update #results live through htmx. *@
+<div class="card list-card">
+    <div class="load-bar" role="status" aria-label="Updating"></div>
+
 <form method="get" action="/Suppliers" class="toolbar supplier-filters" role="search">
     <input type="search" name="search" value="@Model.Query.Search" placeholder="Search name, contact or email…" aria-label="Search suppliers"
            autofocus autocomplete="off" enterkeyhint="search"
-           hx-get="/Suppliers" hx-trigger="input changed delay:300ms" hx-target="#results" hx-push-url="true" hx-include="closest form" />
+           hx-get="/Suppliers" hx-trigger="input changed delay:300ms" hx-target="#results" hx-push-url="true" hx-include="closest form" hx-indicator=".load-bar" />
 
     <select name="status" aria-label="Status"
-            hx-get="/Suppliers" hx-trigger="change" hx-target="#results" hx-push-url="true" hx-include="closest form">
+            hx-get="/Suppliers" hx-trigger="change" hx-target="#results" hx-push-url="true" hx-include="closest form" hx-indicator=".load-bar">
         <option value="@SupplierStatus.Active" selected="@(Model.Query.Status == SupplierStatus.Active)">Active</option>
         <option value="@SupplierStatus.Archived" selected="@(Model.Query.Status == SupplierStatus.Archived)">Archived</option>
         <option value="@SupplierStatus.All" selected="@(Model.Query.Status == SupplierStatus.All)">All</option>
     </select>
 
+</form>
+
+@section Actions {
     @if (Model.CanEdit)
     {
         <a role="button" asp-page="Edit">New supplier</a>
     }
-</form>
+}
 
 <div id="results">
     <partial name="_SupplierRows" model="Model" />
+</div>
 </div>

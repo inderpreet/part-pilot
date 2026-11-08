@@ -29,7 +29,7 @@ public sealed record MovementTableModel(
     string? EmptyMessage = null);
 
 /// <summary>Model for the <c>_SortHeader</c> partial: a <c>&lt;th&gt;</c> that toggles sorting by <paramref name="Column"/>.</summary>
-public sealed record SortHeaderModel(string Column, string Label, ListQuery Query, string Target = "#results");
+public sealed record SortHeaderModel(string Column, string Label, ListQuery Query, string Target = "#results", bool Numeric = false);
 
 /// <summary>Model for the <c>_EmptyState</c> partial.</summary>
 public sealed record EmptyStateModel(string Title, string? Message = null, string? ActionText = null, string? ActionUrl = null);
@@ -73,7 +73,7 @@ public sealed record ConfirmButtonModel(
 
 /// <summary>Model for the <c>_MoveButtons</c> partial: the "+ In / âˆ’ Out / Adjust" buttons that open the quick stock-movement dialog.</summary>
 public sealed record MoveButtonsModel(int ProductId, string Sku);
-/// <summary>Which side of the product–supplier relationship a links table is shown from: a supplier's products, or a product's suppliers.</summary>
+/// <summary>Which side of the productï¿½supplier relationship a links table is shown from: a supplier's products, or a product's suppliers.</summary>
 public enum LinkView
 {
     Supplier,

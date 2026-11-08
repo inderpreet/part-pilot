@@ -2,6 +2,7 @@
 @model ErrorModel
 @{
     ViewData["Title"] = Model.Title;
+    ViewData["Header"] = "plain";
 }
 <article class="error-page">
     <p class="error-code" aria-hidden="true">@Model.HttpStatus</p>

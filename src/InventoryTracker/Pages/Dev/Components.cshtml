@@ -4,6 +4,98 @@
     ViewData["Title"] = "Component style guide";
 }
 
+<p class="muted">The shared patterns from the UI overhaul (F09). The real screens use these same classes and partials; later features should too (architecture D17).</p>
+
+<section>
+    <h2>Buttons</h2>
+    <p>One solid primary per page. Everything else is a role.</p>
+    <div class="page-actions">
+        <button type="button">Primary</button>
+        <button type="button" class="secondary outline">Secondary</button>
+        <button type="button" class="text">Text</button>
+        <button type="button" class="danger">Danger</button>
+        <button type="button" class="text danger">Text danger</button>
+        <button type="button" disabled>Disabled</button>
+    </div>
+</section>
+
+<section>
+    <h2>Overflow menu and confirm dialog</h2>
+    <p class="muted">Rare or hard-to-undo actions live in the menu and confirm in the app's own dialog (<code>hx-confirm</code>), not <code>window.confirm</code>.</p>
+    <div class="page-actions">
+        <button type="button" class="secondary outline" hx-post="?handler=Echo" hx-swap="none" hx-confirm="Post a harmless request?">Confirm (neutral)</button>
+        <details class="menu">
+            <summary class="menu-toggle" aria-label="More actions"><svg class="ico" aria-hidden="true"><use href="#i-dots"/></svg></summary>
+            <div class="menu-pop">
+                <button type="button" class="menu-item" hx-post="?handler=Echo" hx-swap="none" hx-confirm="Export this list?">Export</button>
+                <hr />
+                <button type="button" class="menu-item danger" hx-post="?handler=Echo" hx-swap="none" hx-confirm="Delete this sample? This cannot be undone.">Delete sample</button>
+            </div>
+        </details>
+    </div>
+</section>
+
+<section>
+    <h2>Status chips</h2>
+    <p>
+        <span class="badge badge-draft">Draft</span>
+        <span class="badge badge-submitted">Submitted</span>
+        <span class="badge badge-partial">Partially received</span>
+        <span class="badge badge-received">Received</span>
+        <span class="badge badge-cancelled">Cancelled</span>
+        <span class="badge badge-overdue">Overdue</span>
+    </p>
+</section>
+
+<section>
+    <h2>Cards, stats and key/value summary</h2>
+    <div class="grid">
+        <div class="card stat"><p class="stat-label">Inventory value</p><p class="stat-value">$48,210</p><p class="stat-note up">+2.1% from last month</p></div>
+        <div class="card stat stat-alert"><p class="stat-label">Overdue orders</p><p class="stat-value">2</p><p class="stat-note warn">Oldest is 8 days late</p></div>
+        <section class="card" aria-label="Summary sample">
+            <div class="card-head"><h3 class="card-title">Summary</h3></div>
+            <dl class="kv"><dt>Subtotal</dt><dd>$120.00</dd><dt>Received</dt><dd>$40.00</dd><dt class="kv-total">Outstanding</dt><dd class="kv-total">$80.00</dd></dl>
+        </section>
+    </div>
+</section>
+
+<section>
+    <h2>Timeline</h2>
+    <article class="card">
+        <ol class="timeline">
+            <li><strong>Received 4 of 10</strong><span>Today, 09:12 by Ada</span></li>
+            <li><strong>Submitted</strong><span>Yesterday, 16:40 by Ada</span></li>
+            <li><strong>Created</strong><span>Yesterday, 16:31 by Ada</span></li>
+        </ol>
+    </article>
+</section>
+
+<section>
+    <h2>Tabs and in-page section nav</h2>
+    <nav class="tabs" aria-label="Sample tabs">
+        <ul>
+            <li><a href="#" aria-current="page">Open <span class="tab-count">12</span></a></li>
+            <li><a href="#">Drafts <span class="tab-count">3</span></a></li>
+            <li><a href="#">Received</a></li>
+        </ul>
+    </nav>
+    <nav class="section-nav" aria-label="Sample section nav">
+        <a href="#history" aria-current="true">History</a>
+        <a href="#suppliers">Suppliers</a>
+        <span class="section-nav-soon" aria-disabled="true" title="Coming soon">Audit <small>Soon</small></span>
+    </nav>
+</section>
+
+<section>
+    <h2>Alert and field error</h2>
+    <article class="alert alert-error" role="alert">Please fix the problems below.</article>
+    <label>
+        SKU
+        <input value="ABC-1" aria-invalid="true" aria-describedby="demo-sku-error" />
+        <small class="field-error" id="demo-sku-error">SKU 'ABC-1' already exists.</small>
+    </label>
+</section>
+
 <section>
     <h2>Flash / toast</h2>
     <div class="grid">

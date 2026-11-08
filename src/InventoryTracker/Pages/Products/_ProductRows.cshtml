@@ -24,7 +24,7 @@ else
                     <partial name="_SortHeader" model="@(new SortHeaderModel("name", "Name", Model.Query))" />
                     <partial name="_SortHeader" model="@(new SortHeaderModel("category", "Category", Model.Query))" />
                     <th scope="col">Bin</th>
-                    <partial name="_SortHeader" model="@(new SortHeaderModel("onhand", "On hand", Model.Query))" />
+                    <partial name="_SortHeader" model="@(new SortHeaderModel("onhand", "On hand", Model.Query, Numeric: true))" />
                     <th scope="col" class="num">Unit cost</th>
                     @if (Model.CanEdit)
                     {

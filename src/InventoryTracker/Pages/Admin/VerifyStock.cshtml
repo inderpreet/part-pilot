@@ -59,7 +59,7 @@
         </div>
 
         <form method="post" asp-page-handler="Fix">
-            <button type="submit" class="secondary"
+            <button type="submit" class="danger"
                     hx-post="@Url.Page("/Admin/VerifyStock", "Fix")"
                     hx-confirm="Set the on-hand quantity of @report.Mismatches.Count @(report.Mismatches.Count == 1 ? "product" : "products") to the ledger total?">Fix: set on hand to the ledger total</button>
         </form>

@@ -1,14 +1,21 @@
-@* Usage: <partial name="_ValidationSummary" model="ViewData.ModelState" /> — lists every ModelState error, including mapped service errors. *@
+@* Usage: <partial name="_ValidationSummary" model="ViewData.ModelState" /> — lists every ModelState error, including mapped service errors.
+   Rendered as an error alert (F09). Fields also show their own message through Html.FieldError(key). *@
 @model Microsoft.AspNetCore.Mvc.ModelBinding.ModelStateDictionary
 @if (!Model.IsValid)
 {
-    <article class="validation-summary" role="alert">
-        <strong>Please fix the following:</strong>
-        <ul>
-            @foreach (var error in Model.Values.SelectMany(v => v.Errors))
-            {
-                <li>@error.ErrorMessage</li>
-            }
-        </ul>
+    <article class="validation-summary alert alert-error" role="alert">
+        @if (User.Identity?.IsAuthenticated == true) @* the icon sprite only exists inside the signed-in shell *@
+        {
+            <svg class="ico" aria-hidden="true"><use href="#i-alert"/></svg>
+        }
+        <div>
+            <strong>Please fix the following:</strong>
+            <ul>
+                @foreach (var error in Model.Values.SelectMany(v => v.Errors))
+                {
+                    <li>@error.ErrorMessage</li>
+                }
+            </ul>
+        </div>
     </article>
 }

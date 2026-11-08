@@ -8,8 +8,18 @@ namespace InventoryTracker.Pages.Shared;
 /// A top-level navigation entry. <paramref name="Policy"/> is the authorization policy needed to see it.
 /// <paramref name="Available"/> is false while the feature that owns the page is not built yet: the item is then
 /// shown as a muted "coming soon" label instead of a link that would 404.
+/// <paramref name="Group"/> is the rail section it sits under (<see cref="NavGroups"/>); <c>null</c> means the top of the rail.
+/// <paramref name="Icon"/> is the id of a symbol in <c>_Icons.cshtml</c> (without the <c>i-</c> prefix).
 /// </summary>
-public sealed record NavItem(string Label, string Href, string Policy, bool Available = true);
+public sealed record NavItem(string Label, string Href, string Policy, bool Available = true, string? Group = null, string Icon = "home");
+
+/// <summary>Rail sections. <see cref="Foot"/> items sit at the bottom of the rail, above the user card.</summary>
+public static class NavGroups
+{
+    public const string Inventory = "Inventory";
+    public const string Insights = "Insights";
+    public const string Foot = "Foot";
+}
 
 public static class NavItems
 {
@@ -19,13 +29,13 @@ public static class NavItems
     /// </summary>
     public static IReadOnlyList<NavItem> All { get; } =
     [
-        new("Dashboard", "/", Policies.CanView),
-        new("Products", "/Products", Policies.CanView),
-        new("Stock", "/Stock", Policies.CanView),
-        new("Suppliers", "/Suppliers", Policies.CanView),
-        new("Purchase Orders", "/PurchaseOrders", Policies.CanView),
-        new("Reports", "/Reports", Policies.CanView, Available: false),
-        new("Admin", "/Admin", Policies.RequireAdmin),
+        new("Dashboard", "/", Policies.CanView, Icon: "home"),
+        new("Products", "/Products", Policies.CanView, Group: NavGroups.Inventory, Icon: "box"),
+        new("Stock", "/Stock", Policies.CanView, Group: NavGroups.Inventory, Icon: "layers"),
+        new("Suppliers", "/Suppliers", Policies.CanView, Group: NavGroups.Inventory, Icon: "users"),
+        new("Purchase Orders", "/PurchaseOrders", Policies.CanView, Group: NavGroups.Inventory, Icon: "file"),
+        new("Reports", "/Reports", Policies.CanView, Available: false, Group: NavGroups.Insights, Icon: "chart"),
+        new("Admin", "/Admin", Policies.RequireAdmin, Group: NavGroups.Foot, Icon: "gear"),
     ];
 
     /// <summary>The items <paramref name="user"/> is allowed to see, by evaluating each item's authorization policy.</summary>
