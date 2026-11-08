@@ -93,8 +93,9 @@ StockTransaction(Id, ProductId→Product, Type, QuantityDelta, QuantityAfter, Un
                  ReversesTransactionId→StockTransaction?, UserId→AspNetUsers, OccurredAt, CreatedAt)
   Type ∈ {Receive, Issue, Adjust, Count, Return, Reversal}
 
-Supplier(Id, Name UQ, ContactName, Email, Phone, Address, Website, Notes, IsActive)
+Supplier(Id, Name UQ, ContactName, Email, Phone, Address, Website, Notes, IsActive, RowVersion)
 ProductSupplier(ProductId, SupplierId PK pair, SupplierSku, UnitCostCents, LeadTimeDays, MinOrderQuantity, IsPreferred)
+  at most one IsPreferred per product (filtered unique index); both FKs Restrict
 
 PurchaseOrder(Id, Number UQ, SupplierId→Supplier, Status, OrderDate, ExpectedDate, SubmittedAt, ClosedAt,
               Notes, CreatedById→AspNetUsers, RowVersion)

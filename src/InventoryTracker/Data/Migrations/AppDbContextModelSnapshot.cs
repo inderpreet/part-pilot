@@ -261,6 +261,57 @@ namespace InventoryTracker.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("InventoryTracker.Data.Entities.ProductSupplier", b =>
+                {
+                    b.Property<int>("ProductId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("SupplierId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsPreferred")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int?>("LeadTimeDays")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("MinOrderQuantity")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
+                    b.Property<string>("SupplierSku")
+                        .HasMaxLength(64)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("UnitCostCents")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("ProductId", "SupplierId");
+
+                    b.HasIndex("ProductId")
+                        .IsUnique()
+                        .HasDatabaseName("UX_ProductSuppliers_Preferred")
+                        .HasFilter("\"IsPreferred\" = 1");
+
+                    b.HasIndex("SupplierId");
+
+                    b.ToTable("ProductSuppliers", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_ProductSuppliers_LeadTimeDays", "\"LeadTimeDays\" IS NULL OR \"LeadTimeDays\" >= 0");
+
+                            t.HasCheckConstraint("CK_ProductSuppliers_MinOrderQuantity", "\"MinOrderQuantity\" >= 1");
+
+                            t.HasCheckConstraint("CK_ProductSuppliers_UnitCostCents", "\"UnitCostCents\" >= 0");
+                        });
+                });
+
             modelBuilder.Entity("InventoryTracker.Data.Entities.StockTransaction", b =>
                 {
                     b.Property<long>("Id")
@@ -339,6 +390,65 @@ namespace InventoryTracker.Data.Migrations
 
                             t.HasCheckConstraint("CK_StockTransactions_Type", "\"Type\" IN ('Receive', 'Issue', 'Adjust', 'Count', 'Return', 'Reversal')");
                         });
+                });
+
+            modelBuilder.Entity("InventoryTracker.Data.Entities.Supplier", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Address")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ContactName")
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Email")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT")
+                        .UseCollation("NOCASE");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(50)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("RowVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Website")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.HasIndex("IsActive", "Name");
+
+                    b.ToTable("Suppliers", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>
@@ -502,6 +612,25 @@ namespace InventoryTracker.Data.Migrations
                     b.Navigation("Category");
                 });
 
+            modelBuilder.Entity("InventoryTracker.Data.Entities.ProductSupplier", b =>
+                {
+                    b.HasOne("InventoryTracker.Data.Entities.Product", "Product")
+                        .WithMany("Suppliers")
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("InventoryTracker.Data.Entities.Supplier", "Supplier")
+                        .WithMany("Products")
+                        .HasForeignKey("SupplierId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+
+                    b.Navigation("Supplier");
+                });
+
             modelBuilder.Entity("InventoryTracker.Data.Entities.StockTransaction", b =>
                 {
                     b.HasOne("InventoryTracker.Data.Entities.Product", "Product")
@@ -587,6 +716,13 @@ namespace InventoryTracker.Data.Migrations
             modelBuilder.Entity("InventoryTracker.Data.Entities.Product", b =>
                 {
                     b.Navigation("StockTransactions");
+
+                    b.Navigation("Suppliers");
+                });
+
+            modelBuilder.Entity("InventoryTracker.Data.Entities.Supplier", b =>
+                {
+                    b.Navigation("Products");
                 });
 #pragma warning restore 612, 618
         }

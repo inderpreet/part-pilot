@@ -24,7 +24,7 @@ executable: run it, open the browser, sign in. Data lives in a single SQLite fil
 | [F01](Features/F01-users-auth.md) | Users & authentication | Login, roles, first-run admin setup, user management | F00 | Done |
 | [F02](Features/F02-product-catalog.md) | Product catalog | Products (SKU, unit, bin, reorder point, cost) and categories | F01 | Done |
 | [F03](Features/F03-stock-tracking.md) | Stock tracking | Stock ledger: receive, issue, adjust, count; on-hand quantity | F02 | Done |
-| [F04](Features/F04-suppliers.md) | Suppliers | Supplier directory and product–supplier pricing | F02 | Planned |
+| [F04](Features/F04-suppliers.md) | Suppliers | Supplier directory and product–supplier pricing | F02 | In Progress |
 | [F05](Features/F05-purchase-orders.md) | Purchase orders & receiving | PO lifecycle, receiving into stock | F03, F04 | Planned |
 | [F06](Features/F06-dashboard-alerts-reports.md) | Dashboard, alerts & reports | KPIs, low-stock alerts, reorder suggestions, reports | F03, F05 | Planned |
 | [F07](Features/F07-data-import-export.md) | Data import/export & backup | CSV import/export, opening stock, DB backup download | F03, F04 | Planned |
@@ -52,7 +52,7 @@ F00 has an extra packaging item.
 | [WI-03-1](work-items/F03-stock-tracking/WI-03-1-db-schema.md) | Stock — StockTransaction ledger | Done |
 | [WI-03-2](work-items/F03-stock-tracking/WI-03-2-api.md) | Stock — StockService | Done |
 | [WI-03-3](work-items/F03-stock-tracking/WI-03-3-frontend.md) | Stock — movements, history, stock count | Done |
-| [WI-04-1](work-items/F04-suppliers/WI-04-1-db-schema.md) | Suppliers — Supplier, ProductSupplier schema | Planned |
+| [WI-04-1](work-items/F04-suppliers/WI-04-1-db-schema.md) | Suppliers — Supplier, ProductSupplier schema | Done |
 | [WI-04-2](work-items/F04-suppliers/WI-04-2-api.md) | Suppliers — SupplierService | Planned |
 | [WI-04-3](work-items/F04-suppliers/WI-04-3-frontend.md) | Suppliers — list/detail/edit, product links | Planned |
 | [WI-05-1](work-items/F05-purchase-orders/WI-05-1-db-schema.md) | POs — PurchaseOrder, PurchaseOrderLine schema | Planned |

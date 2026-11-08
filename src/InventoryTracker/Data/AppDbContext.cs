@@ -26,6 +26,10 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole, str
 
     public DbSet<StockTransaction> StockTransactions => Set<StockTransaction>();
 
+    public DbSet<Supplier> Suppliers => Set<Supplier>();
+
+    public DbSet<ProductSupplier> ProductSuppliers => Set<ProductSupplier>();
+
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
         configurationBuilder.Properties<DateTime>().HaveConversion<UtcDateTimeConverter>();

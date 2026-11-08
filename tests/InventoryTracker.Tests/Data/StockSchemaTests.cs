@@ -340,8 +340,9 @@ public sealed class StockSchemaTests : IAsyncLifetime
         await context.Database.MigrateAsync();
 
         var migrations = context.GetService<IMigrationsAssembly>().Migrations.Keys.Order().ToList();
-        var previous = migrations[^2];
-        Assert.EndsWith("_AddStockLedger", migrations[^1], StringComparison.Ordinal);
+        var ledger = migrations.FindIndex(m => m.EndsWith("_AddStockLedger", StringComparison.Ordinal));
+        Assert.True(ledger > 0);
+        var previous = migrations[ledger - 1];
 
         await context.GetService<IMigrator>().MigrateAsync(previous);
         Assert.Equal(0L, await SqliteTestDb.ScalarAsync(context, "SELECT COUNT(*) FROM sqlite_master WHERE name LIKE '%StockTransactions%'"));
