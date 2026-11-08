@@ -429,7 +429,7 @@ public partial class PurchaseOrderPagesTests
 
         var noProduct = await HtmxPostAsync(client, add, [("quantity", "3"), ("unitCost", "")], url);
         Assert.Equal(HttpStatusCode.UnprocessableEntity, noProduct.StatusCode);
-        Assert.Contains("Choose a product", await noProduct.Content.ReadAsStringAsync());
+        Assert.Contains("Choose a part", await noProduct.Content.ReadAsStringAsync());
 
         var badQuantity = await HtmxPostAsync(client, add, [("productId", widget.Id.ToString()), ("q", "W-1 — Widget"), ("quantity", "abc"), ("unitCost", "")], url);
         Assert.Equal(HttpStatusCode.UnprocessableEntity, badQuantity.StatusCode);
@@ -464,7 +464,7 @@ public partial class PurchaseOrderPagesTests
 
         var html = await (await client.SendAsync(Htmx($"/PurchaseOrders/Edit/{order.Id}?handler=Products&q=part"))).Content.ReadAsStringAsync();
 
-        Assert.True(html.IndexOf("Z-LINKED", StringComparison.Ordinal) < html.IndexOf("A-OTHER", StringComparison.Ordinal), "linked products come first");
+        Assert.True(html.IndexOf("Z-LINKED", StringComparison.Ordinal) < html.IndexOf("A-OTHER", StringComparison.Ordinal), "linked parts come first");
         Assert.Contains("data-picker-select", html);
         Assert.Contains("already on this order", html);
         Assert.Contains($"data-id=\"{other.Id}\"", html);

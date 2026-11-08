@@ -3,15 +3,15 @@
 {
     if (Model.IsFiltered)
     {
-        <partial name="_EmptyState" model="@(new EmptyStateModel("No products match", "Try a different search, or change the category and status filters."))" />
+        <partial name="_EmptyState" model="@(new EmptyStateModel("No parts match", "Try a different search, or change the category and status filters."))" />
     }
     else if (Model.CanEdit)
     {
-        <partial name="_EmptyState" model="@(new EmptyStateModel("No products yet", "Add your first product to start tracking it.", "New product", "/Products/Edit"))" />
+        <partial name="_EmptyState" model="@(new EmptyStateModel("No parts yet", "Add your first part to start tracking it.", "New part", "/Products/Edit"))" />
     }
     else
     {
-        <partial name="_EmptyState" model="@(new EmptyStateModel("No products yet", "Ask an Admin or Staff user to add products."))" />
+        <partial name="_EmptyState" model="@(new EmptyStateModel("No parts yet", "Ask an Admin or Staff user to add parts."))" />
     }
 }
 else

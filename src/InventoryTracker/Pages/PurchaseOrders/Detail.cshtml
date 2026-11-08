@@ -88,7 +88,7 @@
 
 @if (o.Status == InventoryTracker.Data.Entities.PurchaseOrderStatus.Draft && o.Lines.Count == 0)
 {
-    <p class="muted" role="status">This draft has no lines yet@(Model.CanEdit ? ". Edit the order to add products, then submit it." : ".")</p>
+    <p class="muted" role="status">This draft has no lines yet@(Model.CanEdit ? ". Edit the order to add parts, then submit it." : ".")</p>
 }
 
 @{
@@ -116,7 +116,7 @@
                     <table class="po-lines">
                         <thead>
                             <tr>
-                                <th scope="col">Product</th>
+                                <th scope="col">Part</th>
                                 <th scope="col">Supplier SKU</th>
                                 <th scope="col" class="num">Ordered</th>
                                 <th scope="col">Received</th>
@@ -186,7 +186,7 @@
                             <tr>
                                 <th scope="col">#</th>
                                 <th scope="col">When</th>
-                                <th scope="col">Product</th>
+                                <th scope="col">Part</th>
                                 <th scope="col" class="num">Quantity</th>
                                 <th scope="col">Reference / note</th>
                                 <th scope="col">By</th>

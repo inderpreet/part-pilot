@@ -90,7 +90,7 @@ public abstract class StockTestBase : CatalogTestBase, IAsyncLifetime
 
     protected async Task<int> NewProductAsync(string sku, int onHand = 0, bool archived = false)
     {
-        var id = (await CreateProductAsync(Input(sku: sku, name: "Product " + sku))).Id;
+        var id = (await CreateProductAsync(Input(sku: sku, name: "Part " + sku))).Id;
         if (onHand != 0)
         {
             Assert.True((await PostAsync(Receive(id, onHand))).Succeeded);

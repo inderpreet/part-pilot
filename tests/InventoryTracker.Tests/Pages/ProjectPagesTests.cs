@@ -151,7 +151,7 @@ public partial class ProjectPagesTests
         Assert.Contains("Robot arm", page);
         Assert.Contains(robot.Number, page);
         Assert.DoesNotContain("Drone", page);
-        Assert.Contains("aria-label=\"Project status\"", page);
+        Assert.Contains("aria-label=\"BOM status\"", page);
 
         var partial = await (await client.SendAsync(Htmx("/Projects?search=robot"))).Content.ReadAsStringAsync();
         Assert.DoesNotContain("<html", partial);
@@ -161,7 +161,7 @@ public partial class ProjectPagesTests
         Assert.Contains("Robot arm", byNumber);
 
         var none = await client.GetStringAsync("/Projects?search=zzz-nothing");
-        Assert.Contains("No projects match", none);
+        Assert.Contains("No BOMs match", none);
 
         var archived = await client.GetStringAsync("/Projects?tab=Archived");
         Assert.Contains("Drone", archived);
@@ -179,7 +179,7 @@ public partial class ProjectPagesTests
         using var staff = factory.CreateClientAs("Staff");
 
         var empty = await staff.GetStringAsync("/Projects");
-        Assert.Contains("No projects yet", empty);
+        Assert.Contains("No BOMs yet", empty);
         Assert.Contains("href=\"/Projects/Edit\"", empty);
 
         var part = await SeedProductAsync(factory, "R-1", costCents: 250);
@@ -256,7 +256,7 @@ public partial class ProjectPagesTests
         var form = await client.GetStringAsync(url);
         Assert.Contains(project.Number, form);
         Assert.DoesNotContain("name=\"Input.Number\"", form);
-        Assert.Contains("Only an Admin can change the project number", form);
+        Assert.Contains("Only an Admin can change the BOM number", form);
 
         var save = await WebForms.PostFormAsync(client, url,
             [("Input.Name", "Robot v2"), ("Input.TargetUnits", "5"), ("Input.Number", "HACKED"), ("Input.RowVersion", await RowVersionOfAsync(client, url))]);
@@ -281,7 +281,7 @@ public partial class ProjectPagesTests
 
         var second = await WebForms.PostFormAsync(client, url, [("Input.Name", "Second"), ("Input.TargetUnits", "1"), ("Input.RowVersion", stale)], url);
         Assert.Equal(HttpStatusCode.OK, second.StatusCode);
-        Assert.Contains("Someone else saved this project", await second.Content.ReadAsStringAsync());
+        Assert.Contains("Someone else saved this BOM", await second.Content.ReadAsStringAsync());
         Assert.Equal("First", (await GetProjectAsync(factory, project.Id)).Name);
     }
 
@@ -584,12 +584,12 @@ public partial class ProjectPagesTests
 
         Assert.Equal(HttpStatusCode.OK, (await viewer.GetAsync("/Projects")).StatusCode);
         var list = await viewer.GetStringAsync("/Projects");
-        Assert.DoesNotContain("New project", list);
+        Assert.DoesNotContain("New BOM", list);
 
         var detail = await viewer.GetStringAsync(url);
         Assert.Contains("5.00", detail); // parts cost per unit: 2 x 2.50
         Assert.Contains("15.00", detail); // for the 3 remaining units
-        foreach (var control in new[] { "Add part", "Remove", "Create a new part", "Archive", "Delete project", "Change number", ">Edit<" })
+        foreach (var control in new[] { "Add part", "Remove", "Create a new part", "Archive", "Delete BOM", "Change number", ">Edit<" })
         {
             Assert.DoesNotContain(control, detail);
         }
@@ -647,8 +647,8 @@ public partial class ProjectPagesTests
 
         var html = await client.GetStringAsync("/Projects");
 
-        Assert.Matches("href=\"/Projects\" aria-current=\"page\"><svg[^>]*>.*?</svg><span>Projects</span></a>", html);
-        Assert.DoesNotContain("aria-disabled=\"true\" title=\"Coming soon\">Projects</span>", html);
+        Assert.Matches("href=\"/Projects\" aria-current=\"page\"><svg[^>]*>.*?</svg><span>BOMs</span></a>", html);
+        Assert.DoesNotContain("aria-disabled=\"true\" title=\"Coming soon\">BOMs</span>", html);
     }
 
     [Fact]
@@ -678,7 +678,7 @@ public partial class ProjectPagesTests
         var dialog = await (await admin.SendAsync(Htmx($"{url}?handler=ChangeNumber"))).Content.ReadAsStringAsync();
         Assert.DoesNotContain("<html", dialog);
         Assert.Contains(project.Number, dialog);
-        Assert.Contains("Other systems may refer to the current project number. Purchase orders are not affected.", dialog);
+        Assert.Contains("Other systems may refer to the current BOM number. Purchase orders are not affected.", dialog);
 
         var changed = await HtmxPostAsync(admin, $"{url}?handler=ChangeNumber", [("rowVersion", project.RowVersion.ToString()), ("newNumber", "ACME-2026-9")], url);
         Assert.Equal(HttpStatusCode.NoContent, changed.StatusCode);
@@ -686,10 +686,10 @@ public partial class ProjectPagesTests
 
         var page = await admin.GetStringAsync(url);
         Assert.Contains("ACME-2026-9", page);
-        Assert.Contains($"Project number changed from {project.Number} to ACME-2026-9.", page);
+        Assert.Contains($"BOM number changed from {project.Number} to ACME-2026-9.", page);
 
         Assert.Contains("Robot", await admin.GetStringAsync("/Projects?search=ACME-2026-9"));
-        Assert.Contains("No projects match", await admin.GetStringAsync($"/Projects?search={Uri.EscapeDataString(project.Number)}"));
+        Assert.Contains("No BOMs match", await admin.GetStringAsync($"/Projects?search={Uri.EscapeDataString(project.Number)}"));
     }
 
     [Fact]
@@ -771,7 +771,7 @@ public partial class ProjectPagesTests
         var url = $"/Projects/{project.Id}";
 
         var detail = await client.GetStringAsync(url);
-        Assert.DoesNotContain("Delete project", detail);
+        Assert.DoesNotContain("Delete BOM", detail);
         Assert.Contains("1 built so far", detail);
 
         var response = await WebForms.PostFormAsync(client, $"{url}?handler=Delete", [("rowVersion", project.RowVersion.ToString())], url);
@@ -792,13 +792,13 @@ public partial class ProjectPagesTests
         var project = await SeedProjectAsync(factory, "Robot", 1, (used.Id, 3));
 
         var usedPage = await client.GetStringAsync($"/Products/{used.Id}");
-        Assert.Contains("Used in projects", usedPage);
+        Assert.Contains("Used in BOMs", usedPage);
         Assert.Contains($"href=\"/Projects/{project.Id}\"", usedPage);
         Assert.Contains(project.Number, usedPage);
         Assert.Contains("3 each", usedPage);
 
         var freePage = await client.GetStringAsync($"/Products/{unused.Id}");
-        Assert.DoesNotContain("Used in projects", freePage);
+        Assert.DoesNotContain("Used in BOMs", freePage);
     }
 
     [Fact]
@@ -815,7 +815,7 @@ public partial class ProjectPagesTests
         var draftPage = await client.GetStringAsync($"/Products/{drafted.Id}");
         Assert.Contains("In draft POs: 12", draftPage);
         Assert.Contains($"href=\"/PurchaseOrders/{draft.Id}\"", draftPage);
-        Assert.Contains("Nothing is on order for this product.", draftPage);
+        Assert.Contains("Nothing is on order for this part.", draftPage);
 
         var submittedPage = await client.GetStringAsync($"/Products/{submitted.Id}");
         Assert.DoesNotContain("In draft POs", submittedPage);

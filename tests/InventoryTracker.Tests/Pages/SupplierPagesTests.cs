@@ -353,7 +353,7 @@ public partial class SupplierPagesTests
         var noProduct = await HtmxPostAsync(client, "/Suppliers/Links?handler=Save",
             [("mode", "add"), ("view", "Supplier"), ("supplierId", supplier.Id.ToString()), ("unitCost", "1")], $"/Suppliers/{supplier.Id}");
         Assert.Equal(HttpStatusCode.UnprocessableEntity, noProduct.StatusCode);
-        Assert.Contains("Choose a product", await noProduct.Content.ReadAsStringAsync());
+        Assert.Contains("Choose a part", await noProduct.Content.ReadAsStringAsync());
     }
 
     [Fact]
@@ -428,7 +428,7 @@ public partial class SupplierPagesTests
             [("view", "Supplier"), ("productId", product.Id.ToString()), ("supplierId", supplier.Id.ToString())], $"/Suppliers/{supplier.Id}");
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
-        Assert.Contains("No products linked yet", await response.Content.ReadAsStringAsync());
+        Assert.Contains("No parts linked yet", await response.Content.ReadAsStringAsync());
         Assert.Empty(await LinksOfAsync(factory, product.Id));
     }
 
@@ -537,8 +537,8 @@ public partial class SupplierPagesTests
 
         var html = await client.GetStringAsync($"/Suppliers/{supplier.Id}");
         Assert.Contains("W-1", html);
-        Assert.Contains("Restore it to link more products", html);
-        Assert.DoesNotContain("Add a product", html);
+        Assert.Contains("Restore it to link more parts", html);
+        Assert.DoesNotContain("Add a part", html);
 
         var response = await HtmxPostAsync(client, "/Suppliers/Links?handler=Save", AddFields("Supplier", other.Id, supplier.Id), $"/Suppliers/{supplier.Id}");
         Assert.Equal(HttpStatusCode.UnprocessableEntity, response.StatusCode);

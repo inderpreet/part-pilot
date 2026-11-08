@@ -10,10 +10,10 @@
     <input type="hidden" name="rowVersion" value="@Model.Project.RowVersion" />
 
     <p>Current number: <strong>@Model.Project.Number</strong></p>
-    <p class="muted">Other systems may refer to the current project number. Purchase orders are not affected.</p>
+    <p class="muted">Other systems may refer to the current BOM number. Purchase orders are not affected.</p>
 
     <label>
-        New project number
+        New BOM number
         <input name="newNumber" value="@Model.NewNumber" maxlength="@Project.NumberMaxLength" required autofocus autocomplete="off" spellcheck="false"
                aria-invalid="@Html.AriaInvalid(ProjectFields.Number)" aria-describedby="@Html.DescribedBy(ProjectFields.Number)" />
         @Html.FieldError(ProjectFields.Number)

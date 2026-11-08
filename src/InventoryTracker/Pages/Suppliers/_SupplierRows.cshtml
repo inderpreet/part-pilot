@@ -24,7 +24,7 @@ else
                     <partial name="_SortHeader" model="@(new SortHeaderModel("contact", "Contact", Model.Query))" />
                     <th scope="col">Phone</th>
                     <th scope="col">Email</th>
-                    <partial name="_SortHeader" model="@(new SortHeaderModel("products", "Products", Model.Query, Numeric: true))" />
+                    <partial name="_SortHeader" model="@(new SortHeaderModel("products", "Parts", Model.Query, Numeric: true))" />
                     @if (Model.CanEdit)
                     {
                         <th scope="col"><span class="visually-hidden">Actions</span></th>

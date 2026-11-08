@@ -12,7 +12,7 @@
 }
 
 @section Subtitle {
-    <span class="project-number">@p.Number</span> · parts this project is short of
+    <span class="project-number">@p.Number</span> · parts this BOM is short of
 }
 
 @if (Model.Result is { } result)
@@ -91,12 +91,12 @@
         {
             <a role="button" asp-page="/PurchaseOrders/Detail" asp-route-id="@openId">Open purchase order</a>
         }
-        <a role="button" class="secondary outline" asp-page="Detail" asp-route-id="@p.Id">Back to project</a>
+        <a role="button" class="secondary outline" asp-page="Detail" asp-route-id="@p.Id">Back to BOM</a>
     </div>
 }
 else if (!Model.Status.Shortages.Any())
 {
-    <partial name="_EmptyState" model="@(new EmptyStateModel("Nothing to order", "Every part is covered by stock or by orders that are already placed.", "Back to project", Url.Page("Detail", new { id = p.Id })))" />
+    <partial name="_EmptyState" model="@(new EmptyStateModel("Nothing to order", "Every part is covered by stock or by orders that are already placed.", "Back to BOM", Url.Page("Detail", new { id = p.Id })))" />
 }
 else
 {

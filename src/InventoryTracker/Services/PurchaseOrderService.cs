@@ -480,7 +480,7 @@ public sealed class PurchaseOrderService(
 
         if (lines.GroupBy(l => l.ProductId).Any(g => g.Count() > 1))
         {
-            errors.Add(new Error("po.line_duplicate", "A product can be on an order only once. Combine its quantities.", PurchaseOrderFields.Lines));
+            errors.Add(new Error("po.line_duplicate", "A part can be on an order only once. Combine its quantities.", PurchaseOrderFields.Lines));
         }
 
         if (errors.Count > 0)
@@ -501,7 +501,7 @@ public sealed class PurchaseOrderService(
                     var input = lines[i];
                     if (!costs.TryGetValue(input.ProductId, out var cost))
                     {
-                        return Result.Failure<int>("po.product_missing", "That product no longer exists.", PurchaseOrderFields.Line(i, PurchaseOrderFields.ProductId));
+                        return Result.Failure<int>("po.product_missing", "That part no longer exists.", PurchaseOrderFields.Line(i, PurchaseOrderFields.ProductId));
                     }
 
                     if (!cost.IsActive)
@@ -658,7 +658,7 @@ public sealed class PurchaseOrderService(
                 var costs = await ResolveCostsAsync(order.SupplierId, [productId], cancellationToken);
                 if (!costs.TryGetValue(productId, out var cost))
                 {
-                    return Result.Failure<long>("po.product_missing", "That product no longer exists.", PurchaseOrderFields.ProductId);
+                    return Result.Failure<long>("po.product_missing", "That part no longer exists.", PurchaseOrderFields.ProductId);
                 }
 
                 if (!cost.IsActive)
@@ -1490,7 +1490,7 @@ public sealed class PurchaseOrderService(
     private static Error LineMissing(string? field = null) => new("po.line_missing", "That line is not on this order any more.", field);
 
     private static Error LineDuplicate(string? sku)
-        => new("po.line_duplicate", sku is null ? "That product is already on this order." : $"{sku} is already on this order. Change its quantity instead.", PurchaseOrderFields.ProductId);
+        => new("po.line_duplicate", sku is null ? "That part is already on this order." : $"{sku} is already on this order. Change its quantity instead.", PurchaseOrderFields.ProductId);
 
     private static Error SupplierArchived()
         => new("po.supplier_archived", "That supplier is archived. Restore it, or choose another supplier.", PurchaseOrderFields.SupplierId);

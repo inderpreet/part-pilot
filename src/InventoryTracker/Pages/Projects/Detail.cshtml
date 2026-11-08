@@ -14,7 +14,7 @@
 }
 
 @section Leading {
-    <a asp-page="Index">‹ All projects</a>
+    <a asp-page="Index">‹ All BOMs</a>
 }
 
 @section Badges {
@@ -55,7 +55,7 @@
                     else
                     {
                         <button type="submit" class="menu-item" hx-post="@Action("Archive")"
-                                hx-confirm="Restore @p.Name to the active projects?">Restore</button>
+                                hx-confirm="Restore @p.Name to the active BOMs?">Restore</button>
                     }
                 </form>
                 @if (p.CanDelete)
@@ -64,7 +64,7 @@
                     <form method="post" asp-page-handler="Delete" asp-route-id="@p.Id">
                         <input type="hidden" name="rowVersion" value="@p.RowVersion" />
                         <button type="submit" class="menu-item danger" hx-post="@Action("Delete")"
-                                hx-confirm="Delete @p.Name and its BOM permanently? This cannot be undone.">Delete project</button>
+                                hx-confirm="Delete @p.Name and its BOM permanently? This cannot be undone.">Delete BOM</button>
                     </form>
                 }
             </div>
@@ -89,8 +89,8 @@ else if (Model.Dialog == DetailModel.ProjectDialog.Build)
 }
 else if (Model.Dialog == DetailModel.ProjectDialog.ChangeNumber)
 {
-    <section id="inline-dialog" class="card form-card" aria-label="Change project number">
-        <h2 class="card-title">Change project number</h2>
+    <section id="inline-dialog" class="card form-card" aria-label="Change BOM number">
+        <h2 class="card-title">Change BOM number</h2>
         <partial name="_ChangeNumberForm" model="Model" />
     </section>
 }
@@ -147,7 +147,7 @@ else if (Model.Dialog == DetailModel.ProjectDialog.ChangeNumber)
 
         @if (!string.IsNullOrWhiteSpace(p.Description) || !string.IsNullOrWhiteSpace(p.Notes))
         {
-            <section class="card" aria-label="Project details">
+            <section class="card" aria-label="BOM details">
                 <div class="card-head"><h2 class="card-title">Details</h2></div>
                 <dl class="kv kv-stack">
                     @if (!string.IsNullOrWhiteSpace(p.Description))

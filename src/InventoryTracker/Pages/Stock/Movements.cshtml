@@ -10,7 +10,7 @@
     <div class="load-bar" role="status" aria-label="Updating"></div>
 
 <form method="get" action="/Stock/Movements" class="toolbar movement-filters" role="search">
-    <input type="search" name="search" value="@Model.Query.Search" placeholder="Search SKU, product, reason or reference…" aria-label="Search movements"
+    <input type="search" name="search" value="@Model.Query.Search" placeholder="Search SKU, part, reason or reference…" aria-label="Search movements"
            autocomplete="off" enterkeyhint="search"
            hx-get="/Stock/Movements" hx-trigger="input changed delay:300ms" hx-target="#results" hx-push-url="true" hx-include="closest form" hx-indicator=".load-bar" />
 
@@ -63,9 +63,9 @@
         }
         else
         {
-            <span>product #@Model.Query.ProductId</span>
+            <span>part #@Model.Query.ProductId</span>
         }
-        · <a asp-page="Movements">show all products</a>
+        · <a asp-page="Movements">show all parts</a>
     </p>
 }
 

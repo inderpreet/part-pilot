@@ -254,7 +254,7 @@ public class DetailModel(IProjectService projects, ICurrentUser currentUser, IAu
         if (result.Succeeded)
         {
             // The flash waits in TempData, so a dialog reloads the page behind it (the header shows the new number).
-            TempData[PageExtensions.FlashKey] = $"Project number changed from {oldNumber} to {result.Value.Number}.";
+            TempData[PageExtensions.FlashKey] = $"BOM number changed from {oldNumber} to {result.Value.Number}.";
             var url = Url.Page("Detail", new { id })!;
             return this.IsHtmx() ? this.HxRedirect(url) : Redirect(url);
         }
@@ -378,7 +378,7 @@ public class DetailModel(IProjectService projects, ICurrentUser currentUser, IAu
         var result = await projects.SetActiveAsync(id, active, rowVersion, HttpContext.RequestAborted);
         if (result.Succeeded)
         {
-            TempData[PageExtensions.FlashKey] = active ? $"Project '{existing.Name}' restored." : $"Project '{existing.Name}' archived.";
+            TempData[PageExtensions.FlashKey] = active ? $"BOM '{existing.Name}' restored." : $"BOM '{existing.Name}' archived.";
         }
         else
         {
@@ -404,7 +404,7 @@ public class DetailModel(IProjectService projects, ICurrentUser currentUser, IAu
         var result = await projects.DeleteAsync(id, rowVersion, HttpContext.RequestAborted);
         if (result.Succeeded)
         {
-            TempData[PageExtensions.FlashKey] = $"Project '{existing.Name}' deleted.";
+            TempData[PageExtensions.FlashKey] = $"BOM '{existing.Name}' deleted.";
             return Back(Url.Page("Index")!);
         }
 

@@ -15,8 +15,8 @@
     @if (Model.Items.Count == 0)
     {
         <partial name="_EmptyState" model="@(bySupplier
-            ? new EmptyStateModel("No products linked yet", Model.CanEdit ? "Add the products this supplier provides, with their price and lead time." : "No products have been linked to this supplier.")
-            : new EmptyStateModel("No suppliers yet", Model.CanEdit ? "Add the suppliers that provide this product, with their price and lead time." : "No suppliers have been linked to this product."))" />
+            ? new EmptyStateModel("No parts linked yet", Model.CanEdit ? "Add the parts this supplier provides, with their price and lead time." : "No parts have been linked to this supplier.")
+            : new EmptyStateModel("No suppliers yet", Model.CanEdit ? "Add the suppliers that provide this part, with their price and lead time." : "No suppliers have been linked to this part."))" />
     }
     else
     {
@@ -24,7 +24,7 @@
             <table class="striped compact">
                 <thead>
                     <tr>
-                        <th scope="col">@(bySupplier ? "Product" : "Supplier")</th>
+                        <th scope="col">@(bySupplier ? "Part" : "Supplier")</th>
                         <th scope="col">Supplier SKU</th>
                         <th scope="col" class="num">Unit cost</th>
                         <th scope="col" class="num">Lead time</th>
@@ -49,7 +49,7 @@
     @if (Model.CanEdit && Model.OwnerActive)
     {
         <details class="link-add" open="@(Model.Items.Count == 0 || add is not null)">
-            <summary>@(bySupplier ? "Add a product" : "Add a supplier")</summary>
+            <summary>@(bySupplier ? "Add a part" : "Add a supplier")</summary>
             <form method="post" novalidate asp-page="/Suppliers/Links" asp-page-handler="Save"
                   hx-post="@saveUrl" hx-target="@target" hx-swap="outerHTML">
                 <partial name="_ValidationSummary" model="ViewData.ModelState" />
@@ -59,14 +59,14 @@
                 @if (bySupplier)
                 {
                     <input type="hidden" name="supplierId" value="@Model.OwnerId" />
-                    <partial name="_ProductPicker" model="@(new ProductPickerModel("productId", add?.ProductId, add?.ProductLabel, ActiveOnly: true, Label: "Product", Required: false))" />
+                    <partial name="_ProductPicker" model="@(new ProductPickerModel("productId", add?.ProductId, add?.ProductLabel, ActiveOnly: true, Label: "Part", Required: false))" />
                 }
                 else
                 {
                     <input type="hidden" name="productId" value="@Model.OwnerId" />
                     @if (Model.Candidates.Count == 0)
                     {
-                        <p class="muted">Every active supplier is already linked to this product. <a asp-page="/Suppliers/Edit">Add a new supplier</a> first.</p>
+                        <p class="muted">Every active supplier is already linked to this part. <a asp-page="/Suppliers/Edit">Add a new supplier</a> first.</p>
                     }
                     else
                     {
@@ -107,16 +107,16 @@
                 </div>
                 <label class="inline-check">
                     <input type="checkbox" name="isPreferred" value="true" checked="@(add?.IsPreferred ?? false)" />
-                    Preferred supplier for this product
+                    Preferred supplier for this part
                 </label>
                 <div class="form-actions">
-                    <button type="submit" disabled="@(!bySupplier && Model.Candidates.Count == 0)">@(bySupplier ? "Add product" : "Add supplier")</button>
+                    <button type="submit" disabled="@(!bySupplier && Model.Candidates.Count == 0)">@(bySupplier ? "Add part" : "Add supplier")</button>
                 </div>
             </form>
         </details>
     }
     else if (Model.CanEdit)
     {
-        <p class="muted">@(bySupplier ? "This supplier is archived. Restore it to link more products." : "This product is archived. Restore it to add suppliers.")</p>
+        <p class="muted">@(bySupplier ? "This supplier is archived. Restore it to link more parts." : "This part is archived. Restore it to add suppliers.")</p>
     }
 </div>

@@ -28,7 +28,7 @@
 
     @if (o.Lines.Count == 0)
     {
-        <p class="muted">No lines yet. Add the first product below.</p>
+        <p class="muted">No lines yet. Add the first part below.</p>
     }
     else
     {
@@ -36,7 +36,7 @@
             <table class="striped compact po-lines">
                 <thead>
                     <tr>
-                        <th scope="col">Product</th>
+                        <th scope="col">Part</th>
                         <th scope="col">Supplier SKU</th>
                         <th scope="col" class="num">Quantity</th>
                         <th scope="col" class="num">Unit cost</th>
@@ -91,7 +91,7 @@
     <form method="post" asp-page-handler="AddLine" asp-route-id="@o.Id" class="po-add-line"
           hx-post="@Handler("AddLine")" hx-target="#po-lines" hx-swap="outerHTML">
         <div class="grid">
-            <partial name="_ProductPicker" model="@(new ProductPickerModel("productId", Model.ProductId, Model.ProductLabel, Label: "Add a product", LookupUrl: Url.Page("Edit", "Products", new { id = o.Id })!))" />
+            <partial name="_ProductPicker" model="@(new ProductPickerModel("productId", Model.ProductId, Model.ProductLabel, Label: "Add a part", LookupUrl: Url.Page("Edit", "Products", new { id = o.Id })!))" />
             <label>
                 Quantity
                 <input type="number" name="quantity" value="@Model.Quantity" min="1" max="@PurchaseOrderService.MaxQuantity" step="1" inputmode="numeric" required

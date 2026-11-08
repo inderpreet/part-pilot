@@ -86,7 +86,7 @@ public class DetailModel(IProductService products, IStockService stock, ISupplie
         var result = await products.SetActiveAsync(id, active, rowVersion, HttpContext.RequestAborted);
         if (result.Succeeded)
         {
-            TempData[PageExtensions.FlashKey] = active ? $"Product '{existing.Sku}' restored." : $"Product '{existing.Sku}' archived.";
+            TempData[PageExtensions.FlashKey] = active ? $"Part '{existing.Sku}' restored." : $"Part '{existing.Sku}' archived.";
         }
         else
         {

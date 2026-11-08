@@ -137,7 +137,7 @@ public sealed class ProductService(AppDbContext db) : IProductService
         var product = await db.Products.Include(p => p.Category).FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
         if (product is null)
         {
-            return Result.Failure<ProductDetail>("product.not_found", "That product no longer exists.");
+            return Result.Failure<ProductDetail>("product.not_found", "That part no longer exists.");
         }
 
         if (product.RowVersion != rowVersion)
@@ -168,7 +168,7 @@ public sealed class ProductService(AppDbContext db) : IProductService
         var product = await db.Products.FirstOrDefaultAsync(p => p.Id == id, cancellationToken);
         if (product is null)
         {
-            return Result.Failure("product.not_found", "That product no longer exists.");
+            return Result.Failure("product.not_found", "That part no longer exists.");
         }
 
         if (rowVersion is { } expected && product.RowVersion != expected)
@@ -291,7 +291,7 @@ public sealed class ProductService(AppDbContext db) : IProductService
         if (existing is not null && sku is not null && !string.Equals(existing.Sku, sku, StringComparison.Ordinal)
             && await IsSkuLockedAsync(existing.Id, cancellationToken))
         {
-            errors.Add(new Error("product.sku_locked", "The SKU cannot be changed because this product has stock history.", ProductFields.Sku));
+            errors.Add(new Error("product.sku_locked", "The SKU cannot be changed because this part has stock history.", ProductFields.Sku));
         }
 
         if (input.CategoryId is { } categoryId)
@@ -335,13 +335,13 @@ public sealed class ProductService(AppDbContext db) : IProductService
     }
 
     private static Error SkuTaken(string sku) =>
-        new("product.sku_taken", $"SKU '{sku}' is already used by another product (it may be archived).", ProductFields.Sku);
+        new("product.sku_taken", $"SKU '{sku}' is already used by another part (it may be archived).", ProductFields.Sku);
 
     private static Error BarcodeTaken(string barcode) =>
-        new("product.barcode_taken", $"Barcode '{barcode}' is already used by another product (it may be archived).", ProductFields.Barcode);
+        new("product.barcode_taken", $"Barcode '{barcode}' is already used by another part (it may be archived).", ProductFields.Barcode);
 
     private static Error ConflictError() =>
-        new("product.conflict", "This product was modified by someone else. Reload the page to see the latest version, then try again.");
+        new("product.conflict", "This part was modified by someone else. Reload the page to see the latest version, then try again.");
 
     /// <summary>Saves, turning a lost concurrency race or a unique-index race into an <see cref="Error"/>.</summary>
     private async Task<Error?> SaveAsync(CancellationToken cancellationToken)

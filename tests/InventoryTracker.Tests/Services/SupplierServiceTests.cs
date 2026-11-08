@@ -48,7 +48,7 @@ public class SupplierServiceTests : CatalogTestBase
 
     private async Task<int> ProductAsync(string sku, bool archived = false)
     {
-        var id = (await CreateProductAsync(Input(sku: sku, name: "Product " + sku))).Id;
+        var id = (await CreateProductAsync(Input(sku: sku, name: "Part " + sku))).Id;
         if (archived)
         {
             await ArchiveAsync(id);
@@ -337,7 +337,7 @@ public class SupplierServiceTests : CatalogTestBase
         Assert.True(result.Succeeded);
         var item = result.Value;
         Assert.Equal("W-1", item.Sku);
-        Assert.Equal("Product W-1", item.ProductName);
+        Assert.Equal("Part W-1", item.ProductName);
         Assert.Equal("Acme", item.SupplierName);
         Assert.Equal("AC-77", item.SupplierSku);
         Assert.Equal(1250, item.UnitCostCents);
@@ -584,7 +584,7 @@ public class SupplierServiceTests : CatalogTestBase
         await ArchiveAsync(archivedProduct);
 
         var products = await RunAsync(s => s.GetProductsAsync(acme.Id));
-        Assert.Equal(["OLD-1", "W-1"], products.Select(i => i.Sku)); // by product name: "Product OLD-1" < "Product W-1"
+        Assert.Equal(["OLD-1", "W-1"], products.Select(i => i.Sku)); // by product name: "Part OLD-1" < "Part W-1"
         Assert.False(products[0].ProductIsActive);
         Assert.Empty(await RunAsync(s => s.GetProductsAsync(9999)));
     }

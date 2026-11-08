@@ -30,11 +30,11 @@ public static class NavItems
     public static IReadOnlyList<NavItem> All { get; } =
     [
         new("Dashboard", "/", Policies.CanView, Icon: "home"),
-        new("Products", "/Products", Policies.CanView, Group: NavGroups.Inventory, Icon: "box"),
+        new("Parts", "/Products", Policies.CanView, Group: NavGroups.Inventory, Icon: "box"),
         new("Stock", "/Stock", Policies.CanView, Group: NavGroups.Inventory, Icon: "layers"),
         new("Suppliers", "/Suppliers", Policies.CanView, Group: NavGroups.Inventory, Icon: "users"),
         new("Purchase Orders", "/PurchaseOrders", Policies.CanView, Group: NavGroups.Inventory, Icon: "file"),
-        new("Projects", "/Projects", Policies.CanView, Group: NavGroups.Inventory, Icon: "clipboard"),
+        new("BOMs", "/Projects", Policies.CanView, Group: NavGroups.Inventory, Icon: "clipboard"),
         new("Reports", "/Reports", Policies.CanView, Available: false, Group: NavGroups.Insights, Icon: "chart"),
         new("Admin", "/Admin", Policies.RequireAdmin, Group: NavGroups.Foot, Icon: "gear"),
     ];

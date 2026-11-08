@@ -71,7 +71,7 @@ public partial class LayoutAndComponentTests(AppFactory factory) : IClassFixture
         var html = await client.GetStringAsync("/");
 
         // Built sections are links; Admin is visible because the test user is an administrator.
-        foreach (var label in new[] { "Dashboard", "Products", "Stock", "Suppliers", "Purchase Orders", "Admin" })
+        foreach (var label in new[] { "Dashboard", "Parts", "Stock", "Suppliers", "Purchase Orders", "Admin" })
         {
             Assert.Contains($"<span>{label}</span></a>", html);
         }
@@ -124,7 +124,7 @@ public partial class LayoutAndComponentTests(AppFactory factory) : IClassFixture
         var html = await client.GetStringAsync("/");
 
         Assert.DoesNotContain("<span>Admin</span>", html);
-        Assert.Contains("<span>Products</span></a>", html);
+        Assert.Contains("<span>Parts</span></a>", html);
     }
 
     [Fact]
@@ -144,7 +144,7 @@ public partial class LayoutAndComponentTests(AppFactory factory) : IClassFixture
 
     [Theory]
     [InlineData("/PurchaseOrders", "New purchase order", "Staff")]
-    [InlineData("/Products", "New product", "Staff")]
+    [InlineData("/Products", "New part", "Staff")]
     [InlineData("/Suppliers", "New supplier", "Staff")]
     [InlineData("/Stock/Movements", "Bulk movement", "Staff")]
     [InlineData("/Admin/Users", "New user", "Admin")]
@@ -201,7 +201,7 @@ public partial class LayoutAndComponentTests(AppFactory factory) : IClassFixture
 
     [Theory]
     [InlineData("/PurchaseOrders", "New purchase order")]
-    [InlineData("/Products", "New product")]
+    [InlineData("/Products", "New part")]
     [InlineData("/Suppliers", "New supplier")]
     [InlineData("/Stock/Movements", "Bulk movement")]
     public async Task Viewers_do_not_get_the_primary_action(string url, string label)
@@ -415,8 +415,8 @@ public partial class LayoutAndComponentTests(AppFactory factory) : IClassFixture
         Assert.Contains("-$2,500.99", html);
         Assert.Contains("data-local=\"datetime\"", html);          // Html.LocalTime
         Assert.Contains("class=\"badge badge-low\"", html);
-        Assert.Contains("hx-confirm=\"Deactivate this product?\"", html);
-        Assert.Contains("No products yet", html);                  // _EmptyState
+        Assert.Contains("hx-confirm=\"Deactivate this part?\"", html);
+        Assert.Contains("No parts yet", html);                  // _EmptyState
         Assert.Contains("aria-sort=\"ascending\"", html);          // _SortHeader on the active column
         Assert.Contains("aria-sort=\"none\"", html);
     }

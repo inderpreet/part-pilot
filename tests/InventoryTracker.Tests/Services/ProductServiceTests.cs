@@ -255,7 +255,7 @@ public class ProductServiceTests(ITestOutputHelper output) : CatalogTestBase
         var (context, products, _) = NewRequest();
         await using var _ = context;
 
-        var result = await products.UpdateAsync(created.Id, created.RowVersion, Input(sku: "ABC", barcode: "XYZ", name: "Same product"));
+        var result = await products.UpdateAsync(created.Id, created.RowVersion, Input(sku: "ABC", barcode: "XYZ", name: "Same part"));
 
         Assert.True(result.Succeeded, string.Join("; ", result.Errors.Select(e => e.Message)));
         Assert.Equal("ABC", result.Value.Sku);
@@ -631,7 +631,7 @@ public class ProductServiceTests(ITestOutputHelper output) : CatalogTestBase
             context.Products.AddRange(Enumerable.Range(1, 10_000).Select(i => new Product
             {
                 Sku = $"BULK-{i:00000}",
-                Name = $"Bulk product number {i}",
+                Name = $"Bulk part number {i}",
                 Barcode = $"9{i:000000000}",
                 CategoryId = categoryId,
                 QuantityOnHand = i % 100,
@@ -658,7 +658,7 @@ public class ProductServiceTests(ITestOutputHelper output) : CatalogTestBase
         var byName = await Time(new ProductListQuery { Search = "number 77" });
         var byBarcode = await Time(new ProductListQuery { Search = "9000000042" });
         var sorted = await Time(new ProductListQuery { Sort = "onhand", Desc = true, CategoryId = categoryId });
-        output.WriteLine($"10k products: listing {listing} ms, sku {bySku} ms, name {byName} ms, barcode {byBarcode} ms, sorted+filtered {sorted} ms");
+        output.WriteLine($"10k parts: listing {listing} ms, sku {bySku} ms, name {byName} ms, barcode {byBarcode} ms, sorted+filtered {sorted} ms");
 
         // Target is < 100 ms (informational); the hard limit is loose so slow CI machines do not flake.
         Assert.True(Math.Max(Math.Max(listing, bySku), Math.Max(Math.Max(byName, byBarcode), sorted)) < 1000, "Catalog search is unexpectedly slow.");

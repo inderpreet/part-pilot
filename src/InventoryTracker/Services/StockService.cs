@@ -243,7 +243,7 @@ public sealed class StockService(AppDbContext db, ISettingsService settings, ICl
             var m = line.Movement;
             if (!products.TryGetValue(m.ProductId, out var product))
             {
-                errors.Add(new Error("stock.product_missing", "That product no longer exists.", StockFields.Line(line.Index, StockFields.Product)));
+                errors.Add(new Error("stock.product_missing", "That part no longer exists.", StockFields.Line(line.Index, StockFields.Product)));
                 continue;
             }
 

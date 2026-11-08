@@ -86,7 +86,7 @@ public class EditModel(IProductService products, ICategoryService categories) : 
             return Page();
         }
 
-        this.Flash(Existing is null ? $"Product '{result.Value.Sku}' created." : $"Product '{result.Value.Sku}' saved.");
+        this.Flash(Existing is null ? $"Part '{result.Value.Sku}' created." : $"Part '{result.Value.Sku}' saved.");
         return RedirectToPage("Detail", new { id = result.Value.Id });
     }
 

@@ -3,19 +3,19 @@
 {
     if (Model.IsFiltered)
     {
-        <partial name="_EmptyState" model="@(new EmptyStateModel("No projects match", "Try a different name or project number, or another tab."))" />
+        <partial name="_EmptyState" model="@(new EmptyStateModel("No BOMs match", "Try a different name or BOM number, or another tab."))" />
     }
     else if (Model.Query.Tab == ProjectTab.Active && Model.CanEdit)
     {
-        <partial name="_EmptyState" model="@(new EmptyStateModel("No projects yet", "Create a project to list the parts a job needs and see what is in stock, on order and still to buy.", "New project", "/Projects/Edit"))" />
+        <partial name="_EmptyState" model="@(new EmptyStateModel("No BOMs yet", "Create a BOM to list the parts a job needs and see what is in stock, on order and still to buy.", "New BOM", "/Projects/Edit"))" />
     }
     else if (Model.Query.Tab == ProjectTab.Active)
     {
-        <partial name="_EmptyState" model="@(new EmptyStateModel("No projects yet", "Ask an Admin or Staff user to create projects."))" />
+        <partial name="_EmptyState" model="@(new EmptyStateModel("No BOMs yet", "Ask an Admin or Staff user to create BOMs."))" />
     }
     else
     {
-        <partial name="_EmptyState" model="@(new EmptyStateModel($"No {ProjectDisplay.TabLabel(Model.Query.Tab).ToLowerInvariant()} projects", "Nothing in this tab right now. Try another tab."))" />
+        <partial name="_EmptyState" model="@(new EmptyStateModel($"No {ProjectDisplay.TabLabel(Model.Query.Tab).ToLowerInvariant()} BOMs", "Nothing in this tab right now. Try another tab."))" />
     }
 }
 else

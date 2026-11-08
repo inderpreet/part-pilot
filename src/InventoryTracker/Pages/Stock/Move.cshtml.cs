@@ -48,7 +48,7 @@ public class MoveModel(IStockService stock, IProductService products, ICurrentUs
 
         if (Input.ProductId is null)
         {
-            ModelState.AddModelError($"{nameof(Input)}.{nameof(Input.ProductId)}", "Choose a product.");
+            ModelState.AddModelError($"{nameof(Input)}.{nameof(Input.ProductId)}", "Choose a part.");
         }
 
         if (!Types.Contains(Input.Type))

@@ -50,7 +50,7 @@ public class BulkModel(IStockService stock, IProductService products, ICurrentUs
             var line = Input.Lines[i];
             if (line.ProductId is null && line.Quantity is not null)
             {
-                ModelState.AddModelError($"{nameof(Input)}.Lines[{i}].ProductId", $"Line {i + 1}: choose a product.");
+                ModelState.AddModelError($"{nameof(Input)}.Lines[{i}].ProductId", $"Line {i + 1}: choose a part.");
             }
             else if (line.ProductId is not null && line.Quantity is null)
             {

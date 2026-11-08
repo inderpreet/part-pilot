@@ -12,7 +12,7 @@
 <form method="post" action="@postUrl" novalidate
       hx-post="@(modal ? postUrl : null)" hx-target="@(modal ? "this" : null)" hx-swap="@(modal ? "outerHTML" : null)">
     <partial name="_ValidationSummary" model="Model.ModelState" />
-    <p class="form-intro-text muted">Creates the part in the catalog with no stock and adds it to this BOM. Fill in the rest (category, supplier, barcode) later on the product page.</p>
+    <p class="form-intro-text muted">Creates the part in the catalog with no stock and adds it to this BOM. Fill in the rest (category, supplier, barcode) later on the part page.</p>
 
     <div class="grid">
         <label>

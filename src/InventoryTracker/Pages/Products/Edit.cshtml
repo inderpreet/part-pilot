@@ -4,7 +4,7 @@
 @using InventoryTracker.Data.Entities
 @inject ISettingsService Settings
 @{
-    ViewData["Title"] = Model.IsEdit ? $"Edit product: {Model.Existing!.Sku}" : "New product";
+    ViewData["Title"] = Model.IsEdit ? $"Edit part: {Model.Existing!.Sku}" : "New part";
     var skuLocked = Model.Existing?.SkuLocked == true;
     var currency = await Settings.GetStringAsync(SettingKeys.CurrencySymbol);
 }
@@ -15,7 +15,7 @@
     @if (Model.Conflict)
     {
         <p role="alert">
-            Someone else saved this product while you were editing.
+            Someone else saved this part while you were editing.
             <a asp-page="Edit" asp-route-id="@Model.Existing!.Id">Reload the latest version</a> (your unsaved changes will be lost).
         </p>
     }
@@ -25,7 +25,7 @@
     <section class="form-row" aria-labelledby="product-identity">
         <div class="form-intro">
             <h2 id="product-identity">Identity</h2>
-            <p>How the product is found and what it is called.</p>
+            <p>How the part is found and what it is called.</p>
         </div>
         <div class="card form-card">
             <div class="field-grid">
@@ -36,7 +36,7 @@
                     @Html.FieldError("Input.Sku")
                     @if (skuLocked)
                     {
-                        <small>The SKU cannot be changed because this product has stock history.</small>
+                        <small>The SKU cannot be changed because this part has stock history.</small>
                     }
                 </label>
                 <label>
@@ -154,6 +154,6 @@
         {
             <a role="button" class="text" asp-page="Index">Cancel</a>
         }
-        <button type="submit">@(Model.IsEdit ? "Save changes" : "Create product")</button>
+        <button type="submit">@(Model.IsEdit ? "Save changes" : "Create part")</button>
     </div>
 </form>

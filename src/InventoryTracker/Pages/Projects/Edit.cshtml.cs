@@ -71,7 +71,7 @@ public class EditModel(IProjectService projects, ICurrentUser currentUser) : Pag
             return Page();
         }
 
-        this.Flash(Existing is null ? $"Project '{result.Value.Name}' created as {result.Value.Number}." : $"Project '{result.Value.Name}' saved.");
+        this.Flash(Existing is null ? $"BOM '{result.Value.Name}' created as {result.Value.Number}." : $"BOM '{result.Value.Name}' saved.");
         return RedirectToPage("Detail", new { id = result.Value.Id });
     }
 
@@ -81,10 +81,10 @@ public class EditModel(IProjectService projects, ICurrentUser currentUser) : Pag
         public string? Name { get; set; }
 
         /// <summary>Only used when creating; blank generates the next number.</summary>
-        [StringLength(Project.NumberMaxLength, ErrorMessage = "Project number can be at most 30 characters.")]
+        [StringLength(Project.NumberMaxLength, ErrorMessage = "BOM number can be at most 30 characters.")]
         public string? Number { get; set; }
 
-        [Display(Name = "Target units"), Required(ErrorMessage = "Enter how many units the project builds.")]
+        [Display(Name = "Target units"), Required(ErrorMessage = "Enter how many units the BOM builds.")]
         public int? TargetUnits { get; set; } = 1;
 
         [StringLength(Project.DescriptionMaxLength, ErrorMessage = "Description can be at most 500 characters.")]

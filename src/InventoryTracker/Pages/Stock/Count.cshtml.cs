@@ -70,7 +70,7 @@ public class CountModel(IStockService stock, IProductService products, ICategory
         var entries = Entries();
         if (entries.Count == 0)
         {
-            ModelState.AddModelError(string.Empty, "Enter at least one counted quantity. Leave a box empty for products you did not count.");
+            ModelState.AddModelError(string.Empty, "Enter at least one counted quantity. Leave a box empty for parts you did not count.");
             await LoadSheetAsync();
             return Page();
         }
@@ -85,7 +85,7 @@ public class CountModel(IStockService stock, IProductService products, ICategory
         var entries = Entries();
         if (entries.Count == 0)
         {
-            ModelState.AddModelError(string.Empty, "Enter at least one counted quantity. Leave a box empty for products you did not count.");
+            ModelState.AddModelError(string.Empty, "Enter at least one counted quantity. Leave a box empty for parts you did not count.");
             await LoadSheetAsync();
             return Page();
         }
@@ -110,8 +110,8 @@ public class CountModel(IStockService stock, IProductService products, ICategory
         var changed = result.Value.Count(p => p.TransactionId is not null);
         var matched = result.Value.Count - changed;
         this.Flash(changed == 0
-            ? $"Count recorded: all {matched} counted products already matched the system."
-            : $"Count posted: {changed} {(changed == 1 ? "product" : "products")} adjusted, {matched} already matched.");
+            ? $"Count recorded: all {matched} counted parts already matched the system."
+            : $"Count posted: {changed} {(changed == 1 ? "part" : "parts")} adjusted, {matched} already matched.");
         return RedirectToPage("Movements", new { type = StockTransactionType.Count });
     }
 

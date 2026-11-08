@@ -2,7 +2,7 @@
 @model InventoryTracker.Pages.Projects.EditModel
 @using InventoryTracker.Data.Entities
 @{
-    ViewData["Title"] = Model.IsEdit ? $"Edit project: {Model.Existing!.Name}" : "New project";
+    ViewData["Title"] = Model.IsEdit ? $"Edit BOM: {Model.Existing!.Name}" : "New BOM";
 }
 
 <form method="post" novalidate class="form-page">
@@ -11,7 +11,7 @@
     @if (Model.Conflict)
     {
         <p role="alert">
-            Someone else saved this project while you were editing.
+            Someone else saved this BOM while you were editing.
             <a asp-page="Edit" asp-route-id="@Model.Existing!.Id">Reload the latest version</a> (your unsaved changes will be lost).
         </p>
     }
@@ -21,7 +21,7 @@
     <section class="form-row" aria-labelledby="project-details">
         <div class="form-intro">
             <h2 id="project-details">Details</h2>
-            <p>What you are building and how many. The parts go in the BOM on the project page.</p>
+            <p>What you are building and how many. Add the parts on the BOM page afterwards.</p>
         </div>
         <div class="card form-card">
             <label>
@@ -35,16 +35,16 @@
                 @if (Model.IsEdit)
                 {
                     <label>
-                        Project number
+                        BOM number
                         <input value="@Model.Existing!.Number" readonly aria-readonly="true" tabindex="-1" aria-describedby="project-number-hint" />
                         <small id="project-number-hint">
                             @if (Model.IsAdmin)
                             {
-                                <span>Change it from the project page (Change number).</span>
+                                <span>Change it from the BOM page (Change number).</span>
                             }
                             else
                             {
-                                <span>Only an Admin can change the project number.</span>
+                                <span>Only an Admin can change the BOM number.</span>
                             }
                         </small>
                     </label>
@@ -52,7 +52,7 @@
                 else
                 {
                     <label>
-                        Project number <small>(optional)</small>
+                        BOM number <small>(optional)</small>
                         <input name="Input.Number" value="@Model.Input.Number" maxlength="@Project.NumberMaxLength" autocomplete="off" spellcheck="false"
                                aria-invalid="@Html.AriaInvalid("Input.Number")" aria-describedby="@Html.DescribedBy("Input.Number")" />
                         @Html.FieldError("Input.Number")
@@ -64,7 +64,7 @@
                     <input type="number" name="Input.TargetUnits" value="@Model.Input.TargetUnits" min="1" step="1" inputmode="numeric" required
                            aria-invalid="@Html.AriaInvalid("Input.TargetUnits")" aria-describedby="@Html.DescribedBy("Input.TargetUnits")" />
                     @Html.FieldError("Input.TargetUnits")
-                    <small>How many units of this project you plan to build.</small>
+                    <small>How many units of this BOM you plan to build.</small>
                 </label>
             </div>
 
@@ -101,6 +101,6 @@
         {
             <a role="button" class="text" asp-page="Index">Cancel</a>
         }
-        <button type="submit">@(Model.IsEdit ? "Save changes" : "Create project")</button>
+        <button type="submit">@(Model.IsEdit ? "Save changes" : "Create BOM")</button>
     </div>
 </form>

@@ -71,7 +71,7 @@ public class SettingsModel(ISettingsService settings) : PageModel
         public string? PurchaseOrderNumberPrefix { get; set; }
 
         [StringLength(BusinessSettings.ProjectPrefixMaxLength)]
-        [Display(Name = "Project number prefix")]
+        [Display(Name = "BOM number prefix")]
         public string? ProjectNumberPrefix { get; set; }
     }
 }

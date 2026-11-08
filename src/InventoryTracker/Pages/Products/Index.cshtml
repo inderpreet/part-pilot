@@ -2,7 +2,7 @@
 @model InventoryTracker.Pages.Products.IndexModel
 @using InventoryTracker.Services
 @{
-    ViewData["Title"] = "Products";
+    ViewData["Title"] = "Parts";
 }
 
 @* A plain GET form, so Enter submits normally (with go=true -> open an exact SKU/barcode match). The controls also
@@ -11,7 +11,7 @@
     <div class="load-bar" role="status" aria-label="Updating"></div>
 
 <form method="get" action="/Products" class="toolbar product-filters" role="search">
-    <input type="search" name="search" value="@Model.Query.Search" placeholder="Search SKU, name or barcode…" aria-label="Search products"
+    <input type="search" name="search" value="@Model.Query.Search" placeholder="Search SKU, name or barcode…" aria-label="Search parts"
            autofocus autocomplete="off" enterkeyhint="search"
            hx-get="/Products" hx-trigger="input changed delay:300ms" hx-target="#results" hx-push-url="true" hx-include="closest form" hx-indicator=".load-bar" />
 
@@ -38,13 +38,13 @@
     <a role="button" class="outline" asp-page="/Categories/Index">@(Model.CanEdit ? "Manage categories" : "Categories")</a>
     @if (Model.CanEdit)
     {
-        <a role="button" asp-page="Edit">New product</a>
+        <a role="button" asp-page="Edit">New part</a>
     }
 }
 
 @if (Model.UnmatchedCode is { } code)
 {
-    <p class="muted" role="status">No product has the exact SKU or barcode “@code”. Showing partial matches instead.</p>
+    <p class="muted" role="status">No part has the exact SKU or barcode “@code”. Showing partial matches instead.</p>
 }
 
 <div id="results">

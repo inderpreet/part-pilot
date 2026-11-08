@@ -368,7 +368,7 @@ public sealed class StockServiceTests : StockTestBase
         var id = await NewProductAsync("V-1", onHand: 10);
         var issue = (await PostAsync(Issue(id, 4))).Value[0].TransactionId!.Value;
 
-        var result = await ReverseAsync(issue, note: "Wrong product");
+        var result = await ReverseAsync(issue, note: "Wrong part");
 
         Assert.True(result.Succeeded);
         Assert.Equal(4, result.Value.QuantityDelta);
@@ -379,7 +379,7 @@ public sealed class StockServiceTests : StockTestBase
         Assert.Equal(StockTransactionType.Reversal, reversal.Type);
         Assert.Equal(issue, reversal.ReversesTransactionId);
         Assert.Equal($"Reversal of #{issue}", reversal.Reason);
-        Assert.Equal("Wrong product", reversal.Note);
+        Assert.Equal("Wrong part", reversal.Note);
         Assert.Equal(UserId, reversal.UserId);
         await AssertConsistentAsync(id);
     }

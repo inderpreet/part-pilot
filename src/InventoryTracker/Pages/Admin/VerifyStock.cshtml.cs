@@ -38,11 +38,11 @@ public class VerifyStockModel(IStockService stock) : PageModel
             var skus = string.Join(", ", report.Mismatches.Take(SkusInMessage).Select(m => m.Sku));
             var more = report.Mismatches.Count > SkusInMessage ? $" and {report.Mismatches.Count - SkusInMessage} more" : string.Empty;
             TempData[PageExtensions.FlashKey] =
-                $"Repaired {report.Mismatches.Count} {(report.Mismatches.Count == 1 ? "product" : "products")} from the ledger: {skus}{more}.";
+                $"Repaired {report.Mismatches.Count} {(report.Mismatches.Count == 1 ? "part" : "parts")} from the ledger: {skus}{more}.";
         }
         else
         {
-            TempData[PageExtensions.FlashKey] = "Nothing to repair: every product already matches its ledger.";
+            TempData[PageExtensions.FlashKey] = "Nothing to repair: every part already matches its ledger.";
         }
 
         var url = Url.Page("VerifyStock")!;

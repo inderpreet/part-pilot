@@ -313,7 +313,7 @@ public class StockPagesTests
 
         var html = await response.Content.ReadAsStringAsync();
         Assert.Contains("Line 1: enter a quantity.", html);
-        Assert.Contains("Line 2: choose a product.", html);
+        Assert.Contains("Line 2: choose a part.", html);
         Assert.Equal(0, await LedgerCountAsync(factory));
     }
 
@@ -359,7 +359,7 @@ public class StockPagesTests
         var preview = await SendFormAsync(client, "/Stock/Count?handler=Preview", counted, "/Stock/Count");
         var previewHtml = await preview.Content.ReadAsStringAsync();
         Assert.Equal(HttpStatusCode.OK, preview.StatusCode);
-        Assert.Contains("<strong>50</strong> products counted", previewHtml);
+        Assert.Contains("<strong>50</strong> parts counted", previewHtml);
         Assert.Contains("<strong>3</strong> differ", previewHtml);
         Assert.Equal(before, await LedgerCountAsync(factory)); // a preview writes nothing
 
@@ -371,7 +371,7 @@ public class StockPagesTests
         Assert.Equal(12, await OnHandAsync(factory, ids[17]));
         Assert.Equal(0, await OnHandAsync(factory, ids[40]));
         Assert.Equal(10, await OnHandAsync(factory, ids[0]));
-        Assert.Contains("Count posted: 3 products adjusted, 47 already matched.", await client.GetStringAsync("/Stock/Movements?type=Count"));
+        Assert.Contains("Count posted: 3 parts adjusted, 47 already matched.", await client.GetStringAsync("/Stock/Movements?type=Count"));
     }
 
     [Fact]
@@ -629,7 +629,7 @@ public class StockPagesTests
         Assert.Equal(HttpStatusCode.Redirect, fix.StatusCode);
         Assert.Equal("/Admin/VerifyStock", fix.RedirectPath());
         Assert.Equal(5, await OnHandAsync(factory, id));
-        Assert.Contains("Repaired 1 product from the ledger: VER-1", await admin.GetStringAsync("/Admin/VerifyStock"));
+        Assert.Contains("Repaired 1 part from the ledger: VER-1", await admin.GetStringAsync("/Admin/VerifyStock"));
     }
 
     [Fact]

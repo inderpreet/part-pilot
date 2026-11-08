@@ -3,7 +3,7 @@
 @{
     var s = Model.Status;
 }
-<section id="project-summary" class="card" aria-label="Project summary" hx-swap-oob="@(Model.Oob ? "true" : null)">
+<section id="project-summary" class="card" aria-label="BOM summary" hx-swap-oob="@(Model.Oob ? "true" : null)">
     <div class="card-head"><h2 class="card-title">Summary</h2></div>
     <dl class="kv">
         <dt>Parts cost per unit</dt>
@@ -17,5 +17,5 @@
         <dt class="kv-total">Remaining to build</dt>
         <dd class="kv-total">@s.RemainingUnits</dd>
     </dl>
-    <p class="card-note muted">Stock is not reserved for a project: two projects can count on the same parts.</p>
+    <p class="card-note muted">Stock is not reserved for a BOM: two BOMs can count on the same parts.</p>
 </section>

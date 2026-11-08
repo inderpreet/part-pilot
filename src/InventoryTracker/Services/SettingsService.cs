@@ -215,11 +215,11 @@ public sealed class SettingsService(IServiceScopeFactory scopeFactory, BrandingS
 
         if (projectPrefix.Length > BusinessSettings.ProjectPrefixMaxLength)
         {
-            errors.Add(new Error("settings.project_prefix_too_long", $"Project number prefix must be at most {BusinessSettings.ProjectPrefixMaxLength} characters.", BusinessSettings.Fields.ProjectNumberPrefix));
+            errors.Add(new Error("settings.project_prefix_too_long", $"BOM number prefix must be at most {BusinessSettings.ProjectPrefixMaxLength} characters.", BusinessSettings.Fields.ProjectNumberPrefix));
         }
         else if (projectPrefix.Any(char.IsWhiteSpace) || projectPrefix.Any(char.IsControl))
         {
-            errors.Add(new Error("settings.project_prefix_invalid", "Project number prefix cannot contain spaces.", BusinessSettings.Fields.ProjectNumberPrefix));
+            errors.Add(new Error("settings.project_prefix_invalid", "BOM number prefix cannot contain spaces.", BusinessSettings.Fields.ProjectNumberPrefix));
         }
 
         if (errors.Count > 0)

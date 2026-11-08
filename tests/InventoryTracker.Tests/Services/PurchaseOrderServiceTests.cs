@@ -7,7 +7,7 @@ namespace InventoryTracker.Tests.Services;
 /// <summary>WI-05-2: numbering, drafts, lines, transitions, receiving, reversing receipts and queries.</summary>
 public sealed class PurchaseOrderServiceTests : PurchaseOrderTestBase
 {
-    private async Task<int> ProductAsync(string sku, long costCents = 0) => (await CreateProductAsync(Input(sku: sku, name: "Product " + sku, costCents: costCents))).Id;
+    private async Task<int> ProductAsync(string sku, long costCents = 0) => (await CreateProductAsync(Input(sku: sku, name: "Part " + sku, costCents: costCents))).Id;
 
     // ---- state machine -----------------------------------------------------------------------------------------
 

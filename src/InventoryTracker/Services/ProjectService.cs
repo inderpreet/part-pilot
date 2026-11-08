@@ -342,7 +342,7 @@ public sealed class ProjectService(
         var errors = ValidateProject(name, input.Description, input.TargetUnits, input.Notes);
         if (typedNumber is { Length: > Project.NumberMaxLength })
         {
-            errors.Add(new Error("project.number_too_long", $"Project number can be at most {Project.NumberMaxLength} characters.", ProjectFields.Number));
+            errors.Add(new Error("project.number_too_long", $"BOM number can be at most {Project.NumberMaxLength} characters.", ProjectFields.Number));
         }
 
         if (errors.Count > 0)
@@ -456,18 +456,18 @@ public sealed class ProjectService(
         RequireActor(actor);
         if (!actor.IsAdmin)
         {
-            return Result.Failure<ProjectDetail>("project.number_admin_only", "Only an administrator can change a project number.", ProjectFields.Number);
+            return Result.Failure<ProjectDetail>("project.number_admin_only", "Only an administrator can change a BOM number.", ProjectFields.Number);
         }
 
         var number = Clean(newNumber);
         if (number is null)
         {
-            return Result.Failure<ProjectDetail>("project.number_required", "Enter a project number.", ProjectFields.Number);
+            return Result.Failure<ProjectDetail>("project.number_required", "Enter a BOM number.", ProjectFields.Number);
         }
 
         if (number.Length > Project.NumberMaxLength)
         {
-            return Result.Failure<ProjectDetail>("project.number_too_long", $"Project number can be at most {Project.NumberMaxLength} characters.", ProjectFields.Number);
+            return Result.Failure<ProjectDetail>("project.number_too_long", $"BOM number can be at most {Project.NumberMaxLength} characters.", ProjectFields.Number);
         }
 
         string? oldNumber = null;
@@ -1050,7 +1050,7 @@ public sealed class ProjectService(
         var errors = new List<Error>();
         if (name is null)
         {
-            errors.Add(new Error("project.name_required", "Project name is required.", ProjectFields.Name));
+            errors.Add(new Error("project.name_required", "BOM name is required.", ProjectFields.Name));
         }
         else if (name.Length > Project.NameMaxLength)
         {
@@ -1178,15 +1178,15 @@ public sealed class ProjectService(
 
     // ---- errors ------------------------------------------------------------------------------------------------
 
-    private static Error NotFound() => new("project.not_found", "That project no longer exists.");
+    private static Error NotFound() => new("project.not_found", "That BOM no longer exists.");
 
-    private static Error ConflictError() => new("project.conflict", "Someone else changed this project. Reload it and try again.");
+    private static Error ConflictError() => new("project.conflict", "Someone else changed this BOM. Reload it and try again.");
 
     private static Error NameTaken(string? name)
-        => new("project.name_taken", name is null ? "A project with that name already exists." : $"A project named \"{name}\" already exists.", ProjectFields.Name);
+        => new("project.name_taken", name is null ? "A BOM with that name already exists." : $"A BOM named \"{name}\" already exists.", ProjectFields.Name);
 
     private static Error NumberTaken(string? number)
-        => new("project.number_taken", number is null ? "That project number is already used." : $"The project number {number} is already used.", ProjectFields.Number);
+        => new("project.number_taken", number is null ? "That BOM number is already used." : $"The BOM number {number} is already used.", ProjectFields.Number);
 
     private static Error LineMissing(string? field = null) => new("project.line_missing", "That part is not in this BOM any more.", field);
 

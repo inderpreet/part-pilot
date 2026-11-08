@@ -134,7 +134,7 @@ public partial class ProductPagesTests
         using var admin = factory.CreateClientAs("Admin");
         using var viewer = factory.CreateClientAs("Viewer");
 
-        Assert.Contains("No products yet", await admin.GetStringAsync("/Products"));
+        Assert.Contains("No parts yet", await admin.GetStringAsync("/Products"));
         Assert.Contains("href=\"/Products/Edit\"", await admin.GetStringAsync("/Products"));
         Assert.DoesNotContain("href=\"/Products/Edit\"", await viewer.GetStringAsync("/Products"));
     }
@@ -165,7 +165,7 @@ public partial class ProductPagesTests
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var html = await response.Content.ReadAsStringAsync();
-        Assert.Contains("No product has the exact SKU or barcode", html);
+        Assert.Contains("No part has the exact SKU or barcode", html);
         Assert.Contains("SCAN-1", html); // still shows partial matches
     }
 
@@ -179,7 +179,7 @@ public partial class ProductPagesTests
 
         var viewerList = await viewer.GetStringAsync("/Products");
         Assert.Contains("V-1", viewerList);
-        Assert.DoesNotContain("New product", viewerList);
+        Assert.DoesNotContain("New part", viewerList);
         Assert.DoesNotContain($"/Products/Edit/{product.Id}", viewerList);
 
         var viewerDetail = await viewer.GetStringAsync($"/Products/{product.Id}");
@@ -187,7 +187,7 @@ public partial class ProductPagesTests
         Assert.DoesNotContain("/Products/Edit", viewerDetail);
 
         var staffList = await staff.GetStringAsync("/Products");
-        Assert.Contains("New product", staffList);
+        Assert.Contains("New part", staffList);
         Assert.Contains($"/Products/Edit/{product.Id}", staffList);
     }
 
@@ -351,7 +351,7 @@ public partial class ProductPagesTests
 
         Assert.Equal(HttpStatusCode.OK, response.StatusCode);
         var html = await response.Content.ReadAsStringAsync();
-        Assert.Contains("Someone else saved this product", html);
+        Assert.Contains("Someone else saved this part", html);
         Assert.Contains($"href=\"/Products/Edit/{product.Id}\"", html);
         Assert.Equal("Changed by someone else", (await ReloadAsync(factory, product.Id)).Name);
     }
@@ -585,7 +585,7 @@ public partial class ProductPagesTests
         Assert.Contains("data-exact=\"true\"", exact);
         Assert.Contains("data-picker-select", exact);
 
-        Assert.Contains("No matching products", await viewer.GetStringAsync("/Products/Lookup?q=zzzz"));
+        Assert.Contains("No matching parts", await viewer.GetStringAsync("/Products/Lookup?q=zzzz"));
     }
 
     [Fact]

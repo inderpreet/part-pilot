@@ -28,7 +28,7 @@
             {
                 <button type="submit" class="text danger"
                         hx-post="@Url.Page("Detail", "Archive", new { id = s.Id })"
-                        hx-confirm="Archive @s.Name? It can no longer be chosen for new purchase orders or product links; existing ones are kept.">Archive</button>
+                        hx-confirm="Archive @s.Name? It can no longer be chosen for new purchase orders or part links; existing ones are kept.">Archive</button>
             }
             else
             {
@@ -141,7 +141,7 @@
     }
 </section>
 
-<section class="card" aria-label="Products this supplier provides">
-    <div class="card-head"><h2 class="card-title">Products</h2></div>
+<section class="card" aria-label="Parts this supplier provides">
+    <div class="card-head"><h2 class="card-title">Parts</h2></div>
     <partial name="_SupplierLinks" model="Model.Links" />
 </section>

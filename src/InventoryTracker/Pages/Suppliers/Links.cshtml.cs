@@ -87,7 +87,7 @@ public class LinksModel(ISupplierService suppliers, IProductService products) : 
 
         if (productId is null)
         {
-            ModelState.AddModelError(SupplierLinkFields.ProductId, "Choose a product.");
+            ModelState.AddModelError(SupplierLinkFields.ProductId, "Choose a part.");
         }
 
         if (supplierId is null)

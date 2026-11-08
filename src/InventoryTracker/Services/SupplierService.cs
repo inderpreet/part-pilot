@@ -190,7 +190,7 @@ public sealed class SupplierService(AppDbContext db) : ISupplierService
         var product = await db.Products.AsNoTracking().Where(p => p.Id == productId).Select(p => new { p.IsActive }).FirstOrDefaultAsync(cancellationToken);
         if (product is null)
         {
-            return Result.Failure<ProductSupplierItem>("supplier.product_missing", "That product no longer exists.", SupplierLinkFields.ProductId);
+            return Result.Failure<ProductSupplierItem>("supplier.product_missing", "That part no longer exists.", SupplierLinkFields.ProductId);
         }
 
         var supplier = await db.Suppliers.AsNoTracking().Where(s => s.Id == supplierId).Select(s => new { s.IsActive }).FirstOrDefaultAsync(cancellationToken);
@@ -206,12 +206,12 @@ public sealed class SupplierService(AppDbContext db) : ISupplierService
         {
             if (!product.IsActive)
             {
-                errors.Add(new Error("supplier.link_product_archived", "That product is archived. Restore it before adding suppliers.", SupplierLinkFields.ProductId));
+                errors.Add(new Error("supplier.link_product_archived", "That part is archived. Restore it before adding suppliers.", SupplierLinkFields.ProductId));
             }
 
             if (!supplier.IsActive)
             {
-                errors.Add(new Error("supplier.link_supplier_archived", "That supplier is archived. Restore it before linking products.", SupplierLinkFields.SupplierId));
+                errors.Add(new Error("supplier.link_supplier_archived", "That supplier is archived. Restore it before linking parts.", SupplierLinkFields.SupplierId));
             }
         }
 
@@ -262,7 +262,7 @@ public sealed class SupplierService(AppDbContext db) : ISupplierService
         var link = await db.ProductSuppliers.Include(l => l.Supplier).FirstOrDefaultAsync(l => l.ProductId == productId && l.SupplierId == supplierId, cancellationToken);
         if (link is null)
         {
-            return Result.Failure("supplier.link_missing", "That supplier is no longer linked to the product.");
+            return Result.Failure("supplier.link_missing", "That supplier is no longer linked to the part.");
         }
 
         if (link.IsPreferred == preferred)
@@ -388,7 +388,7 @@ public sealed class SupplierService(AppDbContext db) : ISupplierService
         {
             // Two people changed the same product's suppliers at the same moment (preferred index, or the same pair added twice).
             db.ChangeTracker.Clear();
-            return new Error("supplier.link_conflict", "Someone else just changed this product's suppliers. Check the list and try again.");
+            return new Error("supplier.link_conflict", "Someone else just changed this part's suppliers. Check the list and try again.");
         }
         finally
         {

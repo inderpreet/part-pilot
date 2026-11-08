@@ -7,7 +7,7 @@
 }
 
 @section Leading {
-    <a asp-page="Index">‹ All products</a>
+    <a asp-page="Index">‹ All parts</a>
 }
 
 @section Badges {
@@ -65,7 +65,7 @@
         }
     </article>
 
-    <section class="card" aria-label="Product details">
+    <section class="card" aria-label="Part details">
         <div class="card-head"><h2 class="card-title">Details</h2></div>
         <dl class="detail-grid">
             <dt>SKU</dt>
@@ -113,13 +113,13 @@
 
 @* In-page navigation: each section is switched on by the feature that fills it (History: F03, Suppliers: F04, Purchase orders: F05,
    Audit: F08). site.js marks the link for the current hash; without JavaScript History stays marked. *@
-<nav class="section-nav" aria-label="More about this product">
+<nav class="section-nav" aria-label="More about this part">
     <a href="#history" aria-current="true">History</a>
     <a href="#suppliers">Suppliers</a>
     <a href="#purchase-orders">Purchase orders</a>
     @if (Model.UsedInProjects.Count > 0)
     {
-        <a href="#projects">Projects</a>
+        <a href="#projects">BOMs</a>
     }
     <span class="section-nav-soon" aria-disabled="true" title="Coming soon">Audit <small>Soon</small></span>
 </nav>
@@ -127,17 +127,17 @@
 <section id="history" class="card" aria-label="Stock history">
     <div class="card-head">
         <h2 class="card-title">History</h2>
-        <a asp-page="/Stock/Movements" asp-route-productId="@p.Id">All movements for this product, with filters</a>
+        <a asp-page="/Stock/Movements" asp-route-productId="@p.Id">All movements for this part, with filters</a>
     </div>
     <partial name="_StockHistory" model="Model" />
 </section>
 
-<section id="suppliers" class="card" aria-label="Suppliers of this product">
+<section id="suppliers" class="card" aria-label="Suppliers of this part">
     <div class="card-head"><h2 class="card-title">Suppliers</h2></div>
     <partial name="_SupplierLinks" model="Model.Suppliers" />
 </section>
 
-<section id="purchase-orders" class="card" aria-label="Open purchase orders for this product">
+<section id="purchase-orders" class="card" aria-label="Open purchase orders for this part">
     <div class="card-head"><h2 class="card-title">Open purchase orders</h2></div>
     @if (Model.InDraft is { } inDraft)
     {
@@ -157,7 +157,7 @@
     }
     @if (Model.OpenOrders.Count == 0)
     {
-        <p class="card-empty muted">Nothing is on order for this product.</p>
+        <p class="card-empty muted">Nothing is on order for this part.</p>
     }
     else
     {
@@ -202,13 +202,13 @@
 
 @if (Model.UsedInProjects.Count > 0)
 {
-    <section id="projects" class="card" aria-label="Projects that use this product">
-        <div class="card-head"><h2 class="card-title">Used in projects</h2></div>
+    <section id="projects" class="card" aria-label="BOMs that use this part">
+        <div class="card-head"><h2 class="card-title">Used in BOMs</h2></div>
         <div class="table-wrap">
             <table class="striped compact">
                 <thead>
                     <tr>
-                        <th scope="col">Project</th>
+                        <th scope="col">BOM</th>
                         <th scope="col" class="num">Per unit</th>
                     </tr>
                 </thead>

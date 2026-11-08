@@ -130,7 +130,7 @@ public class EditModel(IPurchaseOrderService orders, ISupplierService suppliers,
             }
         }
 
-        TempData[PageExtensions.FlashKey] = $"Draft {draft.Number} created. Add the products to order below.";
+        TempData[PageExtensions.FlashKey] = $"Draft {draft.Number} created. Add the parts to order below.";
         return RedirectToPage("Edit", new { id = draft.Id });
     }
 
@@ -195,7 +195,7 @@ public class EditModel(IPurchaseOrderService orders, ISupplierService suppliers,
 
         if (productId is null)
         {
-            ModelState.AddModelError(PurchaseOrderFields.ProductId, "Choose a product.");
+            ModelState.AddModelError(PurchaseOrderFields.ProductId, "Choose a part.");
         }
 
         if (ModelState.IsValid)
