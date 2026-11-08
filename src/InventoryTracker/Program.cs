@@ -47,6 +47,8 @@ builder.Services.AddSingleton<ILoggerProvider>(sp =>
         : NullLoggerProvider.Instance);
 
 builder.Services.AddSingleton<IClock, SystemClock>();
+// Resolved lazily, like HostSettings, so test hosts that adjust configuration late are honoured.
+builder.Services.AddSingleton(sp => BrandingSettings.Resolve(sp.GetRequiredService<IConfiguration>()));
 builder.Services.AddSingleton<ISettingsService, SettingsService>();
 
 builder.Services.AddInventoryAuth();
@@ -109,10 +111,11 @@ if (app.Environment.IsEnvironment("Testing"))
 }
 
 var startupLog = app.Services.GetRequiredService<ILoggerFactory>().CreateLogger("Startup");
+var branding = app.Services.GetRequiredService<BrandingSettings>();
 app.Lifetime.ApplicationStarted.Register(() =>
 {
     var urls = app.Urls.ToArray();
-    startupLog.LogInformation("Inventory Tracker {Version} listening on {Urls}; database {Database}", HealthEndpoint.Version, string.Join(", ", urls), hostSettings.DatabasePath);
+    startupLog.LogInformation("{Product} {Version} listening on {Urls}; database {Database}", branding.ProductName, HealthEndpoint.Version, string.Join(", ", urls), hostSettings.DatabasePath);
     if (hostSettings.ExposedToNetwork)
     {
         startupLog.LogWarning("Bound to network interfaces: other machines can reach this app over plain HTTP. Use INVENTORY_BIND=localhost to restrict it to this machine.");

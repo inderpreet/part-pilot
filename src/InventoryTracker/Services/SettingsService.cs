@@ -1,6 +1,7 @@
 using System.Globalization;
 using InventoryTracker.Data;
 using InventoryTracker.Data.Entities;
+using InventoryTracker.Hosting;
 using Microsoft.EntityFrameworkCore;
 
 namespace InventoryTracker.Services;
@@ -53,8 +54,12 @@ public sealed record BusinessSettings(
 /// <summary>
 /// Registered as a singleton; opens its own DbContext scope per database access. The cache holds the full
 /// key/value snapshot and is dropped on every write.
+/// <para>
+/// A company name that is still the seeded placeholder ("My Company") means "not chosen yet", so the configured
+/// default (<c>Branding:CompanyName</c>) is shown instead; any name saved in Admin → Settings wins.
+/// </para>
 /// </summary>
-public sealed class SettingsService(IServiceScopeFactory scopeFactory) : ISettingsService
+public sealed class SettingsService(IServiceScopeFactory scopeFactory, BrandingSettings? branding = null) : ISettingsService
 {
     private readonly SemaphoreSlim _loadLock = new(1, 1);
     private volatile IReadOnlyDictionary<string, string>? _cache;
@@ -104,6 +109,12 @@ public sealed class SettingsService(IServiceScopeFactory scopeFactory) : ISettin
             foreach (var (key, value) in stored)
             {
                 merged[key] = value;
+            }
+
+            if (branding is not null
+                && string.Equals(merged[SettingKeys.CompanyName], SettingKeys.Defaults[SettingKeys.CompanyName], StringComparison.Ordinal))
+            {
+                merged[SettingKeys.CompanyName] = branding.CompanyName;
             }
 
             _cache = merged;

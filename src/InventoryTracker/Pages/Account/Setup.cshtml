@@ -1,7 +1,8 @@
 @page "/Account/Setup"
 @model SetupModel
+@inject InventoryTracker.Hosting.BrandingSettings Branding
 @{
-    ViewData["Title"] = "Set up Inventory Tracker";
+    ViewData["Title"] = $"Set up {Branding.ProductName}";
     ViewData["Header"] = "plain";
 }
 

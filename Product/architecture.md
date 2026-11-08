@@ -40,6 +40,8 @@ Inventory-Tracker/
 ├─ AGENTS.md / CLAUDE.md / .github/copilot-instructions.md
 ├─ Product/                         specs (this folder)
 ├─ scripts/publish.ps1              single-file publish for each RID
+├─ scripts/make-icons.ps1           builds favicon.ico, img/*.png from branding/icon.jpg
+├─ branding/icon.jpg                master logo
 ├─ src/InventoryTracker/
 │  ├─ Program.cs                    host setup, DI, middleware, CLI args
 │  ├─ appsettings.json
@@ -181,6 +183,8 @@ needed `QuantityPerUnit × remaining units` against on hand, on order and **in d
 | File logging | `Logging__File__Enabled`, `Logging__File__Directory` | on, `<db dir>/logs/` |
 | Session re-validation interval | `Auth__ValidationIntervalSeconds` | `60` |
 | Data-protection keys | derived from DB path | `<db dir>/keys/` |
+| Product name (tab title, footer, setup page) | `Branding:ProductName` (`Branding__ProductName`, `.env`, `appsettings.json`) | `Part Pilot` |
+| Default company name (used until one is saved in Admin → Settings) | `Branding:CompanyName` | the seeded placeholder `My Company` |
 | Business settings (company name, currency, allow negative stock, PO number prefix) | `AppSetting` table via Admin → Settings | see F00 |
 
 **Precedence** (highest first): command line › real environment variables › `.env` file › optional `appsettings.json`
@@ -242,6 +246,7 @@ dotnet publish src/InventoryTracker -c Release -r <rid> --self-contained true
 | D16 | A migration that adds a foreign key to an existing SQLite table writes the table rebuild by hand (`AddPurchaseOrders` does, for `StockTransactions`) | EF rebuilds after all other operations of the migration, so triggers cannot be restored by a `Sql` call in the same migration; the hand-written rebuild keeps D14's triggers. Future FK/column changes to `StockTransactions` must do the same (`PurchaseOrderSchemaTests` and `StockSchemaTests` fail if the triggers are lost) |
 | D17 | UI stays on vendored Pico.css plus `site.css`. F09 (UI overhaul) defines the shared shell (left rail, top bar), page header, list card, button, overflow menu, confirm-dialog, status chip, form-section and type-scale patterns, and pins `--pico-font-size: 100%` because Pico otherwise grows the root size to 125% on wide screens; later features (F06, F07, F08) use those partials, classes and `--it-*` tokens instead of new one-off sizes. `site.css` is the only app stylesheet and `/Dev/Components` is the gallery of the patterns (the static prototype and its `overhaul.css` were removed when the screens matched it) | A data app needs density and a stable action hierarchy. A second stylesheet, an embedded webfont, or a component library would add a build step and a larger binary, which D2 and D11 rule out. The system UI font is the font |
 | D18 | A project build is linked to its stock issue rows by `StockTransaction.Reference` text (`<project name> build #<id>`) and the `ProjectBuild` table, not by a foreign key on `StockTransactions` (F10) | Adding an FK to `StockTransactions` needs the hand-written table rebuild of D16 and re-creating the D14 triggers, for a link that is only used to show a build's history. A text reference keeps the ledger schema untouched; the build's exact rows are still found by the reference, and nothing is denormalised |
+| D19 | The product name and the default company name come from the `Branding` configuration section (`BrandingSettings`), not from code. The company name stays a business setting in the `AppSetting` table: while it is still the seeded placeholder `My Company`, `SettingsService` reports the configured default instead; any name saved in Admin → Settings wins. Internal identifiers (namespace, exe name, auth cookie, `inventory.db`, data-protection application name) keep their original names | Renaming the product should not need a code change, and every install can start with the right company name without editing the database. The seeded row cannot be changed by a migration for installs that already exist, and renaming the cookie or the database file would sign everyone out or orphan the data |
 
 ## 14. Open questions
 

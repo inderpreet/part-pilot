@@ -41,6 +41,9 @@ public class AppFactory : WebApplicationFactory<Program>
     /// <summary>Seconds between security-stamp re-validations; 0 = every request (lets tests see deactivation immediately).</summary>
     public int ValidationIntervalSeconds { get; init; } = 0;
 
+    /// <summary>Extra configuration values (highest priority), e.g. <c>Branding:ProductName</c>.</summary>
+    public IReadOnlyDictionary<string, string?>? Configuration { get; init; }
+
     public string DatabasePath => Path.Combine(_dir, "test.db");
 
     protected override void ConfigureWebHost(IWebHostBuilder builder)
@@ -52,12 +55,25 @@ public class AppFactory : WebApplicationFactory<Program>
         }
 
         var validationInterval = ValidationIntervalSeconds;
-        builder.ConfigureAppConfiguration((_, config) => config.AddInMemoryCollection(new Dictionary<string, string?>
+        var extra = Configuration;
+        builder.ConfigureAppConfiguration((_, config) =>
         {
-            ["INVENTORY_DB"] = DatabasePath,
-            ["Logging:File:Enabled"] = "false",
-            ["Auth:ValidationIntervalSeconds"] = validationInterval.ToString(),
-        }));
+            config.AddInMemoryCollection(new Dictionary<string, string?>
+            {
+                ["INVENTORY_DB"] = DatabasePath,
+                ["Logging:File:Enabled"] = "false",
+                ["Auth:ValidationIntervalSeconds"] = validationInterval.ToString(),
+
+                // Pinned so a developer's own Branding__* variables or .env never change what the tests see.
+                ["Branding:ProductName"] = "Part Pilot",
+                ["Branding:CompanyName"] = "My Company",
+            });
+
+            if (extra is not null)
+            {
+                config.AddInMemoryCollection(extra);
+            }
+        });
 
         var seed = SeedUsers;
         builder.ConfigureTestServices(services =>

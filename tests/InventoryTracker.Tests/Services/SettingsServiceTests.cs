@@ -1,4 +1,5 @@
 using InventoryTracker.Data;
+using InventoryTracker.Hosting;
 using InventoryTracker.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
@@ -34,6 +35,46 @@ public class SettingsServiceTests : IAsyncLifetime
         Assert.Equal("My Company", await settings.GetStringAsync(SettingKeys.CompanyName));
         Assert.False(await settings.GetBoolAsync(SettingKeys.StockAllowNegative));
         Assert.Equal("PO-", await settings.GetStringAsync(SettingKeys.PurchaseOrderNumberPrefix));
+    }
+
+    [Fact]
+    public async Task Configured_company_replaces_the_seeded_placeholder()
+    {
+        var settings = new SettingsService(_provider.GetRequiredService<IServiceScopeFactory>(), new BrandingSettings("Part Pilot", "Anhad Tech"));
+
+        Assert.Equal("Anhad Tech", await settings.GetStringAsync(SettingKeys.CompanyName));
+        Assert.Equal("Anhad Tech", (await settings.GetBusinessSettingsAsync()).CompanyName);
+        Assert.Equal("Anhad Tech", (await settings.GetAllAsync())[SettingKeys.CompanyName]);
+    }
+
+    [Fact]
+    public async Task A_company_saved_in_settings_wins_over_the_configured_default()
+    {
+        var settings = new SettingsService(_provider.GetRequiredService<IServiceScopeFactory>(), new BrandingSettings("Part Pilot", "Anhad Tech"));
+        Assert.Equal("Anhad Tech", await settings.GetStringAsync(SettingKeys.CompanyName)); // primes the cache
+
+        await settings.SetAsync(SettingKeys.CompanyName, "Acme");
+
+        Assert.Equal("Acme", await settings.GetStringAsync(SettingKeys.CompanyName));
+        var other = new SettingsService(_provider.GetRequiredService<IServiceScopeFactory>(), new BrandingSettings("Part Pilot", "Anhad Tech"));
+        Assert.Equal("Acme", await other.GetStringAsync(SettingKeys.CompanyName)); // read back from the database
+    }
+
+    [Fact]
+    public async Task Configured_company_does_not_touch_other_settings_or_the_stored_row()
+    {
+        var settings = new SettingsService(_provider.GetRequiredService<IServiceScopeFactory>(), new BrandingSettings("Part Pilot", "Anhad Tech"));
+
+        Assert.Equal("USD", await settings.GetStringAsync(SettingKeys.CurrencyCode));
+        Assert.Equal("PO-", await settings.GetStringAsync(SettingKeys.PurchaseOrderNumberPrefix));
+        await using var context = _db.CreateContext();
+        Assert.Equal("My Company", (await context.AppSettings.SingleAsync(s => s.Key == SettingKeys.CompanyName)).Value);
+    }
+
+    [Fact]
+    public async Task Without_branding_the_placeholder_is_returned_unchanged()
+    {
+        Assert.Equal("My Company", await CreateService().GetStringAsync(SettingKeys.CompanyName));
     }
 
     [Fact]

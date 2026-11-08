@@ -46,6 +46,8 @@ single self-contained executable per platform.
 | [WI-00-2](../work-items/F00-platform-foundation/WI-00-2-api.md) | Host, DI, config, errors, embedded assets | Done |
 | [WI-00-3](../work-items/F00-platform-foundation/WI-00-3-frontend.md) | Layout, HTMX conventions, shared partials | Done |
 | [WI-00-4](../work-items/F00-platform-foundation/WI-00-4-packaging.md) | Single-file publish script | Done |
+| [WI-00-5](../work-items/F00-platform-foundation/WI-00-5-branding.md) | Branding (product and default company name) from configuration | Done |
+| [WI-00-6](../work-items/F00-platform-foundation/WI-00-6-icon.md) | App icon from the logo (favicon, touch icons, exe, sidebar) | Done |
 
 ## Open questions
 

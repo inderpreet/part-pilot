@@ -208,7 +208,8 @@ button.linklike:hover { text-decoration: underline; }
 main:focus { outline: none; }
 
 .plain-head { padding-block: 2.5rem 1rem; }
-.plain-head .brand { text-decoration: none; }
+.plain-head .brand { display: inline-flex; flex-direction: column; align-items: center; gap: 0.6rem; text-decoration: none; }
+.brand-logo { display: block; width: 3.5rem; height: auto; }
 
 .app { --rail-w: 15rem; display: grid; grid-template-columns: var(--rail-w) minmax(0, 1fr); align-items: start; }
 .stage { min-width: 0; min-height: 100vh; display: flex; flex-direction: column; }
@@ -224,7 +225,8 @@ main:focus { outline: none; }
 }
 .rail .rail-brand { height: auto; margin: 0; padding: 0.25rem 0.5rem 1.5rem; gap: 0.65rem; background: none; }
 .rail .rail-brand:hover { background: none; }
-.mark { display: grid; place-items: center; width: 1.75rem; height: 1.75rem; flex: 0 0 auto; border-radius: var(--it-radius-sm); background: linear-gradient(135deg, #6366f1, #4338ca); color: #fff; font-weight: 700; font-size: var(--it-text-sm); }
+/* The logo (img/logo.png, transparent, about 1.47:1) sits straight on the rail; no tile behind it. */
+.mark { display: block; width: 2.5rem; height: auto; flex: 0 0 auto; }
 /* overflow:hidden is needed for the ellipsis, so the line box must be tall enough for descenders (the "y" and "p" in "My Company"). */
 .brand-name { color: var(--it-ink); font-weight: 600; font-size: var(--it-text); letter-spacing: -0.01em; line-height: 1.4; padding-bottom: 0.1em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 

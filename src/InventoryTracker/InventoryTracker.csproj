@@ -7,6 +7,8 @@
     <IsTransformWebConfigDisabled>true</IsTransformWebConfigDisabled>
     <!-- We serve wwwroot ourselves (embedded manifest); the SDK's static-web-assets endpoints.json would be another loose file. -->
     <StaticWebAssetsEnabled>false</StaticWebAssetsEnabled>
+    <!-- The executable's own icon; the same file the browser gets as /favicon.ico (scripts/make-icons.ps1 builds it from branding/icon.jpg). -->
+    <ApplicationIcon>wwwroot\favicon.ico</ApplicationIcon>
   </PropertyGroup>
 
   <!--

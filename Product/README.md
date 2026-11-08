@@ -46,6 +46,8 @@ F00 has an extra packaging item. F09 has no schema and no service layer; it is s
 | [WI-00-2](work-items/F00-platform-foundation/WI-00-2-api.md) | Foundation — host, DI, config, errors, embedded assets | Done |
 | [WI-00-3](work-items/F00-platform-foundation/WI-00-3-frontend.md) | Foundation — layout, HTMX conventions, shared partials | Done |
 | [WI-00-4](work-items/F00-platform-foundation/WI-00-4-packaging.md) | Foundation — single-file publish script | Done |
+| [WI-00-5](work-items/F00-platform-foundation/WI-00-5-branding.md) | Foundation — branding from configuration | Done |
+| [WI-00-6](work-items/F00-platform-foundation/WI-00-6-icon.md) | Foundation — app icon from the logo | Done |
 | [WI-01-1](work-items/F01-users-auth/WI-01-1-db-schema.md) | Users — Identity schema, role seed | Done |
 | [WI-01-2](work-items/F01-users-auth/WI-01-2-api.md) | Users — auth config, policies, UserService | Done |
 | [WI-01-3](work-items/F01-users-auth/WI-01-3-frontend.md) | Users — login, setup, user admin, settings pages | Done |

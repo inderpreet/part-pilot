@@ -52,8 +52,10 @@ public partial class LayoutAndComponentTests(AppFactory factory) : IClassFixture
             var html = await client.GetStringAsync("/");
 
             Assert.Contains("class=\"brand-name\">Acme &lt;Tools&gt;</strong>", html);
+            // The tab title carries the product name, not the company (see BrandingPagesTests).
             // The separator is HTML-encoded by Razor (&#xB7;), so match around it.
-            Assert.Matches("<title>Dashboard (·|&#xB7;) Acme &lt;Tools&gt;</title>", html);
+            Assert.Matches("<title>Dashboard (·|&#xB7;) Part Pilot</title>", html);
+            Assert.Matches("<small>Acme &lt;Tools&gt; (·|&#xB7;) Part Pilot v", html);
         }
         finally
         {

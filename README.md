@@ -86,6 +86,8 @@ or a `.env` file (copy [`.env.example`](.env.example) to `.env`):
 | Port | `--port <n>` | `INVENTORY_PORT` | `5080` |
 | Database file | `--db <path>` | `INVENTORY_DB` | `inventory.db` next to the executable |
 | Open browser on start | `--open` | - | off |
+| Product name shown in the tab, footer and setup page | `Branding:ProductName` | `Branding__ProductName` | `Part Pilot` |
+| Default company name (a name saved in Admin → Settings wins) | `Branding:CompanyName` | `Branding__CompanyName` | `My Company` |
 | Full URL override | `--urls <url>` | `ASPNETCORE_URLS` | derived from bind + port |
 
 Precedence, highest first: command line, real environment variables, `.env`, `appsettings.json` beside the executable,
@@ -186,6 +188,8 @@ Inventory-Tracker/
 ├─ start.ps1                    start the app
 ├─ scripts/dev.ps1              developer tasks
 ├─ scripts/publish.ps1          build the single-file executable (+ smoke.ps1)
+├─ scripts/make-icons.ps1       regenerate favicon, touch icons, exe icon and logo from branding/icon.jpg
+├─ branding/icon.jpg            master logo (edit this, then run make-icons.ps1)
 ├─ src/InventoryTracker/
 │  ├─ Program.cs                host setup, config, middleware
 │  ├─ Data/                     DbContext, entities, configurations, interceptors, migrations
@@ -193,7 +197,7 @@ Inventory-Tracker/
 │  ├─ Services/                 business logic (one service per aggregate) and shared result/paging types
 │  ├─ Hosting/                  CLI/.env/config, health check, logging, htmx and display helpers
 │  ├─ Pages/                    Razor Pages, shared layout and partials
-│  └─ wwwroot/                  css, js, vendored htmx + Pico (embedded into the assembly)
+│  └─ wwwroot/                  css, js, img (logo, touch icons), favicon.ico, vendored htmx + Pico (embedded into the assembly)
 ├─ tests/InventoryTracker.Tests/
 └─ Product/                     feature specs, work items, architecture
 ```
