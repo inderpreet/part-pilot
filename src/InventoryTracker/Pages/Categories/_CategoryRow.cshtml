@@ -28,7 +28,7 @@
     @if (Model.CanEdit)
     {
         <td class="row-actions">
-            <button type="button" class="secondary outline" hx-get="/Categories?handler=Edit&amp;id=@item.Id"
+            <button type="button" class="outline" hx-get="/Categories?handler=Edit&amp;id=@item.Id"
                     hx-target="#category-row-@item.Id" hx-swap="outerHTML">Edit</button>
             @if (item.IsActive)
             {

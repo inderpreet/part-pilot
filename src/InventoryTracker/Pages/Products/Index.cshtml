@@ -34,7 +34,7 @@
     {
         <a role="button" asp-page="Edit">New product</a>
     }
-    <a role="button" class="secondary outline" asp-page="/Categories/Index">Categories</a>
+    <a role="button" class="outline" asp-page="/Categories/Index">@(Model.CanEdit ? "Manage categories" : "Categories")</a>
 </form>
 
 @if (Model.UnmatchedCode is { } code)

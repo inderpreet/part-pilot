@@ -90,6 +90,21 @@ public class CategoryPagesTests
     }
 
     [Fact]
+    public async Task Staff_can_reach_category_management_from_the_product_list_and_the_product_form()
+    {
+        using var factory = new AppFactory();
+        using var staff = factory.CreateClientAs("Staff");
+
+        var list = await staff.GetStringAsync("/Products");
+        Assert.Contains("href=\"/Categories\"", list);
+        Assert.Contains("Manage categories", list);
+
+        var form = await staff.GetStringAsync("/Products/Edit");
+        Assert.Contains("href=\"/Categories\"", form);
+        Assert.Contains("Add or edit categories", form);
+    }
+
+    [Fact]
     public async Task The_new_and_edit_forms_load_as_fragments()
     {
         using var factory = new AppFactory();

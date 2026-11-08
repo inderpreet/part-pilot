@@ -59,6 +59,7 @@
                     <option value="@category.Id" selected="@(Model.Input.CategoryId == category.Id)">@category.Name@(category.IsActive ? "" : " (archived)")</option>
                 }
             </select>
+            <small><a asp-page="/Categories/Index" target="_blank" rel="noopener">Add or edit categories</a> (opens in a new tab; reload this page to see changes)</small>
         </label>
         <label>
             Unit
