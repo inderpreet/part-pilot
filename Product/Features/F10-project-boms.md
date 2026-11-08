@@ -110,8 +110,8 @@ Built in this order: schema, API, then the frontend in two steps (the frontend i
 
 | ID | Title | Status |
 |---|---|---|
-| [WI-10-1](../work-items/F10-project-boms/WI-10-1-db-schema.md) | Project, BomLine, ProjectBuild schema | Planned |
-| [WI-10-2](../work-items/F10-project-boms/WI-10-2-api.md) | ProjectService (BOM, status, build), PO add-lines | Planned |
+| [WI-10-1](../work-items/F10-project-boms/WI-10-1-db-schema.md) | Project, BomLine, ProjectBuild schema | Done |
+| [WI-10-2](../work-items/F10-project-boms/WI-10-2-api.md) | ProjectService (BOM, status, build), PO add-lines | Done |
 | [WI-10-3](../work-items/F10-project-boms/WI-10-3-frontend-projects.md) | Projects list, project page, BOM editing, new part | Planned |
 | [WI-10-4](../work-items/F10-project-boms/WI-10-4-frontend-order-build.md) | Order shortages, build, builds history | Planned |
 

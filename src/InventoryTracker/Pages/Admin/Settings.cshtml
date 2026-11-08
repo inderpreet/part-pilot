@@ -50,7 +50,7 @@
     <section class="form-row" aria-labelledby="settings-ops">
         <div class="form-intro">
             <h2 id="settings-ops">Orders and stock</h2>
-            <p>Numbering for purchase orders and how strictly stock is checked.</p>
+            <p>Numbering for purchase orders and projects, and how strictly stock is checked.</p>
         </div>
         <div class="card form-card">
             <label>
@@ -59,6 +59,14 @@
                        aria-invalid="@Html.AriaInvalid("Input.PurchaseOrderNumberPrefix")" aria-describedby="@Html.DescribedBy("Input.PurchaseOrderNumberPrefix")" />
                 @Html.FieldError("Input.PurchaseOrderNumberPrefix")
                 <small>Put in front of purchase order numbers, e.g. <code>PO-</code>. Up to 10 characters, no spaces.</small>
+            </label>
+
+            <label>
+                Project number prefix
+                <input name="Input.ProjectNumberPrefix" value="@Model.Input.ProjectNumberPrefix" maxlength="10"
+                       aria-invalid="@Html.AriaInvalid("Input.ProjectNumberPrefix")" aria-describedby="@Html.DescribedBy("Input.ProjectNumberPrefix")" />
+                @Html.FieldError("Input.ProjectNumberPrefix")
+                <small>Put in front of generated project numbers, e.g. <code>PRJ-</code>. Up to 10 characters, no spaces.</small>
             </label>
 
             <label>

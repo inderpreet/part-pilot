@@ -78,8 +78,8 @@ public class PagedResultTests : IAsyncLifetime
 
     public async Task DisposeAsync() => await _db.DisposeAsync();
 
-    // The migration seeds 5 AppSettings rows, which is all the data these paging tests need.
-    private IQueryable<string> Keys(AppDbContext context) => context.AppSettings.OrderBy(s => s.Key).Select(s => s.Key);
+    // The migrations seed AppSettings rows (6 now; the newest is left out to keep the arithmetic at 5), which is all the data these paging tests need.
+    private IQueryable<string> Keys(AppDbContext context) => context.AppSettings.Where(s => s.Key != SettingKeys.ProjectNumberPrefix).OrderBy(s => s.Key).Select(s => s.Key);
 
     [Fact]
     public async Task Returns_the_requested_page_and_totals()

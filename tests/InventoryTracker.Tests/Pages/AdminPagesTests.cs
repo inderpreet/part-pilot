@@ -225,7 +225,7 @@ public class AdminPagesTests
         var saved = await WebForms.PostFormAsync(client, "/Admin/Settings",
         [
             ("Input.CompanyName", "Zeta Ltd"), ("Input.CurrencyCode", "eur"), ("Input.CurrencySymbol", "\u20AC"),
-            ("Input.PurchaseOrderNumberPrefix", "ORD-"), ("Input.AllowNegativeStock", "true"), ("Input.AllowNegativeStock", "false"),
+            ("Input.PurchaseOrderNumberPrefix", "ORD-"), ("Input.ProjectNumberPrefix", "JOB-"), ("Input.AllowNegativeStock", "true"), ("Input.AllowNegativeStock", "false"),
         ]);
         Assert.Equal(HttpStatusCode.Redirect, saved.StatusCode);
 
@@ -236,6 +236,7 @@ public class AdminPagesTests
             var settings = await sp.GetRequiredService<ISettingsService>().GetBusinessSettingsAsync();
             Assert.Equal("EUR", settings.CurrencyCode);
             Assert.Equal("ORD-", settings.PurchaseOrderNumberPrefix);
+            Assert.Equal("JOB-", settings.ProjectNumberPrefix);
             Assert.True(settings.AllowNegativeStock);
         });
     }

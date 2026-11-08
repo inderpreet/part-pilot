@@ -13,11 +13,18 @@ public sealed class FakeSettings : ISettingsService
 
     public string PurchaseOrderPrefix { get; set; } = "PO-";
 
+    public string ProjectPrefix { get; set; } = "PRJ-";
+
     public Task<bool> GetBoolAsync(string key, CancellationToken cancellationToken = default)
         => Task.FromResult(key == SettingKeys.StockAllowNegative && AllowNegative);
 
     public Task<string> GetStringAsync(string key, CancellationToken cancellationToken = default)
-        => key == SettingKeys.PurchaseOrderNumberPrefix ? Task.FromResult(PurchaseOrderPrefix) : throw new NotSupportedException();
+        => key switch
+        {
+            SettingKeys.PurchaseOrderNumberPrefix => Task.FromResult(PurchaseOrderPrefix),
+            SettingKeys.ProjectNumberPrefix => Task.FromResult(ProjectPrefix),
+            _ => throw new NotSupportedException(),
+        };
 
     public Task<int> GetIntAsync(string key, CancellationToken cancellationToken = default) => throw new NotSupportedException();
 

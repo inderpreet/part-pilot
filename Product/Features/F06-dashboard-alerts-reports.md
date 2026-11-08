@@ -23,7 +23,7 @@ handful of standard reports with CSV export.
 3. FR-3 Nav badge with low-stock count on every page (cached ~60 s).
 4. FR-4 Low-stock page: products where on hand + on order <= reorder point; columns: SKU, name, on hand, on order,
    reorder point, suggested qty, preferred supplier; filter by category/supplier.
-5. FR-5 Suggested quantity = max(ReorderQuantity, ReorderPoint − (OnHand + OnOrder)), rounded up to supplier MinOrderQuantity (shared helper `MinOrderRounding`, also used by F10 BOM shortage orders; build it once, in whichever of F06 or F10 lands first).
+5. FR-5 Suggested quantity = max(ReorderQuantity, ReorderPoint − (OnHand + OnOrder)), rounded up to supplier MinOrderQuantity (shared helper `MinOrderRounding.RoundUp(quantity, minOrderQuantity)`, already in `Services/MinOrderRounding.cs` from F10; reuse it, do not copy it).
 6. FR-6 "Create draft POs": select suggestions → one Draft PO per preferred supplier; items without a preferred supplier are listed as skipped.
 7. FR-7 Reports (each with filters, on-screen table, CSV download):
    - Stock on hand & valuation (as of now; by category)

@@ -8,6 +8,7 @@ public static class SettingKeys
     public const string CurrencySymbol = "Currency.Symbol";
     public const string StockAllowNegative = "Stock.AllowNegative";
     public const string PurchaseOrderNumberPrefix = "PurchaseOrder.NumberPrefix";
+    public const string ProjectNumberPrefix = "Project.NumberPrefix";
 
     /// <summary>Default values seeded by the initial migration.</summary>
     public static IReadOnlyDictionary<string, string> Defaults { get; } = new Dictionary<string, string>
@@ -17,5 +18,6 @@ public static class SettingKeys
         [CurrencySymbol] = "$",
         [StockAllowNegative] = "false",
         [PurchaseOrderNumberPrefix] = "PO-",
+        [ProjectNumberPrefix] = "PRJ-",
     };
 }

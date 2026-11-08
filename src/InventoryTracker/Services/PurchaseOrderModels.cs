@@ -224,6 +224,34 @@ public sealed record OpenOrderLineItem(
     public int Outstanding => Math.Max(0, QuantityOrdered - QuantityReceived);
 }
 
+/// <summary>One Draft order that holds a product, and how many of it.</summary>
+public sealed record InDraftEntry(int PurchaseOrderId, string Number, int Quantity);
+
+/// <summary>A product's quantity across all Draft orders. Drafts are intentions: they are never "on order".</summary>
+public sealed record InDraftQuantity(int Total, IReadOnlyList<InDraftEntry> Orders);
+
+public enum DraftChangeKind
+{
+    /// <summary>Put the product on the draft as a new line (skipped when it is already there).</summary>
+    Add,
+
+    /// <summary>Set the quantity of the product's existing line on the draft.</summary>
+    SetQuantity,
+}
+
+/// <summary>One change to the lines of a Draft order, applied by <see cref="IPurchaseOrderService.ApplyDraftChangesAsync"/>.</summary>
+public sealed record DraftLineChange(int PurchaseOrderId, int ProductId, DraftChangeKind Kind, int Quantity);
+
+public enum DraftChangeStatus
+{
+    Added,
+    Updated,
+    Skipped,
+}
+
+/// <summary>What happened to one <see cref="DraftLineChange"/>. <see cref="PreviousQuantity"/> is set for an update; <see cref="Reason"/> for a skip.</summary>
+public sealed record DraftChangeOutcome(DraftLineChange Change, DraftChangeStatus Status, int? PreviousQuantity, string? Reason);
+
 /// <summary>A product offered when adding a line: supplier-linked products first, with the price the line would get.</summary>
 public sealed record PurchaseOrderProductChoice(
     int ProductId,

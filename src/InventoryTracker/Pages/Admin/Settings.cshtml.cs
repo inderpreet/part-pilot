@@ -24,6 +24,7 @@ public class SettingsModel(ISettingsService settings) : PageModel
             CurrencySymbol = current.CurrencySymbol,
             AllowNegativeStock = current.AllowNegativeStock,
             PurchaseOrderNumberPrefix = current.PurchaseOrderNumberPrefix,
+            ProjectNumberPrefix = current.ProjectNumberPrefix,
         };
     }
 
@@ -35,7 +36,7 @@ public class SettingsModel(ISettingsService settings) : PageModel
         }
 
         var result = await settings.UpdateBusinessSettingsAsync(
-            new BusinessSettings(Input.CompanyName, Input.CurrencyCode, Input.CurrencySymbol, Input.AllowNegativeStock, Input.PurchaseOrderNumberPrefix ?? string.Empty),
+            new BusinessSettings(Input.CompanyName, Input.CurrencyCode, Input.CurrencySymbol, Input.AllowNegativeStock, Input.PurchaseOrderNumberPrefix ?? string.Empty, Input.ProjectNumberPrefix ?? string.Empty),
             HttpContext.RequestAborted);
 
         if (!result.Succeeded)
@@ -68,5 +69,9 @@ public class SettingsModel(ISettingsService settings) : PageModel
         [StringLength(BusinessSettings.PurchaseOrderPrefixMaxLength)]
         [Display(Name = "PO number prefix")]
         public string? PurchaseOrderNumberPrefix { get; set; }
+
+        [StringLength(BusinessSettings.ProjectPrefixMaxLength)]
+        [Display(Name = "Project number prefix")]
+        public string? ProjectNumberPrefix { get; set; }
     }
 }

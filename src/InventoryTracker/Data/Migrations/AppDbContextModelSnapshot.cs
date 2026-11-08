@@ -57,6 +57,11 @@ namespace InventoryTracker.Data.Migrations
                         {
                             Key = "PurchaseOrder.NumberPrefix",
                             Value = "PO-"
+                        },
+                        new
+                        {
+                            Key = "Project.NumberPrefix",
+                            Value = "PRJ-"
                         });
                 });
 

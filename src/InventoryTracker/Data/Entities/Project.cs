@@ -12,6 +12,9 @@ public class Project : IHasTimestamps, IHasRowVersion
     public const int DescriptionMaxLength = 500;
     public const int NotesMaxLength = 2000;
 
+    /// <summary>Largest target (and largest single build), so quantity per unit x units stays inside a <c>long</c> with room to spare.</summary>
+    public const int MaxTargetUnits = 100_000;
+
     /// <summary>The database key every relationship inside the app uses.</summary>
     public int Id { get; set; }
 

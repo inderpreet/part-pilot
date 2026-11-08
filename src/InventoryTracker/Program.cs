@@ -56,6 +56,7 @@ builder.Services.AddCatalog();
 builder.Services.AddStock();
 builder.Services.AddSuppliers();
 builder.Services.AddPurchaseOrders();
+builder.Services.AddProjects();
 
 builder.Services.AddHealthChecks().AddCheck<DatabaseHealthCheck>(DatabaseHealthCheck.Name);
 builder.Services.AddRazorPages();

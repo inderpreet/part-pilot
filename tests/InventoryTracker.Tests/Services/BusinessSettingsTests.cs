@@ -147,4 +147,28 @@ public class BusinessSettingsTests : IAsyncLifetime
         Assert.Equal(new BusinessSettings("My Company", "USD", "$", false, "PO-"), await CreateService().GetBusinessSettingsAsync());
         Assert.Equal("My Company", await service.GetStringAsync(SettingKeys.CompanyName));
     }
+
+    [Fact]
+    public async Task The_project_number_prefix_defaults_to_prj_and_can_be_changed_or_emptied()
+    {
+        Assert.Equal("PRJ-", (await CreateService().GetBusinessSettingsAsync()).ProjectNumberPrefix);
+
+        Assert.True((await CreateService().UpdateBusinessSettingsAsync(Valid() with { ProjectNumberPrefix = " JOB/ " })).Succeeded);
+        Assert.Equal("JOB/", (await CreateService().GetBusinessSettingsAsync()).ProjectNumberPrefix);
+        Assert.Equal("JOB/", await CreateService().GetStringAsync(SettingKeys.ProjectNumberPrefix));
+
+        Assert.True((await CreateService().UpdateBusinessSettingsAsync(Valid() with { ProjectNumberPrefix = "" })).Succeeded);
+        Assert.Equal("", (await CreateService().GetBusinessSettingsAsync()).ProjectNumberPrefix);
+    }
+
+    [Fact]
+    public async Task A_project_prefix_that_is_too_long_or_has_spaces_is_refused_on_its_own_field()
+    {
+        var tooLong = await CreateService().UpdateBusinessSettingsAsync(Valid() with { ProjectNumberPrefix = new string('x', BusinessSettings.ProjectPrefixMaxLength + 1) });
+        var spaced = await CreateService().UpdateBusinessSettingsAsync(Valid() with { ProjectNumberPrefix = "P R-" });
+
+        Assert.Equal(BusinessSettings.Fields.ProjectNumberPrefix, Assert.Single(tooLong.Errors).Field);
+        Assert.Equal(BusinessSettings.Fields.ProjectNumberPrefix, Assert.Single(spaced.Errors).Field);
+        Assert.Equal("PRJ-", (await CreateService().GetBusinessSettingsAsync()).ProjectNumberPrefix);
+    }
 }

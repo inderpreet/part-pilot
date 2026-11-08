@@ -35,11 +35,13 @@ public sealed record BusinessSettings(
     string CurrencyCode,
     string CurrencySymbol,
     bool AllowNegativeStock,
-    string PurchaseOrderNumberPrefix)
+    string PurchaseOrderNumberPrefix,
+    string ProjectNumberPrefix = "PRJ-")
 {
     public const int CompanyNameMaxLength = 100;
     public const int CurrencySymbolMaxLength = 5;
     public const int PurchaseOrderPrefixMaxLength = 10;
+    public const int ProjectPrefixMaxLength = 10;
 
     // Field names match the property names so pages can attach errors to inputs.
     public static class Fields
@@ -48,6 +50,7 @@ public sealed record BusinessSettings(
         public const string CurrencyCode = nameof(CurrencyCode);
         public const string CurrencySymbol = nameof(CurrencySymbol);
         public const string PurchaseOrderNumberPrefix = nameof(PurchaseOrderNumberPrefix);
+        public const string ProjectNumberPrefix = nameof(ProjectNumberPrefix);
     }
 }
 
@@ -165,7 +168,8 @@ public sealed class SettingsService(IServiceScopeFactory scopeFactory, BrandingS
             all[SettingKeys.CurrencyCode],
             all[SettingKeys.CurrencySymbol],
             bool.TryParse(all[SettingKeys.StockAllowNegative], out var allow) && allow,
-            all[SettingKeys.PurchaseOrderNumberPrefix]);
+            all[SettingKeys.PurchaseOrderNumberPrefix],
+            all[SettingKeys.ProjectNumberPrefix]);
     }
 
     public async Task<Result<BusinessSettings>> UpdateBusinessSettingsAsync(BusinessSettings settings, CancellationToken cancellationToken = default)
@@ -174,6 +178,7 @@ public sealed class SettingsService(IServiceScopeFactory scopeFactory, BrandingS
         var code = settings.CurrencyCode?.Trim().ToUpperInvariant() ?? string.Empty;
         var symbol = settings.CurrencySymbol?.Trim() ?? string.Empty;
         var prefix = settings.PurchaseOrderNumberPrefix?.Trim() ?? string.Empty;
+        var projectPrefix = settings.ProjectNumberPrefix?.Trim() ?? string.Empty;
 
         var errors = new List<Error>();
         if (company.Length == 0)
@@ -208,6 +213,15 @@ public sealed class SettingsService(IServiceScopeFactory scopeFactory, BrandingS
             errors.Add(new Error("settings.po_prefix_invalid", "PO number prefix cannot contain spaces.", BusinessSettings.Fields.PurchaseOrderNumberPrefix));
         }
 
+        if (projectPrefix.Length > BusinessSettings.ProjectPrefixMaxLength)
+        {
+            errors.Add(new Error("settings.project_prefix_too_long", $"Project number prefix must be at most {BusinessSettings.ProjectPrefixMaxLength} characters.", BusinessSettings.Fields.ProjectNumberPrefix));
+        }
+        else if (projectPrefix.Any(char.IsWhiteSpace) || projectPrefix.Any(char.IsControl))
+        {
+            errors.Add(new Error("settings.project_prefix_invalid", "Project number prefix cannot contain spaces.", BusinessSettings.Fields.ProjectNumberPrefix));
+        }
+
         if (errors.Count > 0)
         {
             return Result.Failure<BusinessSettings>([.. errors]);
@@ -220,6 +234,7 @@ public sealed class SettingsService(IServiceScopeFactory scopeFactory, BrandingS
             [SettingKeys.CurrencySymbol] = symbol,
             [SettingKeys.StockAllowNegative] = settings.AllowNegativeStock ? "true" : "false",
             [SettingKeys.PurchaseOrderNumberPrefix] = prefix,
+            [SettingKeys.ProjectNumberPrefix] = projectPrefix,
         };
 
         await using (var scope = scopeFactory.CreateAsyncScope())
@@ -242,7 +257,7 @@ public sealed class SettingsService(IServiceScopeFactory scopeFactory, BrandingS
         }
 
         _cache = null;
-        return Result.Success(new BusinessSettings(company, code, symbol, settings.AllowNegativeStock, prefix));
+        return Result.Success(new BusinessSettings(company, code, symbol, settings.AllowNegativeStock, prefix, projectPrefix));
     }
 
     private static void EnsureKnown(string key)

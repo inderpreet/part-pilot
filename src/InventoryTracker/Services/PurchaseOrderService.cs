@@ -24,6 +24,13 @@ public interface IPurchaseOrderService
     /// <summary>Σ outstanding per product over submitted / partially received orders (the "on order" quantity, F06). Products with nothing on order are absent.</summary>
     Task<IReadOnlyDictionary<int, int>> GetOnOrderByProductAsync(CancellationToken cancellationToken = default);
 
+    /// <summary>
+    /// Σ quantity per product over the lines of <b>all Draft orders</b>, with the orders that hold it. Cancelled, submitted and
+    /// later orders are never included. Products in no draft are absent. Pass <paramref name="productIds"/> to limit the query.
+    /// </summary>
+    Task<IReadOnlyDictionary<int, InDraftQuantity>> GetInDraftByProductAsync(
+        IReadOnlyCollection<int>? productIds = null, CancellationToken cancellationToken = default);
+
     /// <summary>A supplier's most recent orders (by order date), for the supplier page.</summary>
     Task<IReadOnlyList<PurchaseOrderListItem>> GetRecentForSupplierAsync(int supplierId, int take = 10, CancellationToken cancellationToken = default);
 
@@ -60,6 +67,17 @@ public interface IPurchaseOrderService
 
     /// <summary>Removes a line from a draft. Idempotent for a line that is already gone.</summary>
     Task<Result> RemoveLineAsync(int purchaseOrderId, long lineId, CancellationToken cancellationToken = default);
+
+    /// <summary>
+    /// Applies several line changes to Draft orders in one transaction (the BOM shortage review uses it). Every change is
+    /// checked first: a missing order, an order that is not a Draft (<c>po.not_editable</c>) or a quantity change for a line the
+    /// order does not hold (<c>po.line_not_found</c>) refuses the whole call and applies nothing. An add that cannot be made
+    /// (already on that order, archived or missing product, quantity below 1) is skipped with a reason instead. Added lines take
+    /// the supplier link's price when above zero, else the product's cost; changed lines keep their cost. The outcomes come back
+    /// in the order of <paramref name="changes"/>.
+    /// </summary>
+    Task<Result<IReadOnlyList<DraftChangeOutcome>>> ApplyDraftChangesAsync(
+        IReadOnlyList<DraftLineChange> changes, CancellationToken cancellationToken = default);
 
     // ---- transitions -------------------------------------------------------------------------------------------
 
@@ -300,6 +318,39 @@ public sealed class PurchaseOrderService(
             .Select(g => new { ProductId = g.Key, OnOrder = g.Sum(l => l.QuantityOrdered - l.QuantityReceived) })
             .ToListAsync(cancellationToken);
         return rows.ToDictionary(r => r.ProductId, r => r.OnOrder);
+    }
+
+    public async Task<IReadOnlyDictionary<int, InDraftQuantity>> GetInDraftByProductAsync(
+        IReadOnlyCollection<int>? productIds = null, CancellationToken cancellationToken = default)
+    {
+        var lines = db.PurchaseOrderLines.AsNoTracking().Where(l => l.PurchaseOrder!.Status == PurchaseOrderStatus.Draft);
+        if (productIds is not null)
+        {
+            if (productIds.Count == 0)
+            {
+                return new Dictionary<int, InDraftQuantity>();
+            }
+
+            var ids = productIds.Distinct().ToList();
+            lines = lines.Where(l => ids.Contains(l.ProductId));
+        }
+
+        var rows = await lines
+            .OrderBy(l => l.PurchaseOrder!.Number)
+            .Select(l => new { l.ProductId, l.PurchaseOrderId, l.PurchaseOrder!.Number, l.QuantityOrdered })
+            .ToListAsync(cancellationToken);
+
+        return rows
+            .GroupBy(r => r.ProductId)
+            .ToDictionary(
+                g => g.Key,
+                g =>
+                {
+                    var orders = g.GroupBy(r => (r.PurchaseOrderId, r.Number))
+                        .Select(o => new InDraftEntry(o.Key.PurchaseOrderId, o.Key.Number, o.Sum(r => r.QuantityOrdered)))
+                        .ToList();
+                    return new InDraftQuantity(orders.Sum(o => o.Quantity), orders);
+                });
     }
 
     public async Task<IReadOnlyList<PurchaseOrderListItem>> GetRecentForSupplierAsync(int supplierId, int take = 10, CancellationToken cancellationToken = default)
@@ -701,6 +752,137 @@ public sealed class PurchaseOrderService(
             },
             Conflict,
             cancellationToken);
+
+    public async Task<Result<IReadOnlyList<DraftChangeOutcome>>> ApplyDraftChangesAsync(
+        IReadOnlyList<DraftLineChange> changes, CancellationToken cancellationToken = default)
+    {
+        ArgumentNullException.ThrowIfNull(changes);
+        if (changes.Count == 0)
+        {
+            return Result.Success<IReadOnlyList<DraftChangeOutcome>>([]);
+        }
+
+        var errors = new List<Error>();
+        for (var i = 0; i < changes.Count; i++)
+        {
+            if (changes[i].Kind == DraftChangeKind.SetQuantity)
+            {
+                ValidateQuantityAndCost(changes[i].Quantity, null, PurchaseOrderFields.Line(i, PurchaseOrderFields.Quantity), PurchaseOrderFields.UnitCost, errors);
+            }
+            else if (changes[i].Quantity > MaxQuantity)
+            {
+                errors.Add(new Error("po.quantity_too_large", $"Quantities cannot exceed {MaxQuantity:N0}.", PurchaseOrderFields.Line(i, PurchaseOrderFields.Quantity)));
+            }
+        }
+
+        if (errors.Count > 0)
+        {
+            return Result.Failure<IReadOnlyList<DraftChangeOutcome>>([.. errors]);
+        }
+
+        return await InTransactionAsync<Result<IReadOnlyList<DraftChangeOutcome>>>(
+            async () =>
+            {
+                var orderIds = changes.Select(c => c.PurchaseOrderId).Distinct().ToList();
+                var orders = await db.PurchaseOrders.Include(o => o.Lines)
+                    .Where(o => orderIds.Contains(o.Id))
+                    .ToDictionaryAsync(o => o.Id, cancellationToken);
+
+                // Validate everything before changing anything.
+                var problems = new List<Error>();
+                foreach (var id in orderIds)
+                {
+                    if (!orders.TryGetValue(id, out var order))
+                    {
+                        problems.Add(NotFound());
+                    }
+                    else if (!PurchaseOrderRules.CanEditLines(order.Status))
+                    {
+                        problems.Add(new Error("po.not_editable", $"{order.Number} is {Describe(order.Status)}. Lines can only be changed while the order is a draft.", PurchaseOrderFields.Lines));
+                    }
+                }
+
+                if (problems.Count > 0)
+                {
+                    return Result.Failure<IReadOnlyList<DraftChangeOutcome>>([.. problems]);
+                }
+
+                foreach (var change in changes.Where(c => c.Kind == DraftChangeKind.SetQuantity))
+                {
+                    if (!orders[change.PurchaseOrderId].Lines.Any(l => l.ProductId == change.ProductId))
+                    {
+                        problems.Add(new Error("po.line_not_found", $"That part is not on {orders[change.PurchaseOrderId].Number}, so its quantity cannot be changed.", PurchaseOrderFields.Lines));
+                    }
+                }
+
+                if (problems.Count > 0)
+                {
+                    return Result.Failure<IReadOnlyList<DraftChangeOutcome>>([.. problems]);
+                }
+
+                var costs = new Dictionary<int, Dictionary<int, ProductCosts>>();
+                foreach (var order in orders.Values)
+                {
+                    var productIds = changes.Where(c => c.PurchaseOrderId == order.Id && c.Kind == DraftChangeKind.Add).Select(c => c.ProductId);
+                    costs[order.Id] = await ResolveCostsAsync(order.SupplierId, productIds, cancellationToken);
+                }
+
+                var outcomes = new List<DraftChangeOutcome>(changes.Count);
+                foreach (var change in changes)
+                {
+                    var order = orders[change.PurchaseOrderId];
+                    var existing = order.Lines.FirstOrDefault(l => l.ProductId == change.ProductId);
+
+                    if (change.Kind == DraftChangeKind.SetQuantity)
+                    {
+                        var previous = existing!.QuantityOrdered;
+                        existing.QuantityOrdered = change.Quantity;
+                        outcomes.Add(new DraftChangeOutcome(change, DraftChangeStatus.Updated, previous, null));
+                        continue;
+                    }
+
+                    string? skip = null;
+                    ProductCosts? cost = null;
+                    if (change.Quantity < 1)
+                    {
+                        skip = "The quantity is below 1.";
+                    }
+                    else if (!costs[order.Id].TryGetValue(change.ProductId, out cost))
+                    {
+                        skip = "The part no longer exists.";
+                    }
+                    else if (!cost.IsActive)
+                    {
+                        skip = $"{cost.Sku} is archived. Restore it before ordering it.";
+                    }
+                    else if (existing is not null)
+                    {
+                        skip = $"{cost.Sku} is already on {order.Number}.";
+                    }
+
+                    if (skip is not null)
+                    {
+                        outcomes.Add(new DraftChangeOutcome(change, DraftChangeStatus.Skipped, null, skip));
+                        continue;
+                    }
+
+                    var unitCost = DefaultCost(cost!.LinkCostCents, cost.ProductCostCents);
+                    if (unitCost > MaxUnitCostCents)
+                    {
+                        outcomes.Add(new DraftChangeOutcome(change, DraftChangeStatus.Skipped, null, $"The cost of {cost.Sku} is too large to order."));
+                        continue;
+                    }
+
+                    order.Lines.Add(new PurchaseOrderLine { ProductId = change.ProductId, QuantityOrdered = change.Quantity, UnitCostCents = unitCost });
+                    outcomes.Add(new DraftChangeOutcome(change, DraftChangeStatus.Added, null, null));
+                }
+
+                await db.SaveChangesAsync(cancellationToken);
+                return Result.Success<IReadOnlyList<DraftChangeOutcome>>(outcomes);
+            },
+            Conflict<IReadOnlyList<DraftChangeOutcome>>,
+            cancellationToken);
+    }
 
     // ---- transitions -------------------------------------------------------------------------------------------
 
