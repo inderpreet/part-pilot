@@ -81,7 +81,7 @@ F00 has an extra packaging item. F09 has no schema and no service layer; it is s
 | [WI-09-6](work-items/F09-ui-overhaul/WI-09-6-forms.md) | UI — form sections and field errors | Done |
 | [WI-09-7](work-items/F09-ui-overhaul/WI-09-7-detail.md) | UI — detail pages | Done |
 | [WI-09-8](work-items/F09-ui-overhaul/WI-09-8-finish.md) | UI — narrow screens, print, gallery, clean-up | Done |
-| [WI-10-1](work-items/F10-project-boms/WI-10-1-db-schema.md) | Projects — Project, BomLine, ProjectBuild schema | Planned |
+| [WI-10-1](work-items/F10-project-boms/WI-10-1-db-schema.md) | Projects — Project, BomLine, ProjectBuild schema | Done |
 | [WI-10-2](work-items/F10-project-boms/WI-10-2-api.md) | Projects — ProjectService (BOM, status, build), PO add-lines | Planned |
 | [WI-10-3](work-items/F10-project-boms/WI-10-3-frontend-projects.md) | Projects — list, project page, BOM editing, new part | Planned |
 | [WI-10-4](work-items/F10-project-boms/WI-10-4-frontend-order-build.md) | Projects — order shortages, build, builds history | Planned |

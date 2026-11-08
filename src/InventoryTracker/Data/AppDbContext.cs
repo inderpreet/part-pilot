@@ -36,6 +36,12 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole, str
 
     public DbSet<DocumentSequence> DocumentSequences => Set<DocumentSequence>();
 
+    public DbSet<Project> Projects => Set<Project>();
+
+    public DbSet<BomLine> BomLines => Set<BomLine>();
+
+    public DbSet<ProjectBuild> ProjectBuilds => Set<ProjectBuild>();
+
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
         configurationBuilder.Properties<DateTime>().HaveConversion<UtcDateTimeConverter>();

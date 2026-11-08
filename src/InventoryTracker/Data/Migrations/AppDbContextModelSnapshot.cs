@@ -135,6 +135,44 @@ namespace InventoryTracker.Data.Migrations
                     b.ToTable("AspNetUsers", (string)null);
                 });
 
+            modelBuilder.Entity("InventoryTracker.Data.Entities.BomLine", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("QuantityPerUnit")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("ProjectId", "ProductId")
+                        .IsUnique();
+
+                    b.ToTable("BomLines", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_BomLines_QuantityPerUnit", "\"QuantityPerUnit\" >= 1");
+                        });
+                });
+
             modelBuilder.Entity("InventoryTracker.Data.Entities.Category", b =>
                 {
                     b.Property<int>("Id")
@@ -329,6 +367,100 @@ namespace InventoryTracker.Data.Migrations
                             t.HasCheckConstraint("CK_ProductSuppliers_MinOrderQuantity", "\"MinOrderQuantity\" >= 1");
 
                             t.HasCheckConstraint("CK_ProductSuppliers_UnitCostCents", "\"UnitCostCents\" >= 0");
+                        });
+                });
+
+            modelBuilder.Entity("InventoryTracker.Data.Entities.Project", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT")
+                        .UseCollation("NOCASE");
+
+                    b.Property<string>("Notes")
+                        .HasMaxLength(2000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Number")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT")
+                        .UseCollation("NOCASE");
+
+                    b.Property<long>("RowVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("TargetUnits")
+                        .HasColumnType("INTEGER")
+                        .HasDefaultValue(1);
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.HasIndex("Number")
+                        .IsUnique();
+
+                    b.HasIndex("IsActive", "Name");
+
+                    b.ToTable("Projects", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Projects_TargetUnits", "\"TargetUnits\" >= 1");
+                        });
+                });
+
+            modelBuilder.Entity("InventoryTracker.Data.Entities.ProjectBuild", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ProjectId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("Units")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("UserId")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("UserId");
+
+                    b.HasIndex("ProjectId", "Id");
+
+                    b.ToTable("ProjectBuilds", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_ProjectBuilds_Units", "\"Units\" >= 1");
                         });
                 });
 
@@ -728,6 +860,25 @@ namespace InventoryTracker.Data.Migrations
                     b.ToTable("AspNetUserTokens", (string)null);
                 });
 
+            modelBuilder.Entity("InventoryTracker.Data.Entities.BomLine", b =>
+                {
+                    b.HasOne("InventoryTracker.Data.Entities.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("InventoryTracker.Data.Entities.Project", "Project")
+                        .WithMany("Lines")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+
+                    b.Navigation("Project");
+                });
+
             modelBuilder.Entity("InventoryTracker.Data.Entities.Product", b =>
                 {
                     b.HasOne("InventoryTracker.Data.Entities.Category", "Category")
@@ -755,6 +906,25 @@ namespace InventoryTracker.Data.Migrations
                     b.Navigation("Product");
 
                     b.Navigation("Supplier");
+                });
+
+            modelBuilder.Entity("InventoryTracker.Data.Entities.ProjectBuild", b =>
+                {
+                    b.HasOne("InventoryTracker.Data.Entities.Project", "Project")
+                        .WithMany("Builds")
+                        .HasForeignKey("ProjectId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("InventoryTracker.Data.Entities.ApplicationUser", "User")
+                        .WithMany()
+                        .HasForeignKey("UserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Project");
+
+                    b.Navigation("User");
                 });
 
             modelBuilder.Entity("InventoryTracker.Data.Entities.PurchaseOrder", b =>
@@ -889,6 +1059,13 @@ namespace InventoryTracker.Data.Migrations
                     b.Navigation("StockTransactions");
 
                     b.Navigation("Suppliers");
+                });
+
+            modelBuilder.Entity("InventoryTracker.Data.Entities.Project", b =>
+                {
+                    b.Navigation("Builds");
+
+                    b.Navigation("Lines");
                 });
 
             modelBuilder.Entity("InventoryTracker.Data.Entities.PurchaseOrder", b =>
