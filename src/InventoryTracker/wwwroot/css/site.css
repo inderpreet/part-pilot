@@ -261,3 +261,58 @@ button.star:hover, button.star:focus-visible { color: #d99a00; background: none;
 .link-add > summary { cursor: pointer; font-weight: 600; margin-bottom: 0.5rem; }
 .link-add form { margin-top: 0.5rem; }
 .supplier-filters select { min-width: 8rem; }
+
+/* ---------- Purchase orders (F05) ---------- */
+/* Status tabs: plain links, the current one underlined. */
+.tabs ul { margin-left: 0; margin-bottom: var(--pico-spacing); flex-wrap: wrap; }
+.tabs a { padding: 0.25rem 0.75rem; margin: 0; }
+.tabs a[aria-current] { font-weight: 600; border-bottom: 2px solid var(--pico-primary); border-radius: 0; text-decoration: none; }
+.po-filters label.inline-date { display: flex; align-items: center; gap: 0.4rem; margin: 0; white-space: nowrap; }
+.po-filters input[type="date"] { width: auto; margin: 0; }
+.po-filters input[type="search"] { flex: 1 1 10rem; max-width: 16rem; margin: 0; }
+.po-overdue { color: var(--it-danger); font-weight: 600; }
+.po-actions form { margin: 0; }
+.po-actions form button { width: auto; margin: 0; }
+.po-header-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(18rem, 1fr)); gap: var(--pico-spacing); }
+.po-header-grid article { margin: 0 0 var(--pico-spacing); }
+.po-header-grid .detail-grid { margin: 0; }
+/* Inline editing of a line: compact inputs that sit in the table cell. */
+.po-lines input[type="number"], .po-lines input[type="text"] { width: 7rem; margin: 0; padding: 0.25rem 0.5rem; text-align: right; }
+.po-lines td.row-actions form { margin: 0; }
+.po-lines tfoot th, .po-lines tfoot td { border-top: 2px solid var(--pico-muted-border-color); }
+.po-add-line { margin-top: var(--pico-spacing); }
+.po-add-line .grid { align-items: end; }
+.po-add-line .grid > button { width: auto; margin-bottom: var(--pico-spacing); }
+/* Receive: big touch targets for a tablet at the goods-in door. */
+.po-receive input.receive-qty { width: 8rem; margin: 0; font-size: 1.25rem; text-align: right; }
+.po-receive .toolbar button { width: auto; margin: 0; }
+.po-receive-lines td { vertical-align: middle; }
+
+/* Print view: a plain sheet, no site chrome. */
+.print-body { background: #fff; color: #000; padding: 1rem; }
+.print-toolbar { display: flex; gap: 0.5rem; justify-content: space-between; max-width: 190mm; margin: 0 auto 1rem; }
+.print-toolbar > * { width: auto; margin: 0; }
+.print-sheet { max-width: 190mm; margin: 0 auto; padding: 0; background: #fff; color: #000; box-shadow: none; font-size: 11pt; }
+.print-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem; border-bottom: 2px solid #000; padding-bottom: 0.5rem; margin-bottom: 1rem; }
+.print-company { font-size: 1.5rem; margin: 0; }
+.print-title { text-align: right; }
+.print-title h2 { font-size: 1.25rem; margin: 0; text-transform: uppercase; letter-spacing: 0.05em; }
+.print-number { font-size: 1.1rem; font-weight: 700; margin: 0; }
+.print-stamp { display: inline-block; margin: 0.25rem 0 0; padding: 0 0.5rem; border: 2px solid #000; font-weight: 700; letter-spacing: 0.1em; }
+.print-parties { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; margin-bottom: 1rem; }
+.print-parties h3, .print-notes h3 { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.08em; margin: 0 0 0.25rem; color: #444; }
+.print-parties p { margin: 0; }
+.print-dates { display: grid; grid-template-columns: auto 1fr; gap: 0.1rem 1rem; margin: 0; }
+.print-dates dt { font-weight: 600; }
+.print-dates dd { margin: 0; }
+.print-lines { width: 100%; border-collapse: collapse; margin-bottom: 1rem; }
+.print-lines th, .print-lines td { border: 0; border-bottom: 1px solid #999; padding: 0.3rem 0.4rem; background: transparent; color: #000; }
+.print-lines thead th { border-bottom: 2px solid #000; }
+.print-lines tfoot th, .print-lines tfoot td { border-top: 2px solid #000; border-bottom: 0; }
+.print-lines tr { break-inside: avoid; }
+.print-notes { break-inside: avoid; }
+@page { margin: 12mm; }
+@media print {
+  .print-body { padding: 0; }
+  .print-sheet { max-width: none; }
+}

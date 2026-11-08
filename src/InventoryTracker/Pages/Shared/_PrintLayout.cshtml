@@ -1,0 +1,22 @@
+@using InventoryTracker.Data
+@using Microsoft.AspNetCore.Antiforgery
+@inject ISettingsService Settings
+@{
+    var pageTitle = ViewData["Title"] as string;
+    var company = await Settings.GetStringAsync(SettingKeys.CompanyName);
+}
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>@(string.IsNullOrEmpty(pageTitle) ? company : $"{pageTitle} · {company}")</title>
+    <link rel="stylesheet" href="~/lib/pico.min.css" />
+    <link rel="stylesheet" href="~/css/site.css" />
+    <script src="~/js/site.js" defer></script>
+</head>
+@* No navigation, no footer: a clean sheet. data-auto-print makes site.js open the browser's print dialog once the page has loaded. *@
+<body class="print-body" data-auto-print>
+    @RenderBody()
+</body>
+</html>

@@ -1,0 +1,41 @@
+@model PoProductResultsModel
+@if (Model.Items.Count == 0)
+{
+    <p class="picker-empty muted" role="status">No matching products.</p>
+}
+else
+{
+    <ul role="listbox" class="picker-list">
+        @foreach (var item in Model.Items)
+        {
+            <li role="option">
+                @if (item.AlreadyOnOrder)
+                {
+                    <span class="picker-item muted"><strong>@item.Sku</strong> @item.Name <small>already on this order</small></span>
+                }
+                else
+                {
+                    <button type="button" class="picker-item" data-picker-select
+                            data-id="@item.ProductId" data-label="@item.Sku — @item.Name" data-exact="@(Model.IsExact(item) ? "true" : "false")">
+                        <strong>@item.Sku</strong> <span>@item.Name</span>
+                        <small class="muted">
+                            @if (item.IsLinked)
+                            {
+                                <span title="Linked to this supplier">★ </span>
+                                @if (!string.IsNullOrEmpty(item.SupplierSku))
+                                {
+                                    <span>their SKU @item.SupplierSku · </span>
+                                }
+                            }
+                            @Html.Money(item.DefaultUnitCostCents) / @item.Unit
+                            @if (item.MinOrderQuantity is > 1)
+                            {
+                                <span> · min @item.MinOrderQuantity</span>
+                            }
+                        </small>
+                    </button>
+                }
+            </li>
+        }
+    </ul>
+}

@@ -93,7 +93,47 @@
     </dl>
 </article>
 
-@* Recent purchase orders join this page in F05 (WI-05-3). *@
+<section id="orders" aria-label="Recent purchase orders">
+    <h2 class="section-title">Recent purchase orders</h2>
+    @if (Model.CanEdit && s.IsActive)
+    {
+        <p><a role="button" class="outline" asp-page="/PurchaseOrders/Edit" asp-route-supplierId="@s.Id">New purchase order</a></p>
+    }
+    @if (Model.RecentOrders.Count == 0)
+    {
+        <p class="muted">No purchase orders for this supplier yet.</p>
+    }
+    else
+    {
+        <div class="table-wrap">
+            <table class="striped compact">
+                <thead>
+                    <tr>
+                        <th scope="col">Number</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Ordered</th>
+                        <th scope="col">Expected</th>
+                        <th scope="col" class="num">Total</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var order in Model.RecentOrders)
+                    {
+                        <tr>
+                            <td><a asp-page="/PurchaseOrders/Detail" asp-route-id="@order.Id">@order.Number</a></td>
+                            <td><partial name="_PoStatusBadge" model="order.Status" /></td>
+                            <td>@PurchaseOrderDisplay.Date(order.OrderDate)</td>
+                            <td>@PurchaseOrderDisplay.Date(order.ExpectedDate)</td>
+                            <td class="num">@Html.Money(order.TotalCents)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <p><a asp-page="/PurchaseOrders/Index" asp-route-supplierId="@s.Id" asp-route-tab="All">All orders for this supplier</a></p>
+    }
+</section>
+
 <section aria-label="Products this supplier provides">
     <h2 class="section-title">Products</h2>
     <partial name="_SupplierLinks" model="Model.Links" />

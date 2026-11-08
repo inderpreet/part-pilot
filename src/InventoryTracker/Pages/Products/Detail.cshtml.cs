@@ -9,7 +9,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 namespace InventoryTracker.Pages.Products;
 
 [Authorize(Policy = Policies.CanView)]
-public class DetailModel(IProductService products, IStockService stock, ISupplierService suppliers, ICurrentUser currentUser) : PageModel
+public class DetailModel(IProductService products, IStockService stock, ISupplierService suppliers, IPurchaseOrderService purchaseOrders, ICurrentUser currentUser) : PageModel
 {
     public ProductDetail Product { get; private set; } = null!;
 
@@ -18,6 +18,9 @@ public class DetailModel(IProductService products, IStockService stock, ISupplie
 
     /// <summary>The Suppliers section: who supplies this product, with terms (managed through <c>/Suppliers/Links</c>).</summary>
     public SupplierLinksModel Suppliers { get; private set; } = null!;
+
+    /// <summary>The Open POs section: order lines for this product that are still expected, soonest first.</summary>
+    public IReadOnlyList<OpenOrderLineItem> OpenOrders { get; private set; } = [];
 
     /// <summary>Only used to hide edit actions; the handler and the edit page enforce <c>CanEdit</c> themselves.</summary>
     public bool CanEdit => currentUser.CanEdit;
@@ -36,6 +39,7 @@ public class DetailModel(IProductService products, IStockService stock, ISupplie
         Product = product;
         History = await stock.GetHistoryAsync(id, query, HttpContext.RequestAborted);
         Suppliers = (await SupplierLinksBuilder.BuildAsync(suppliers, products, LinkView.Product, id, CanEdit, cancellationToken: HttpContext.RequestAborted))!;
+        OpenOrders = await purchaseOrders.GetOpenLinesForProductAsync(id, HttpContext.RequestAborted);
         return Page();
     }
 

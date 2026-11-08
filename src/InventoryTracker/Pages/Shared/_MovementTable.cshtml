@@ -58,7 +58,11 @@ else
                             {
                                 <small class="muted">ref @m.Reference</small>
                             }
-                            @if (m.PurchaseOrderLineId is { } line)
+                            @if (m.PurchaseOrderId is { } orderId)
+                            {
+                                <small><a href="/PurchaseOrders/@orderId#tx-@m.Id" title="Receipts are reversed from the purchase order">@(m.PurchaseOrderNumber ?? $"PO #{orderId}")</a></small>
+                            }
+                            else if (m.PurchaseOrderLineId is { } line)
                             {
                                 <small class="muted">PO line #@line</small>
                             }

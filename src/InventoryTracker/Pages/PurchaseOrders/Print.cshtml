@@ -1,0 +1,117 @@
+@page "/PurchaseOrders/{id:int}/Print"
+@model InventoryTracker.Pages.PurchaseOrders.PrintModel
+@using InventoryTracker.Data.Entities
+@using InventoryTracker.Pages.Shared
+@{
+    Layout = "_PrintLayout";
+    var o = Model.Order;
+    ViewData["Title"] = $"Purchase order {o.Number}";
+}
+
+<div class="print-toolbar no-print">
+    <a role="button" class="secondary outline" asp-page="Detail" asp-route-id="@o.Id">‹ Back to order</a>
+    <button type="button" data-print>Print</button>
+</div>
+
+<article class="print-sheet">
+    <header class="print-head">
+        <div>
+            <h1 class="print-company">@Model.CompanyName</h1>
+        </div>
+        <div class="print-title">
+            <h2>Purchase order</h2>
+            <p class="print-number">@o.Number</p>
+            @if (o.Status == PurchaseOrderStatus.Draft)
+            {
+                <p class="print-stamp">DRAFT</p>
+            }
+            else if (o.Status == PurchaseOrderStatus.Cancelled)
+            {
+                <p class="print-stamp">CANCELLED</p>
+            }
+        </div>
+    </header>
+
+    <div class="print-parties">
+        <section>
+            <h3>Supplier</h3>
+            <p>
+                <strong>@o.SupplierName</strong><br />
+                @if (!string.IsNullOrWhiteSpace(o.SupplierContactName))
+                {
+                    <span>Attn: @o.SupplierContactName</span><br />
+                }
+                @if (!string.IsNullOrWhiteSpace(o.SupplierAddress))
+                {
+                    <span class="pre-line">@o.SupplierAddress</span><br />
+                }
+                @if (!string.IsNullOrWhiteSpace(o.SupplierPhone))
+                {
+                    <span>Tel: @o.SupplierPhone</span><br />
+                }
+                @if (!string.IsNullOrWhiteSpace(o.SupplierEmail))
+                {
+                    <span>@o.SupplierEmail</span>
+                }
+            </p>
+        </section>
+        <section>
+            <h3>Order details</h3>
+            <dl class="print-dates">
+                <dt>Order date</dt>
+                <dd>@PurchaseOrderDisplay.Date(o.OrderDate)</dd>
+                <dt>Expected</dt>
+                <dd>@PurchaseOrderDisplay.Date(o.ExpectedDate)</dd>
+                <dt>Prepared by</dt>
+                <dd>@o.CreatedByName</dd>
+            </dl>
+        </section>
+    </div>
+
+    <table class="print-lines">
+        <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">SKU</th>
+                <th scope="col">Description</th>
+                <th scope="col" class="num">Qty</th>
+                <th scope="col" class="num">Unit cost</th>
+                <th scope="col" class="num">Amount</th>
+            </tr>
+        </thead>
+        <tbody>
+            @for (var i = 0; i < o.Lines.Count; i++)
+            {
+                var line = o.Lines[i];
+                <tr>
+                    <td>@(i + 1)</td>
+                    <td>
+                        @(line.SupplierSku ?? line.Sku)
+                        @if (line.SupplierSku is not null && line.SupplierSku != line.Sku)
+                        {
+                            <br /><small>(our SKU @line.Sku)</small>
+                        }
+                    </td>
+                    <td>@line.ProductName</td>
+                    <td class="num">@line.QuantityOrdered @line.Unit</td>
+                    <td class="num">@Html.Money(line.UnitCostCents)</td>
+                    <td class="num">@Html.Money(line.LineTotalCents)</td>
+                </tr>
+            }
+        </tbody>
+        <tfoot>
+            <tr>
+                <th scope="row" colspan="5" class="num">Total</th>
+                <td class="num"><strong>@Html.Money(o.TotalCents)</strong></td>
+            </tr>
+        </tfoot>
+    </table>
+
+    @if (!string.IsNullOrWhiteSpace(o.Notes))
+    {
+        <section class="print-notes">
+            <h3>Notes</h3>
+            <p class="pre-line">@o.Notes</p>
+        </section>
+    }
+</article>

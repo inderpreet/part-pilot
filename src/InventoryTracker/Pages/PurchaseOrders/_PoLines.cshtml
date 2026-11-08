@@ -1,0 +1,108 @@
+@model PoLinesModel
+@using System.Globalization
+@{
+    var o = Model.Order;
+    string Handler(string name) => Url.Page("Edit", name, new { id = o.Id })!;
+
+    // Only the messages about lines; the header form shows its own (keys start with "Input.").
+    var errors = ViewData.ModelState
+        .Where(entry => !entry.Key.StartsWith("Input.", StringComparison.Ordinal))
+        .SelectMany(entry => entry.Value!.Errors)
+        .Select(error => error.ErrorMessage)
+        .ToList();
+}
+<section id="po-lines" aria-label="Order lines">
+    <h2 class="section-title">Lines</h2>
+
+    @if (errors.Count > 0)
+    {
+        <article class="validation-summary" role="alert">
+            <ul>
+                @foreach (var message in errors)
+                {
+                    <li>@message</li>
+                }
+            </ul>
+        </article>
+    }
+
+    @if (o.Lines.Count == 0)
+    {
+        <p class="muted">No lines yet. Add the first product below.</p>
+    }
+    else
+    {
+        <div class="table-wrap">
+            <table class="striped compact po-lines">
+                <thead>
+                    <tr>
+                        <th scope="col">Product</th>
+                        <th scope="col">Supplier SKU</th>
+                        <th scope="col" class="num">Quantity</th>
+                        <th scope="col" class="num">Unit cost</th>
+                        <th scope="col" class="num">Line total</th>
+                        <th scope="col"><span class="visually-hidden">Actions</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var line in o.Lines)
+                    {
+                        var key = EditModel.LineKey(line.Id);
+                        <tr data-line-row>
+                            <td>
+                                <strong>@line.Sku</strong> @line.ProductName
+                                <input type="hidden" name="lineId" value="@line.Id" />
+                            </td>
+                            <td>@(line.SupplierSku ?? "—")</td>
+                            <td class="num">
+                                <input type="number" name="quantity" value="@line.QuantityOrdered.ToString(CultureInfo.InvariantCulture)" min="1" max="@PurchaseOrderService.MaxQuantity" step="1"
+                                       inputmode="numeric" aria-label="Quantity of @line.Sku (@line.Unit)" aria-invalid="@Html.AriaInvalid($"{key}.Quantity")"
+                                       hx-post="@Handler("SaveLine")" hx-trigger="change" hx-include="closest tr" hx-target="#po-lines" hx-swap="outerHTML" />
+                            </td>
+                            <td class="num">
+                                <input type="text" name="unitCost" value="@MoneyParser.ToPlainString(line.UnitCostCents)" inputmode="decimal" autocomplete="off"
+                                       aria-label="Unit cost of @line.Sku" aria-invalid="@Html.AriaInvalid($"{key}.UnitCost")"
+                                       hx-post="@Handler("SaveLine")" hx-trigger="change" hx-include="closest tr" hx-target="#po-lines" hx-swap="outerHTML" />
+                            </td>
+                            <td class="num">@Html.Money(line.LineTotalCents)</td>
+                            <td class="row-actions">
+                                <form method="post" asp-page-handler="RemoveLine" asp-route-id="@o.Id" class="inline-form">
+                                    <input type="hidden" name="lineId" value="@line.Id" />
+                                    <button type="submit" class="secondary outline" hx-post="@Handler("RemoveLine")" hx-target="#po-lines" hx-swap="outerHTML"
+                                            aria-label="Remove @line.Sku from the order">Remove</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th scope="row" colspan="2">Total (@o.Lines.Count line@(o.Lines.Count == 1 ? "" : "s"), @o.TotalOrdered unit@(o.TotalOrdered == 1 ? "" : "s"))</th>
+                        <td></td>
+                        <td></td>
+                        <td class="num"><strong id="po-total">@Html.Money(o.TotalCents)</strong></td>
+                        <td></td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    }
+
+    <form method="post" asp-page-handler="AddLine" asp-route-id="@o.Id" class="po-add-line"
+          hx-post="@Handler("AddLine")" hx-target="#po-lines" hx-swap="outerHTML">
+        <div class="grid">
+            <partial name="_ProductPicker" model="@(new ProductPickerModel("productId", Model.ProductId, Model.ProductLabel, Label: "Add a product", LookupUrl: Url.Page("Edit", "Products", new { id = o.Id })!))" />
+            <label>
+                Quantity
+                <input type="number" name="quantity" value="@Model.Quantity" min="1" max="@PurchaseOrderService.MaxQuantity" step="1" inputmode="numeric" required
+                       data-focus-after-pick aria-invalid="@Html.AriaInvalid("Quantity")" />
+            </label>
+            <label>
+                Unit cost
+                <input type="text" name="unitCost" value="@Model.UnitCost" inputmode="decimal" autocomplete="off" placeholder="usual price"
+                       aria-invalid="@Html.AriaInvalid("UnitCost")" />
+            </label>
+            <button type="submit">Add line</button>
+        </div>
+    </form>
+</section>

@@ -624,5 +624,7 @@ public sealed class StockService(AppDbContext db, ISettingsService settings, ICl
         db.StockTransactions.Where(r => r.ReversesTransactionId == t.Id).Select(r => (long?)r.Id).FirstOrDefault(),
         t.User!.DisplayName,
         t.OccurredAt,
-        t.CreatedAt));
+        t.CreatedAt,
+        t.PurchaseOrderLine == null ? (int?)null : t.PurchaseOrderLine.PurchaseOrderId,
+        t.PurchaseOrderLine == null ? null : t.PurchaseOrderLine.PurchaseOrder!.Number));
 }

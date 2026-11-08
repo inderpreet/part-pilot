@@ -1,0 +1,61 @@
+@model InventoryTracker.Pages.PurchaseOrders.IndexModel
+@using InventoryTracker.Pages.Shared
+@if (Model.Orders.TotalCount == 0)
+{
+    if (Model.IsFiltered)
+    {
+        <partial name="_EmptyState" model="@(new EmptyStateModel("No purchase orders match", "Try a different search, or widen the supplier and date filters."))" />
+    }
+    else if (Model.Query.Tab == PurchaseOrderTab.All && Model.CanEdit)
+    {
+        <partial name="_EmptyState" model="@(new EmptyStateModel("No purchase orders yet", "Create one to order stock from a supplier and receive it into inventory.", "New purchase order", "/PurchaseOrders/Edit"))" />
+    }
+    else if (Model.Query.Tab == PurchaseOrderTab.All)
+    {
+        <partial name="_EmptyState" model="@(new EmptyStateModel("No purchase orders yet", "Ask an Admin or Staff user to create purchase orders."))" />
+    }
+    else
+    {
+        <partial name="_EmptyState" model="@(new EmptyStateModel($"No {PurchaseOrderDisplay.TabLabel(Model.Query.Tab).ToLowerInvariant()} purchase orders", "Nothing in this tab right now. Try another tab."))" />
+    }
+}
+else
+{
+    <div class="table-wrap">
+        <table class="striped">
+            <thead>
+                <tr>
+                    <partial name="_SortHeader" model="@(new SortHeaderModel("number", "Number", Model.Query))" />
+                    <partial name="_SortHeader" model="@(new SortHeaderModel("supplier", "Supplier", Model.Query))" />
+                    <partial name="_SortHeader" model="@(new SortHeaderModel("status", "Status", Model.Query))" />
+                    <partial name="_SortHeader" model="@(new SortHeaderModel("date", "Ordered", Model.Query))" />
+                    <partial name="_SortHeader" model="@(new SortHeaderModel("expected", "Expected", Model.Query))" />
+                    <partial name="_SortHeader" model="@(new SortHeaderModel("total", "Total", Model.Query))" />
+                    <partial name="_SortHeader" model="@(new SortHeaderModel("outstanding", "Outstanding", Model.Query))" />
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var order in Model.Orders.Items)
+                {
+                    var overdue = PurchaseOrderDisplay.IsOverdue(order.Status, order.ExpectedDate, Model.Today);
+                    <tr>
+                        <td><a asp-page="Detail" asp-route-id="@order.Id">@order.Number</a></td>
+                        <td><a asp-page="/Suppliers/Detail" asp-route-id="@order.SupplierId">@order.SupplierName</a></td>
+                        <td><partial name="_PoStatusBadge" model="order.Status" /></td>
+                        <td>@PurchaseOrderDisplay.Date(order.OrderDate)</td>
+                        <td class="@(overdue ? "po-overdue" : null)">
+                            @PurchaseOrderDisplay.Date(order.ExpectedDate)
+                            @if (overdue)
+                            {
+                                <span class="badge badge-cancelled" title="Expected @PurchaseOrderDisplay.Date(order.ExpectedDate); not fully received yet">Overdue</span>
+                            }
+                        </td>
+                        <td class="num">@Html.Money(order.TotalCents)</td>
+                        <td class="num">@(order.OutstandingCents > 0 ? Html.Money(order.OutstandingCents) : Html.Raw("—"))</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <partial name="_Pager" model="@PagerModel.From(Model.Orders)" />
+}

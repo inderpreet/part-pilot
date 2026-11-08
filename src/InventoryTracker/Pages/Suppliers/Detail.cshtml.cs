@@ -9,12 +9,15 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 namespace InventoryTracker.Pages.Suppliers;
 
 [Authorize(Policy = Policies.CanView)]
-public class DetailModel(ISupplierService suppliers, IProductService products, ICurrentUser currentUser) : PageModel
+public class DetailModel(ISupplierService suppliers, IProductService products, IPurchaseOrderService purchaseOrders, ICurrentUser currentUser) : PageModel
 {
     public SupplierDetail Supplier { get; private set; } = null!;
 
     /// <summary>The products this supplier provides (add / edit / remove / preferred through <c>/Suppliers/Links</c>).</summary>
     public SupplierLinksModel Links { get; private set; } = null!;
+
+    /// <summary>The supplier's most recent purchase orders (newest order date first).</summary>
+    public IReadOnlyList<PurchaseOrderListItem> RecentOrders { get; private set; } = [];
 
     /// <summary>Only used to hide edit actions; the handlers and the edit page enforce <c>CanEdit</c> themselves.</summary>
     public bool CanEdit => currentUser.CanEdit;
@@ -29,6 +32,7 @@ public class DetailModel(ISupplierService suppliers, IProductService products, I
 
         Supplier = supplier;
         Links = (await SupplierLinksBuilder.BuildAsync(suppliers, products, LinkView.Supplier, id, CanEdit, cancellationToken: HttpContext.RequestAborted))!;
+        RecentOrders = await purchaseOrders.GetRecentForSupplierAsync(id, cancellationToken: HttpContext.RequestAborted);
         return Page();
     }
 

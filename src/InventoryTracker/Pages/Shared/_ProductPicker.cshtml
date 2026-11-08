@@ -8,7 +8,7 @@
            role="combobox" aria-autocomplete="list" aria-expanded="false" aria-controls="picker-results-@Model.DomId"
            required="@Model.Required"
            data-picker-input
-           hx-get="/Products/Lookup" hx-trigger="input changed delay:250ms, focus, lookup-now" hx-target="#picker-results-@Model.DomId"
+           hx-get="@Model.LookupUrl" hx-trigger="input changed delay:250ms, focus, lookup-now" hx-target="#picker-results-@Model.DomId"
            hx-vals='{"activeOnly": "@(Model.ActiveOnly ? "true" : "false")"}' hx-swap="innerHTML" hx-sync="this:replace" />
     <input type="hidden" name="@Model.FieldName" value="@Model.SelectedId" data-picker-value />
     <div id="picker-results-@Model.DomId" class="picker-results" data-picker-results></div>

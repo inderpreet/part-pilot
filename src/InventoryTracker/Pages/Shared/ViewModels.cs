@@ -45,7 +45,8 @@ public sealed record ProductPickerModel(
     string? SelectedLabel = null,
     bool ActiveOnly = true,
     string Label = "Product",
-    bool Required = true)
+    bool Required = true,
+    string LookupUrl = "/Products/Lookup")
 {
     /// <summary>Unique-per-field id fragment so several pickers can share a page.</summary>
     public string DomId => FieldName.Replace('.', '-').Replace('[', '-').Replace(']', '-').ToLowerInvariant();

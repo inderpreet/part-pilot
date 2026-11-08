@@ -1,0 +1,102 @@
+@page "/PurchaseOrders/{id:int}/Receive"
+@model InventoryTracker.Pages.PurchaseOrders.ReceiveModel
+@using System.Globalization
+@using InventoryTracker.Pages.Shared
+@{
+    var o = Model.Order;
+    ViewData["Title"] = $"Receive {o.Number}";
+}
+
+<p class="muted">
+    <a asp-page="Detail" asp-route-id="@o.Id">‹ @o.Number</a>
+    · @o.SupplierName
+    <partial name="_PoStatusBadge" model="o.Status" />
+</p>
+
+@if (Model.Conflict)
+{
+    <p role="alert" class="validation-summary">
+        Someone else changed this order while you were receiving.
+        <a asp-page="Receive" asp-route-id="@o.Id">Reload it</a> to see the current quantities, then enter yours again.
+    </p>
+}
+
+<partial name="_ValidationSummary" model="ViewData.ModelState" />
+
+@if (Model.OverReceiptRefused && Model.CanOverReceive)
+{
+    <p role="status" class="muted">You can receive more than was ordered: tick “Allow over-receipt” below and post again.</p>
+}
+
+<form method="post" asp-page="Receive" asp-route-id="@o.Id" class="po-receive">
+    <input type="hidden" name="Input.RowVersion" value="@Model.Input.RowVersion" />
+
+    <div class="toolbar">
+        <button type="button" class="secondary outline" data-receive-all>Receive all outstanding</button>
+        <button type="button" class="secondary outline" data-receive-clear>Clear all</button>
+    </div>
+
+    <div class="table-wrap">
+        <table class="striped po-receive-lines">
+            <thead>
+                <tr>
+                    <th scope="col">Product</th>
+                    <th scope="col" class="num">Ordered</th>
+                    <th scope="col" class="num">Received</th>
+                    <th scope="col" class="num">Outstanding</th>
+                    <th scope="col" class="num">Receive now</th>
+                </tr>
+            </thead>
+            <tbody>
+                @for (var i = 0; i < o.Lines.Count; i++)
+                {
+                    var line = o.Lines[i];
+                    var form = i < Model.Input.Lines.Count ? Model.Input.Lines[i] : null;
+                    <tr data-line-row>
+                        <td>
+                            <strong>@line.Sku</strong> @line.ProductName
+                            @if (!line.ProductIsActive)
+                            {
+                                <span class="badge badge-inactive">Archived</span>
+                            }
+                            <input type="hidden" name="Input.Lines[@i].LineId" value="@line.Id" />
+                        </td>
+                        <td class="num">@line.QuantityOrdered</td>
+                        <td class="num">@line.QuantityReceived</td>
+                        <td class="num">@line.Outstanding</td>
+                        <td class="num">
+                            <input type="number" name="Input.Lines[@i].Quantity" value="@form?.Quantity" min="0" max="@PurchaseOrderService.MaxQuantity" step="1"
+                                   inputmode="numeric" class="receive-qty" data-outstanding="@line.Outstanding.ToString(CultureInfo.InvariantCulture)"
+                                   aria-label="Quantity received of @line.Sku (@line.Unit)" aria-invalid="@Html.AriaInvalid($"Input.Lines[{i}].Quantity")" />
+                            <small class="muted">@line.Unit</small>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+
+    <div class="grid">
+        <label>
+            Delivery note / reference
+            <input type="text" name="Input.Reference" value="@Model.Input.Reference" maxlength="100" autocomplete="off" aria-invalid="@Html.AriaInvalid("Input.Reference")" />
+        </label>
+        <label>
+            Note
+            <input type="text" name="Input.Note" value="@Model.Input.Note" maxlength="500" autocomplete="off" aria-invalid="@Html.AriaInvalid("Input.Note")" />
+        </label>
+    </div>
+
+    @if (Model.CanOverReceive)
+    {
+        <label class="inline-check">
+            <input type="checkbox" name="Input.AllowOverReceipt" value="true" checked="@Model.Input.AllowOverReceipt" />
+            Allow over-receipt (more than ordered; Admin only)
+        </label>
+    }
+
+    <div class="form-actions">
+        <button type="submit">Post receipt</button>
+        <a role="button" class="secondary outline" asp-page="Detail" asp-route-id="@o.Id">Cancel</a>
+    </div>
+</form>

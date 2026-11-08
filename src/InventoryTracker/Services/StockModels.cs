@@ -46,7 +46,9 @@ public sealed record StockMovementItem(
     long? ReversedByTransactionId,
     string UserName,
     DateTime OccurredAt,
-    DateTime CreatedAt)
+    DateTime CreatedAt,
+    int? PurchaseOrderId = null,
+    string? PurchaseOrderNumber = null)
 {
     /// <summary>True for a row that a later Reversal has already cancelled.</summary>
     public bool IsReversed => ReversedByTransactionId is not null;

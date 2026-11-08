@@ -1,0 +1,59 @@
+@page "/PurchaseOrders"
+@model InventoryTracker.Pages.PurchaseOrders.IndexModel
+@using InventoryTracker.Pages.Shared
+@{
+    ViewData["Title"] = "Purchase orders";
+    var tabs = new[] { PurchaseOrderTab.Open, PurchaseOrderTab.Draft, PurchaseOrderTab.Received, PurchaseOrderTab.Cancelled, PurchaseOrderTab.All };
+}
+
+@* A plain GET form, so Enter submits normally. Its controls also refresh #results live through htmx; the form itself has
+   no hx-* attributes. The status tabs are ordinary links (a tab change reloads the page, which keeps the hidden tab field right). *@
+<nav class="tabs" aria-label="Order status">
+    <ul>
+        @foreach (var tab in tabs)
+        {
+            <li>
+                <a asp-page="Index" asp-route-tab="@tab" asp-route-search="@Model.Query.Search" asp-route-supplierId="@Model.Query.SupplierId"
+                   asp-route-from="@Model.Query.From?.ToString("yyyy-MM-dd")" asp-route-to="@Model.Query.To?.ToString("yyyy-MM-dd")"
+                   aria-current="@(Model.Query.Tab == tab ? "page" : null)">@PurchaseOrderDisplay.TabLabel(tab)</a>
+            </li>
+        }
+    </ul>
+</nav>
+
+<form method="get" action="/PurchaseOrders" class="toolbar po-filters" role="search">
+    <input type="hidden" name="tab" value="@Model.Query.Tab" />
+
+    <input type="search" name="search" value="@Model.Query.Search" placeholder="Order number…" aria-label="Search by order number"
+           autocomplete="off" enterkeyhint="search"
+           hx-get="/PurchaseOrders" hx-trigger="input changed delay:300ms" hx-target="#results" hx-push-url="true" hx-include="closest form" />
+
+    <select name="supplierId" aria-label="Supplier"
+            hx-get="/PurchaseOrders" hx-trigger="change" hx-target="#results" hx-push-url="true" hx-include="closest form">
+        <option value="">All suppliers</option>
+        @foreach (var supplier in Model.Suppliers)
+        {
+            <option value="@supplier.Id" selected="@(Model.Query.SupplierId == supplier.Id)">@supplier.Name@(supplier.IsActive ? "" : " (archived)")</option>
+        }
+    </select>
+
+    <label class="inline-date">From
+        <input type="date" name="from" value="@Model.Query.From?.ToString("yyyy-MM-dd")"
+               hx-get="/PurchaseOrders" hx-trigger="change" hx-target="#results" hx-push-url="true" hx-include="closest form" />
+    </label>
+    <label class="inline-date">To
+        <input type="date" name="to" value="@Model.Query.To?.ToString("yyyy-MM-dd")"
+               hx-get="/PurchaseOrders" hx-trigger="change" hx-target="#results" hx-push-url="true" hx-include="closest form" />
+    </label>
+
+    <button type="submit" class="visually-hidden" tabindex="-1">Apply filters</button>
+
+    @if (Model.CanEdit)
+    {
+        <a role="button" asp-page="Edit">New purchase order</a>
+    }
+</form>
+
+<div id="results">
+    <partial name="_OrderResults" model="Model" />
+</div>

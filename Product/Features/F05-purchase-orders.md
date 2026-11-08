@@ -1,6 +1,6 @@
 # F05 — Purchase orders & receiving
 
-- **Status:** In Progress
+- **Status:** Done
 - **Depends on:** F03, F04
 - **Roles:** Admin/Staff create, submit, receive, cancel; Viewer reads
 
@@ -69,7 +69,7 @@ partially). Receiving posts `Receive` stock transactions linked to PO lines.
 |---|---|---|
 | [WI-05-1](../work-items/F05-purchase-orders/WI-05-1-db-schema.md) | PurchaseOrder, PurchaseOrderLine schema | Done |
 | [WI-05-2](../work-items/F05-purchase-orders/WI-05-2-api.md) | PurchaseOrderService, receiving | Done |
-| [WI-05-3](../work-items/F05-purchase-orders/WI-05-3-frontend.md) | List, editor, receive, print view | Planned |
+| [WI-05-3](../work-items/F05-purchase-orders/WI-05-3-frontend.md) | List, editor, receive, print view | Done |
 
 ## Open questions
 

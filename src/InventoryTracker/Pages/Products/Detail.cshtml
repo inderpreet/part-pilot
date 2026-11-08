@@ -109,7 +109,7 @@
     <ul>
         <li><a href="#history" aria-current="true">History</a></li>
         <li><a href="#suppliers">Suppliers</a></li>
-        <li><span aria-disabled="true" title="Coming soon">Purchase orders</span></li>
+        <li><a href="#purchase-orders">Purchase orders</a></li>
         <li><span aria-disabled="true" title="Coming soon">Audit</span></li>
     </ul>
 </nav>
@@ -124,4 +124,51 @@
 <section id="suppliers" aria-label="Suppliers of this product">
     <h2 class="section-title">Suppliers</h2>
     <partial name="_SupplierLinks" model="Model.Suppliers" />
+</section>
+
+<section id="purchase-orders" aria-label="Open purchase orders for this product">
+    <h2 class="section-title">Open purchase orders</h2>
+    @if (Model.OpenOrders.Count == 0)
+    {
+        <p class="muted">Nothing is on order for this product.</p>
+    }
+    else
+    {
+        <div class="table-wrap">
+            <table class="striped compact">
+                <thead>
+                    <tr>
+                        <th scope="col">Order</th>
+                        <th scope="col">Supplier</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Expected</th>
+                        <th scope="col" class="num">Ordered</th>
+                        <th scope="col" class="num">Received</th>
+                        <th scope="col" class="num">Outstanding</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var line in Model.OpenOrders)
+                    {
+                        var overdue = PurchaseOrderDisplay.IsOverdue(line.Status, line.ExpectedDate, DateOnly.FromDateTime(DateTime.Now));
+                        <tr>
+                            <td><a asp-page="/PurchaseOrders/Detail" asp-route-id="@line.PurchaseOrderId">@line.Number</a></td>
+                            <td><a asp-page="/Suppliers/Detail" asp-route-id="@line.SupplierId">@line.SupplierName</a></td>
+                            <td><partial name="_PoStatusBadge" model="line.Status" /></td>
+                            <td class="@(overdue ? "po-overdue" : null)">@PurchaseOrderDisplay.Date(line.ExpectedDate)</td>
+                            <td class="num">@line.QuantityOrdered</td>
+                            <td class="num">@line.QuantityReceived</td>
+                            <td class="num"><strong>@line.Outstanding</strong> @p.Unit</td>
+                        </tr>
+                    }
+                </tbody>
+                <tfoot>
+                    <tr>
+                        <th scope="row" colspan="6">On order</th>
+                        <td class="num"><strong>@Model.OpenOrders.Sum(l => l.Outstanding)</strong> @p.Unit</td>
+                    </tr>
+                </tfoot>
+            </table>
+        </div>
+    }
 </section>

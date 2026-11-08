@@ -1,0 +1,96 @@
+@page "/PurchaseOrders/Edit/{id:int?}"
+@model InventoryTracker.Pages.PurchaseOrders.EditModel
+@{
+    var order = Model.Order;
+    ViewData["Title"] = order is null ? "New purchase order" : $"Edit {order.Number}";
+    var date = (DateOnly? d) => d?.ToString("yyyy-MM-dd");
+    var headerOnly = order is not null && !order.CanEditLines;
+}
+
+<p class="muted">
+    @if (order is null)
+    {
+        <a asp-page="Index">‹ All purchase orders</a>
+    }
+    else
+    {
+        <a asp-page="Detail" asp-route-id="@order.Id">‹ @order.Number</a>
+        <partial name="_PoStatusBadge" model="order.Status" />
+    }
+</p>
+
+@if (Model.Conflict && order is not null)
+{
+    <p role="alert" class="validation-summary">
+        Someone else changed this order while you were editing.
+        <a asp-page="Edit" asp-route-id="@order.Id">Reload it</a> to see their changes, then make yours again.
+    </p>
+}
+
+<partial name="_ValidationSummary" model="ViewData.ModelState" />
+
+<form method="post" asp-page="Edit" asp-route-id="@order?.Id" class="po-header-form">
+    <input type="hidden" name="Input.RowVersion" value="@Model.Input.RowVersion" />
+
+    <div class="grid">
+        <label>
+            Supplier
+            <select name="Input.SupplierId" required disabled="@Model.SupplierLocked" aria-invalid="@Html.AriaInvalid("Input.SupplierId")">
+                @if (order is null)
+                {
+                    <option value="">Choose a supplier…</option>
+                }
+                @foreach (var supplier in Model.Suppliers)
+                {
+                    <option value="@supplier.Id" selected="@(Model.Input.SupplierId == supplier.Id)">@supplier.Name@(supplier.IsActive ? "" : " (archived)")</option>
+                }
+            </select>
+            @if (Model.SupplierLocked)
+            {
+                <small class="muted">The supplier is fixed once an order has lines.@(order is { Lines.Count: > 0, CanEditLines: true } ? " Remove every line to change it." : "")</small>
+            }
+        </label>
+
+        <label>
+            Order date
+            <input type="date" name="Input.OrderDate" value="@date(Model.Input.OrderDate)" required disabled="@headerOnly" aria-invalid="@Html.AriaInvalid("Input.OrderDate")" />
+        </label>
+
+        <label>
+            Expected date
+            <input type="date" name="Input.ExpectedDate" value="@date(Model.Input.ExpectedDate)" aria-invalid="@Html.AriaInvalid("Input.ExpectedDate")"
+                   aria-describedby="expected-help" />
+            <small id="expected-help" class="muted">Leave blank to use the supplier's lead time when you submit.</small>
+        </label>
+    </div>
+
+    <label>
+        Notes
+        <textarea name="Input.Notes" rows="3" maxlength="2000" aria-invalid="@Html.AriaInvalid("Input.Notes")">@Model.Input.Notes</textarea>
+    </label>
+
+    <div class="form-actions">
+        <button type="submit">@(order is null ? "Create draft" : "Save details")</button>
+        @if (order is null)
+        {
+            <a role="button" class="secondary outline" asp-page="Index">Cancel</a>
+        }
+        else
+        {
+            <a role="button" class="secondary outline" asp-page="Detail" asp-route-id="@order.Id">@(order.CanEditLines ? "Done — review & submit" : "Back to order")</a>
+        }
+    </div>
+</form>
+
+@if (order is not null && order.CanEditLines)
+{
+    <partial name="_PoLines" model="@(new PoLinesModel(order))" />
+}
+else if (order is not null)
+{
+    <p class="muted" role="status">Lines can only be changed while the order is a draft.</p>
+}
+else
+{
+    <p class="muted" role="status">Create the draft first, then add the products to order.</p>
+}

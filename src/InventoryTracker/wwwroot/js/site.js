@@ -239,8 +239,33 @@
     }
   });
 
+  // ---------- Purchase orders ----------
+  // Receive page: [data-receive-all] fills every quantity with what is outstanding, [data-receive-clear] empties them.
+  document.addEventListener('click', event => {
+    const all = event.target.closest?.('[data-receive-all]');
+    const clear = event.target.closest?.('[data-receive-clear]');
+    if (!all && !clear) return;
+    const form = (all ?? clear).closest('form');
+    form?.querySelectorAll('input[data-outstanding]').forEach(input => {
+      input.value = all ? input.dataset.outstanding : '';
+    });
+  });
+
+  // Print view: [data-print] prints again; body[data-auto-print] opens the print dialog once the page has loaded.
+  document.addEventListener('click', event => {
+    if (event.target.closest?.('[data-print]')) window.print();
+  });
+
+  function autoPrint() {
+    if (!document.body?.hasAttribute('data-auto-print')) return;
+    // Let the stylesheet apply first so the print preview is laid out properly.
+    window.addEventListener('load', () => setTimeout(() => window.print(), 250), { once: true });
+    if (document.readyState === 'complete') setTimeout(() => window.print(), 250);
+  }
+
   // ---------- Boot ----------
   function init() {
+    autoPrint();
     watchFlashArea();
     bindModalClose();
     upgradeTimes(document);
