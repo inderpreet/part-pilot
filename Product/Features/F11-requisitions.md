@@ -1,6 +1,6 @@
 # F11 — Requisitions
 
-- **Status:** Planned
+- **Status:** Done
 - **Depends on:** F01, F02
 - **Roles:** Any signed-in user raises and tracks their own requisitions (Viewers included). Admin, Manager and Staff see everyone's.
 
@@ -42,6 +42,10 @@ lines can then be ordered ([F13](F13-requisition-to-po.md)). A requisition never
 - Quantities are whole units, as everywhere in v1 (`int`).
 - Viewers are read-only everywhere else; raising requisitions is the one exception, enforced by a named policy (`CanRequest`) so the exception is visible in code.
 - Ownership is a service rule: a Viewer or Staff member can only change their own `Draft`.
+- Submit follows the same ownership rule as editing: the requester or an Admin. The history shows who actually submitted (`SubmittedById`).
+- Adding, changing or removing a line moves the requisition's `RowVersion`, so a page showing older lines cannot submit them. The editor refreshes its hidden version after each line change.
+- A part archived while the requisition is still a draft blocks submit until the line is removed.
+- The list's date filter applies to the created date.
 
 ## Data model
 
@@ -67,11 +71,12 @@ lines can then be ordered ([F13](F13-requisition-to-po.md)). A requisition never
 
 | ID | Title | Status |
 |---|---|---|
-| [WI-11-1](../work-items/F11-requisitions/WI-11-1-db-schema.md) | Requisition, RequisitionLine schema | Planned |
-| [WI-11-2](../work-items/F11-requisitions/WI-11-2-api.md) | RequisitionService, CanRequest policy | Planned |
-| [WI-11-3](../work-items/F11-requisitions/WI-11-3-frontend.md) | List, editor, detail | Planned |
+| [WI-11-1](../work-items/F11-requisitions/WI-11-1-db-schema.md) | Requisition, RequisitionLine schema | Done |
+| [WI-11-2](../work-items/F11-requisitions/WI-11-2-api.md) | RequisitionService, CanRequest policy | Done |
+| [WI-11-3](../work-items/F11-requisitions/WI-11-3-frontend.md) | List, editor, detail | Done |
 
 ## Open questions
 
 - ~~Should a requester be able to ask for a part that is not in the catalog yet?~~ Decided 2026-11-09: no, catalog parts only.
 - Should a requisition link to a BOM or project (F10)? Assumed no for v1.
+- Staff can read other people's drafts as well as submitted requisitions ("see everyone's", FR roles). Should drafts stay private to the requester until submitted? Built as readable; a one-line change in `RequisitionRules.CanSee` and `SearchAsync` if not.

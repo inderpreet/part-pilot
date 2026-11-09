@@ -9,6 +9,7 @@ public static class SettingKeys
     public const string StockAllowNegative = "Stock.AllowNegative";
     public const string PurchaseOrderNumberPrefix = "PurchaseOrder.NumberPrefix";
     public const string ProjectNumberPrefix = "Project.NumberPrefix";
+    public const string RequisitionNumberPrefix = "Requisition.NumberPrefix";
 
     /// <summary>
     /// The key of a data permission for a role (F07 FR-9): <c>Permission.ImportData.Staff</c>. Admin has no key because
@@ -30,6 +31,7 @@ public static class SettingKeys
             [StockAllowNegative] = "false",
             [PurchaseOrderNumberPrefix] = "PO-",
             [ProjectNumberPrefix] = "PRJ-",
+            [RequisitionNumberPrefix] = "REQ-",
         };
 
         foreach (var permission in Enum.GetValues<DataPermission>())

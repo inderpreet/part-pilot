@@ -1,0 +1,77 @@
+@page "/Requisitions/Edit/{id:int?}"
+@model InventoryTracker.Pages.Requisitions.EditModel
+@using InventoryTracker.Data.Entities
+@using InventoryTracker.Pages.Requisitions
+@{
+    var requisition = Model.Requisition;
+    ViewData["Title"] = requisition is null ? "New requisition" : $"Edit {requisition.Number}";
+}
+
+@section Leading {
+    @if (requisition is null)
+    {
+        <a asp-page="Index">‹ All requisitions</a>
+    }
+    else
+    {
+        <a asp-page="Detail" asp-route-id="@requisition.Id">‹ @requisition.Number</a>
+    }
+}
+
+@if (Model.Conflict && requisition is not null)
+{
+    <p role="alert" class="validation-summary">
+        This requisition was changed while you were editing.
+        <a asp-page="Edit" asp-route-id="@requisition.Id">Reload it</a> to see the changes, then make yours again.
+    </p>
+}
+
+<partial name="_ValidationSummary" model="ViewData.ModelState" />
+
+<form method="post" asp-page="Edit" asp-route-id="@requisition?.Id" class="form-page">
+    <input type="hidden" id="req-row-version" name="Input.RowVersion" value="@Model.Input.RowVersion" />
+
+    <section class="form-row" aria-labelledby="req-details">
+        <div class="form-intro">
+            <h2 id="req-details">Details</h2>
+            <p>Why you need the parts and by when. A reason is required to submit.</p>
+        </div>
+        <div class="card form-card">
+            <label>
+                Needed by <small>(optional)</small>
+                <input type="date" name="Input.NeededBy" value="@Model.Input.NeededBy?.ToString("yyyy-MM-dd")"
+                       aria-invalid="@Html.AriaInvalid("Input.NeededBy")" aria-describedby="@Html.DescribedBy("Input.NeededBy")" />
+                @Html.FieldError("Input.NeededBy")
+            </label>
+
+            <label>
+                Reason
+                <textarea name="Input.Reason" rows="3" maxlength="@Requisition.ReasonMaxLength"
+                          aria-invalid="@Html.AriaInvalid("Input.Reason")" aria-describedby="@Html.DescribedBy("Input.Reason")">@Model.Input.Reason</textarea>
+                @Html.FieldError("Input.Reason")
+            </label>
+        </div>
+    </section>
+
+    @* Static, not sticky: the line editor sits below this form and a floating bar would sit on top of it. *@
+    <div class="action-bar action-bar-static form-actions">
+        @if (requisition is null)
+        {
+            <a role="button" class="text" asp-page="Index">Cancel</a>
+        }
+        else
+        {
+            <a role="button" class="secondary outline" asp-page="Detail" asp-route-id="@requisition.Id">Done — review &amp; submit</a>
+        }
+        <button type="submit">@(requisition is null ? "Create draft" : "Save details")</button>
+    </div>
+</form>
+
+@if (requisition is not null)
+{
+    <partial name="_RequisitionLines" model="@(new RequisitionLinesModel(requisition))" />
+}
+else
+{
+    <p class="muted" role="status">Create the draft first, then add the parts you need.</p>
+}

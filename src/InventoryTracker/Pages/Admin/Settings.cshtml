@@ -50,7 +50,7 @@
     <section class="form-row" aria-labelledby="settings-ops">
         <div class="form-intro">
             <h2 id="settings-ops">Orders and stock</h2>
-            <p>Numbering for purchase orders and BOMs, and how strictly stock is checked.</p>
+            <p>Numbering for purchase orders, BOMs and requisitions, and how strictly stock is checked.</p>
         </div>
         <div class="card form-card">
             <label>
@@ -67,6 +67,14 @@
                        aria-invalid="@Html.AriaInvalid("Input.ProjectNumberPrefix")" aria-describedby="@Html.DescribedBy("Input.ProjectNumberPrefix")" />
                 @Html.FieldError("Input.ProjectNumberPrefix")
                 <small>Put in front of generated BOM numbers, e.g. <code>PRJ-</code>. Up to 10 characters, no spaces.</small>
+            </label>
+
+            <label>
+                Requisition number prefix
+                <input name="Input.RequisitionNumberPrefix" value="@Model.Input.RequisitionNumberPrefix" maxlength="10"
+                       aria-invalid="@Html.AriaInvalid("Input.RequisitionNumberPrefix")" aria-describedby="@Html.DescribedBy("Input.RequisitionNumberPrefix")" />
+                @Html.FieldError("Input.RequisitionNumberPrefix")
+                <small>Put in front of requisition numbers, e.g. <code>REQ-</code>. Up to 10 characters, no spaces.</small>
             </label>
 
             <label>

@@ -65,6 +65,11 @@ namespace InventoryTracker.Data.Migrations
                         },
                         new
                         {
+                            Key = "Requisition.NumberPrefix",
+                            Value = "REQ-"
+                        },
+                        new
+                        {
                             Key = "Permission.ImportData.Staff",
                             Value = "false"
                         },
@@ -668,6 +673,108 @@ namespace InventoryTracker.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("InventoryTracker.Data.Entities.Requisition", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DecidedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateOnly?>("NeededBy")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Number")
+                        .IsRequired()
+                        .HasMaxLength(30)
+                        .HasColumnType("TEXT")
+                        .UseCollation("NOCASE");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(1000)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("RequestedById")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("RowVersion")
+                        .IsConcurrencyToken()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Status")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("SubmittedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("SubmittedById")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Number")
+                        .IsUnique();
+
+                    b.HasIndex("RequestedById");
+
+                    b.HasIndex("SubmittedById");
+
+                    b.HasIndex("Status", "SubmittedAt");
+
+                    b.ToTable("Requisitions", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_Requisitions_Status", "\"Status\" IN ('Draft', 'Submitted', 'Approved', 'Rejected', 'Cancelled')");
+                        });
+                });
+
+            modelBuilder.Entity("InventoryTracker.Data.Entities.RequisitionLine", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Note")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("ProductId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("QuantityRequested")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("RequisitionId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("UpdatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ProductId");
+
+                    b.HasIndex("RequisitionId", "ProductId")
+                        .IsUnique();
+
+                    b.ToTable("RequisitionLines", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_RequisitionLines_QuantityRequested", "\"QuantityRequested\" >= 1");
+                        });
+                });
+
             modelBuilder.Entity("InventoryTracker.Data.Entities.StockTransaction", b =>
                 {
                     b.Property<long>("Id")
@@ -1078,6 +1185,43 @@ namespace InventoryTracker.Data.Migrations
                     b.Navigation("PurchaseOrder");
                 });
 
+            modelBuilder.Entity("InventoryTracker.Data.Entities.Requisition", b =>
+                {
+                    b.HasOne("InventoryTracker.Data.Entities.ApplicationUser", "RequestedBy")
+                        .WithMany()
+                        .HasForeignKey("RequestedById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("InventoryTracker.Data.Entities.ApplicationUser", "SubmittedBy")
+                        .WithMany()
+                        .HasForeignKey("SubmittedById")
+                        .OnDelete(DeleteBehavior.Restrict);
+
+                    b.Navigation("RequestedBy");
+
+                    b.Navigation("SubmittedBy");
+                });
+
+            modelBuilder.Entity("InventoryTracker.Data.Entities.RequisitionLine", b =>
+                {
+                    b.HasOne("InventoryTracker.Data.Entities.Product", "Product")
+                        .WithMany()
+                        .HasForeignKey("ProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("InventoryTracker.Data.Entities.Requisition", "Requisition")
+                        .WithMany("Lines")
+                        .HasForeignKey("RequisitionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Product");
+
+                    b.Navigation("Requisition");
+                });
+
             modelBuilder.Entity("InventoryTracker.Data.Entities.StockTransaction", b =>
                 {
                     b.HasOne("InventoryTracker.Data.Entities.ImportBatch", "ImportBatch")
@@ -1196,6 +1340,11 @@ namespace InventoryTracker.Data.Migrations
             modelBuilder.Entity("InventoryTracker.Data.Entities.PurchaseOrderLine", b =>
                 {
                     b.Navigation("Receipts");
+                });
+
+            modelBuilder.Entity("InventoryTracker.Data.Entities.Requisition", b =>
+                {
+                    b.Navigation("Lines");
                 });
 
             modelBuilder.Entity("InventoryTracker.Data.Entities.Supplier", b =>

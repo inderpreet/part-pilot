@@ -1,0 +1,27 @@
+@model InventoryTracker.Pages.Requisitions.RequisitionProductResultsModel
+@if (Model.Items.Count == 0)
+{
+    <p class="picker-empty muted" role="status">No matching parts.</p>
+}
+else
+{
+    <ul role="listbox" class="picker-list">
+        @foreach (var item in Model.Items)
+        {
+            <li role="option">
+                @if (item.AlreadyOnRequisition)
+                {
+                    <span class="picker-item muted"><strong>@item.Sku</strong> @item.Name <small>already on this requisition</small></span>
+                }
+                else
+                {
+                    <button type="button" class="picker-item" data-picker-select
+                            data-id="@item.ProductId" data-label="@item.Sku — @item.Name" data-exact="@(Model.IsExact(item) ? "true" : "false")">
+                        <strong>@item.Sku</strong> <span>@item.Name</span>
+                        <small class="muted">@item.OnHand @item.Unit on hand · @item.OnOrder on order</small>
+                    </button>
+                }
+            </li>
+        }
+    </ul>
+}

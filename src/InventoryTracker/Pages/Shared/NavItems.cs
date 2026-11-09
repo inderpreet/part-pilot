@@ -34,6 +34,7 @@ public static class NavItems
         new("Parts", "/Products", Policies.CanView, Group: NavGroups.Inventory, Icon: "box"),
         new("Stock", "/Stock", Policies.CanView, Group: NavGroups.Inventory, Icon: "layers"),
         new("Suppliers", "/Suppliers", Policies.CanView, Group: NavGroups.Inventory, Icon: "users"),
+        new("Requisitions", "/Requisitions", Policies.CanRequest, Group: NavGroups.Inventory, Icon: "cart"),
         new("Purchase Orders", "/PurchaseOrders", Policies.CanView, Group: NavGroups.Inventory, Icon: "file"),
         new("BOMs", "/Projects", Policies.CanView, Group: NavGroups.Inventory, Icon: "clipboard"),
         new("Low stock", "/Reports/LowStock", Policies.CanView, Group: NavGroups.Insights, Icon: "alert", LowStockBadge: true),

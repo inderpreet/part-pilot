@@ -29,7 +29,7 @@ public class SettingsModel(ISettingsService settings) : PageModel
         }
 
         var result = await settings.UpdateBusinessSettingsAsync(
-            new BusinessSettings(Input.CompanyName, Input.CurrencyCode, Input.CurrencySymbol, Input.AllowNegativeStock, Input.PurchaseOrderNumberPrefix ?? string.Empty, Input.ProjectNumberPrefix ?? string.Empty),
+            new BusinessSettings(Input.CompanyName, Input.CurrencyCode, Input.CurrencySymbol, Input.AllowNegativeStock, Input.PurchaseOrderNumberPrefix ?? string.Empty, Input.ProjectNumberPrefix ?? string.Empty, Input.RequisitionNumberPrefix ?? string.Empty),
             HttpContext.RequestAborted);
 
         if (!result.Succeeded)
@@ -73,6 +73,7 @@ public class SettingsModel(ISettingsService settings) : PageModel
             AllowNegativeStock = current.AllowNegativeStock,
             PurchaseOrderNumberPrefix = current.PurchaseOrderNumberPrefix,
             ProjectNumberPrefix = current.ProjectNumberPrefix,
+            RequisitionNumberPrefix = current.RequisitionNumberPrefix,
         };
         Permissions = From(await settings.GetDataPermissionsAsync(HttpContext.RequestAborted));
     }
@@ -113,6 +114,10 @@ public class SettingsModel(ISettingsService settings) : PageModel
         [StringLength(BusinessSettings.ProjectPrefixMaxLength)]
         [Display(Name = "BOM number prefix")]
         public string? ProjectNumberPrefix { get; set; }
+
+        [StringLength(BusinessSettings.RequisitionPrefixMaxLength)]
+        [Display(Name = "Requisition number prefix")]
+        public string? RequisitionNumberPrefix { get; set; }
     }
 
     public sealed class PermissionsInput

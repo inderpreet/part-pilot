@@ -1,0 +1,79 @@
+@page "/Requisitions"
+@model InventoryTracker.Pages.Requisitions.IndexModel
+@using InventoryTracker.Data.Entities
+@{
+    ViewData["Title"] = "Requisitions";
+    var date = (DateOnly? d) => d?.ToString("yyyy-MM-dd");
+    const string Live = "/Requisitions";
+}
+
+@section Actions {
+    <a role="button" asp-page="Edit">New requisition</a>
+}
+
+@* A plain GET form, so Enter submits normally. Its controls also refresh #results through htmx. The tabs are ordinary links:
+   changing tab reloads the page, which keeps the hidden tab field and the requester filter right. *@
+<div class="card list-card">
+    <div class="load-bar" role="status" aria-label="Updating"></div>
+
+    @if (Model.CanSeeAll)
+    {
+        <nav class="tabs" aria-label="Whose requisitions">
+            <ul>
+                @foreach (var tab in Enum.GetValues<RequisitionTab>())
+                {
+                    <li>
+                        <a asp-page="Index" asp-route-tab="@tab" asp-route-search="@Model.Query.Search" asp-route-status="@Model.Query.Status"
+                           asp-route-from="@date(Model.Query.From)" asp-route-to="@date(Model.Query.To)"
+                           aria-current="@(Model.Query.Tab == tab ? "page" : null)">@RequisitionDisplay.TabLabel(tab)</a>
+                    </li>
+                }
+            </ul>
+        </nav>
+    }
+
+    <form method="get" action="@Live" class="toolbar po-filters" role="search">
+        <input type="hidden" name="tab" value="@Model.Query.Tab" />
+        <input type="hidden" name="tz" value="@Model.Query.Tz" data-tz-offset />
+
+        <input type="search" name="search" value="@Model.Query.Search" placeholder="Number or part…" aria-label="Search by number or part"
+               autocomplete="off" enterkeyhint="search"
+               hx-get="@Live" hx-trigger="input changed delay:300ms" hx-target="#results" hx-push-url="true" hx-include="closest form" hx-indicator=".load-bar" />
+
+        <select name="status" aria-label="Status"
+                hx-get="@Live" hx-trigger="change" hx-target="#results" hx-push-url="true" hx-include="closest form" hx-indicator=".load-bar">
+            <option value="">All statuses</option>
+            @foreach (var status in Enum.GetValues<RequisitionStatus>())
+            {
+                <option value="@status" selected="@(Model.Query.Status == status)">@RequisitionDisplay.StatusLabel(status)</option>
+            }
+        </select>
+
+        @if (Model.CanSeeAll && Model.ShowsEveryone)
+        {
+            <select name="requesterId" aria-label="Requested by"
+                    hx-get="@Live" hx-trigger="change" hx-target="#results" hx-push-url="true" hx-include="closest form" hx-indicator=".load-bar">
+                <option value="">Anyone</option>
+                @foreach (var requester in Model.Requesters)
+                {
+                    <option value="@requester.Id" selected="@(Model.Query.RequesterId == requester.Id)">@requester.DisplayName</option>
+                }
+            </select>
+        }
+
+        <label class="inline-date">From
+            <input type="date" name="from" value="@date(Model.Query.From)"
+                   hx-get="@Live" hx-trigger="change" hx-target="#results" hx-push-url="true" hx-include="closest form" hx-indicator=".load-bar" />
+        </label>
+        <label class="inline-date">To
+            <input type="date" name="to" value="@date(Model.Query.To)"
+                   hx-get="@Live" hx-trigger="change" hx-target="#results" hx-push-url="true" hx-include="closest form" hx-indicator=".load-bar" />
+        </label>
+
+        <button type="submit" class="visually-hidden" tabindex="-1">Apply filters</button>
+    </form>
+
+    <div id="results">
+        <partial name="_RequisitionResults" model="Model" />
+    </div>
+</div>

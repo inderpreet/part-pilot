@@ -56,7 +56,7 @@ Inventory-Tracker/
 │  │  ├─ Shared/                    _Layout, _Flash, _Pager, _ValidationSummary
 │  │  ├─ Account/                   Login, Logout, Setup, ChangePassword
 │  │  ├─ Admin/                     Users, Settings, Audit, Import, Backup
-│  │  ├─ Products/ Categories/ Stock/ Suppliers/ PurchaseOrders/ Projects/ Reports/
+│  │  ├─ Products/ Categories/ Stock/ Suppliers/ PurchaseOrders/ Projects/ Requisitions/ Reports/
 │  │  └─ Index.cshtml               dashboard
 │  └─ wwwroot/                      css/, js/htmx.min.js, lib/pico.min.css (EmbeddedResource)
 └─ tests/InventoryTracker.Tests/
@@ -113,7 +113,7 @@ ProjectBuild(Id, ProjectId→Project Restrict, Units, Note, UserId→AspNetUsers
 
 ImportBatch(Id, Kind, FileName, RowCount, CreatedCount, UpdatedCount, SkippedCount, Options?, CreatedById, CreatedAt)   -- Kind: Products, Suppliers, ProductSuppliers, OpeningStock, Boms (F07)
 
-Requisition(Id, Number UQ, Status, RequestedById→AspNetUsers, NeededBy?, Reason, SubmittedAt?, DecidedAt?, RowVersion)   -- F11, planned
+Requisition(Id, Number UQ, Status, RequestedById→AspNetUsers, NeededBy?, Reason?, SubmittedAt?, SubmittedById→AspNetUsers?, DecidedAt?, RowVersion)   -- F11
   Status ∈ {Draft, Submitted, Approved, Rejected, Cancelled}; "Ordered" / "Partly ordered" are derived from RequisitionLineOrder (F13)
 RequisitionLine(Id, RequisitionId→Requisition Cascade, ProductId→Product Restrict, QuantityRequested, Note)  UQ (RequisitionId, ProductId)
 RequisitionLineDecision(Id, RequisitionLineId→RequisitionLine UQ Cascade, Decision, QuantityApproved, Reason, DecidedById→AspNetUsers, DecidedAt)   -- F12, planned
@@ -125,7 +125,7 @@ AuditEntry(Id, OccurredAt, UserId?, UserName, Action, EntityType, EntityId, Chan
 Relationships: Category 1–* Product; Product 1–* StockTransaction; Product *–* Supplier via ProductSupplier;
 Supplier 1–* PurchaseOrder 1–* PurchaseOrderLine *–1 Product; PurchaseOrderLine 1–* StockTransaction (receipts);
 Project 1–* BomLine *–1 Product; Project 1–* ProjectBuild (a build's issue rows are linked by `StockTransaction.Reference`, D18).
-Requisition 1–* RequisitionLine *–1 Product (planned); RequisitionLine 1–0..1 RequisitionLineDecision; RequisitionLine 1–0..1 RequisitionLineOrder *–1 PurchaseOrderLine. Requisitions never change stock or on-order figures.
+Requisition 1–* RequisitionLine *–1 Product; RequisitionLine 1–0..1 RequisitionLineDecision; RequisitionLine 1–0..1 RequisitionLineOrder *–1 PurchaseOrderLine. Requisitions never change stock or on-order figures.
 
 Derived values (not stored): **on order** = Σ(QuantityOrdered − QuantityReceived) over lines of Submitted /
 PartiallyReceived POs; **stock value** = Σ(QuantityOnHand × UnitCostCents); **low stock** =
@@ -142,7 +142,7 @@ needed `QuantityPerUnit × remaining units` against on hand, on order and **in d
 5. (F10) A project build changes stock only by posting `Issue` movements through `StockService`, all lines in one
    call and in the same DB transaction as its `ProjectBuild` row; shortages reach purchase orders only through
    `PurchaseOrderService` and only onto a Draft.
-6. Optimistic concurrency on `Product`, `PurchaseOrder` and `Project` via `RowVersion` (incremented in `SaveChanges`, since SQLite has no rowversion type).
+6. Optimistic concurrency on `Product`, `PurchaseOrder`, `Project` and `Requisition` via `RowVersion` (incremented in `SaveChanges`, since SQLite has no rowversion type). A requisition line change also moves its header's `RowVersion` (F11).
 
 ## 7. SQLite configuration
 
@@ -167,6 +167,7 @@ needed `QuantityPerUnit × remaining units` against on hand, on order and **in d
   the fallback policy require an authenticated user carrying the `inv:active` claim. Applied with
   `[Authorize(Policy = ...)]` on page models; a page that names a policy is not evaluated against the fallback, so each policy
   repeats the active check.
+- `CanRequest` (F11): any active user with a role. The one write allowed to Viewers, named apart from `CanView` so the exception is visible; `RequisitionService` enforces ownership (`RequisitionActor`).
 - Data permissions (F07): `CanImportData`, `CanImportBoms`, `CanExportData`, `CanExportBoms` (and `CanImport` / `CanExport`, either of the
   pair). Admin always passes; Staff and Viewer pass when an Admin has allowed it for that role on the Settings page (settings
   `Permission.<Name>.Staff|Viewer`, read through `ISettingsService`, so a change applies on the next request). Backup stays `RequireAdmin`.

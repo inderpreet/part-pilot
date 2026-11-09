@@ -15,6 +15,8 @@ public sealed class FakeSettings : ISettingsService
 
     public string ProjectPrefix { get; set; } = "PRJ-";
 
+    public string RequisitionPrefix { get; set; } = "REQ-";
+
     public Task<bool> GetBoolAsync(string key, CancellationToken cancellationToken = default)
         => Task.FromResult(key == SettingKeys.StockAllowNegative && AllowNegative);
 
@@ -23,6 +25,7 @@ public sealed class FakeSettings : ISettingsService
         {
             SettingKeys.PurchaseOrderNumberPrefix => Task.FromResult(PurchaseOrderPrefix),
             SettingKeys.ProjectNumberPrefix => Task.FromResult(ProjectPrefix),
+            SettingKeys.RequisitionNumberPrefix => Task.FromResult(RequisitionPrefix),
             _ => throw new NotSupportedException(),
         };
 

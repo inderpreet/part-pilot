@@ -44,6 +44,10 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole, str
 
     public DbSet<ImportBatch> ImportBatches => Set<ImportBatch>();
 
+    public DbSet<Requisition> Requisitions => Set<Requisition>();
+
+    public DbSet<RequisitionLine> RequisitionLines => Set<RequisitionLine>();
+
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
         configurationBuilder.Properties<DateTime>().HaveConversion<UtcDateTimeConverter>();

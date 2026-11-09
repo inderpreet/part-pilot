@@ -57,6 +57,7 @@ builder.Services.AddStock();
 builder.Services.AddSuppliers();
 builder.Services.AddPurchaseOrders();
 builder.Services.AddProjects();
+builder.Services.AddRequisitions();
 builder.Services.AddReporting();
 builder.Services.AddDataTransfer();
 

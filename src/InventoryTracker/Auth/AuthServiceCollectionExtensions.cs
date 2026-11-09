@@ -112,6 +112,7 @@ public static class AuthServiceCollectionExtensions
             .AddPolicy(Policies.RequireAdmin, p => Apply(p).RequireRole(Roles.Admin))
             .AddPolicy(Policies.CanEdit, p => Apply(p).RequireRole(Roles.Admin, Roles.Staff))
             .AddPolicy(Policies.CanView, p => Apply(p).RequireRole(Roles.Admin, Roles.Staff, Roles.Viewer))
+            .AddPolicy(Policies.CanRequest, p => Apply(p).RequireRole(Roles.All))
             .AddPolicy(Policies.CanImportData, p => Apply(p).AddRequirements(new DataPermissionRequirement(DataPermission.ImportData)))
             .AddPolicy(Policies.CanImportBoms, p => Apply(p).AddRequirements(new DataPermissionRequirement(DataPermission.ImportBoms)))
             .AddPolicy(Policies.CanExportData, p => Apply(p).AddRequirements(new DataPermissionRequirement(DataPermission.ExportData)))

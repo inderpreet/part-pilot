@@ -1,0 +1,49 @@
+@model InventoryTracker.Pages.Requisitions.IndexModel
+@if (Model.Requisitions.TotalCount == 0)
+{
+    if (Model.IsFiltered)
+    {
+        <partial name="_EmptyState" model="@(new EmptyStateModel("No requisitions match", "Try a different search, or widen the filters."))" />
+    }
+    else
+    {
+        <partial name="_EmptyState" model="@(new EmptyStateModel("No requisitions yet", "Raise one to ask for the parts you need.", "New requisition", "/Requisitions/Edit"))" />
+    }
+}
+else
+{
+    <div class="table-wrap">
+        <table class="striped">
+            <thead>
+                <tr>
+                    <partial name="_SortHeader" model="@(new SortHeaderModel("number", "Number", Model.Query))" />
+                    <partial name="_SortHeader" model="@(new SortHeaderModel("status", "Status", Model.Query))" />
+                    @if (Model.ShowsEveryone)
+                    {
+                        <partial name="_SortHeader" model="@(new SortHeaderModel("requester", "Requested by", Model.Query))" />
+                    }
+                    <partial name="_SortHeader" model="@(new SortHeaderModel("needed", "Needed by", Model.Query))" />
+                    <th scope="col" class="num">Parts</th>
+                    <partial name="_SortHeader" model="@(new SortHeaderModel("created", "Created", Model.Query))" />
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Requisitions.Items)
+                {
+                    <tr>
+                        <td><a asp-page="Detail" asp-route-id="@item.Id">@item.Number</a></td>
+                        <td><partial name="_RequisitionStatusBadge" model="item.Status" /></td>
+                        @if (Model.ShowsEveryone)
+                        {
+                            <td>@item.RequestedByName</td>
+                        }
+                        <td>@PurchaseOrderDisplay.Date(item.NeededBy)</td>
+                        <td class="num">@item.LineCount</td>
+                        <td>@Html.LocalDate(item.CreatedAt)</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <partial name="_Pager" model="@PagerModel.From(Model.Requisitions)" />
+}

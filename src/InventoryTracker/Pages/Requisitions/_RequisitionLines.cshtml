@@ -1,0 +1,109 @@
+@model InventoryTracker.Pages.Requisitions.RequisitionLinesModel
+@using System.Globalization
+@using InventoryTracker.Data.Entities
+@using InventoryTracker.Pages.Requisitions
+@{
+    var r = Model.Requisition;
+    string Handler(string name) => Url.Page("Edit", name, new { id = r.Id })!;
+
+    // Only the messages about lines; the header form shows its own (keys start with "Input.").
+    var errors = ViewData.ModelState
+        .Where(entry => !entry.Key.StartsWith("Input.", StringComparison.Ordinal))
+        .SelectMany(entry => entry.Value!.Errors)
+        .Select(error => error.ErrorMessage)
+        .ToList();
+}
+<section id="req-lines" aria-label="Requested parts">
+    <h2 class="section-title">Parts</h2>
+
+    @if (errors.Count > 0)
+    {
+        <article class="validation-summary" role="alert">
+            <ul>
+                @foreach (var message in errors)
+                {
+                    <li>@message</li>
+                }
+            </ul>
+        </article>
+    }
+
+    @if (r.Lines.Count == 0)
+    {
+        <p class="muted">No parts yet. Add the first one below.</p>
+    }
+    else
+    {
+        <div class="table-wrap">
+            <table class="striped compact po-lines">
+                <thead>
+                    <tr>
+                        <th scope="col">Part</th>
+                        <th scope="col" class="num">On hand</th>
+                        <th scope="col" class="num">On order</th>
+                        <th scope="col" class="num">Quantity</th>
+                        <th scope="col">Note</th>
+                        <th scope="col"><span class="visually-hidden">Actions</span></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var line in r.Lines)
+                    {
+                        var key = EditModel.LineKey(line.Id);
+                        <tr data-line-row>
+                            <td>
+                                <strong>@line.Sku</strong> @line.ProductName
+                                @if (!line.ProductIsActive)
+                                {
+                                    <span class="badge badge-inactive">Archived</span>
+                                }
+                                <input type="hidden" name="lineId" value="@line.Id" />
+                            </td>
+                            <td class="num">@line.OnHand @line.Unit</td>
+                            <td class="num">@line.OnOrder</td>
+                            <td class="num">
+                                <input type="number" name="quantity" value="@line.QuantityRequested.ToString(CultureInfo.InvariantCulture)" min="1" max="@RequisitionLine.MaxQuantity" step="1"
+                                       inputmode="numeric" aria-label="Quantity of @line.Sku (@line.Unit)" aria-invalid="@Html.AriaInvalid($"{key}.Quantity")"
+                                       hx-post="@Handler("SaveLine")" hx-trigger="change" hx-include="closest tr" hx-target="#req-lines" hx-swap="outerHTML" />
+                            </td>
+                            <td>
+                                <input type="text" name="note" value="@line.Note" maxlength="@RequisitionLine.NoteMaxLength" autocomplete="off"
+                                       aria-label="Note for @line.Sku" aria-invalid="@Html.AriaInvalid($"{key}.Note")"
+                                       hx-post="@Handler("SaveLine")" hx-trigger="change" hx-include="closest tr" hx-target="#req-lines" hx-swap="outerHTML" />
+                            </td>
+                            <td class="row-actions">
+                                <form method="post" asp-page-handler="RemoveLine" asp-route-id="@r.Id" class="inline-form">
+                                    <input type="hidden" name="lineId" value="@line.Id" />
+                                    <button type="submit" class="text danger" hx-post="@Handler("RemoveLine")" hx-target="#req-lines" hx-swap="outerHTML"
+                                            aria-label="Remove @line.Sku from the requisition">Remove</button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+
+    <form method="post" asp-page-handler="AddLine" asp-route-id="@r.Id" class="po-add-line"
+          hx-post="@Handler("AddLine")" hx-target="#req-lines" hx-swap="outerHTML">
+        <div class="grid">
+            <partial name="_ProductPicker" model="@(new ProductPickerModel("productId", Model.ProductId, Model.ProductLabel, Label: "Add a part", LookupUrl: Url.Page("Edit", "Products", new { id = r.Id })!))" />
+            <label>
+                Quantity
+                <input type="number" name="quantity" value="@Model.Quantity" min="1" max="@RequisitionLine.MaxQuantity" step="1" inputmode="numeric" required
+                       data-focus-after-pick aria-invalid="@Html.AriaInvalid("Quantity")" />
+            </label>
+            <label>
+                Note
+                <input type="text" name="note" value="@Model.Note" maxlength="@RequisitionLine.NoteMaxLength" autocomplete="off" placeholder="optional"
+                       aria-invalid="@Html.AriaInvalid("Note")" />
+            </label>
+            <button type="submit">Add part</button>
+        </div>
+    </form>
+</section>
+@if (Model.UpdateRowVersion)
+{
+    <input type="hidden" id="req-row-version" name="Input.RowVersion" value="@r.RowVersion" hx-swap-oob="true" />
+}

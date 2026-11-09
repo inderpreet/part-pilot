@@ -1,0 +1,140 @@
+@page "/Requisitions/{id:int}"
+@model InventoryTracker.Pages.Requisitions.DetailModel
+@{
+    var r = Model.Requisition;
+    ViewData["Title"] = $"Requisition {r.Number}";
+    ViewData["Crumb"] = r.Number;
+
+    string Action(string handler) => Url.Page("Detail", handler, new { id = r.Id })!;
+}
+
+@section Leading {
+    <a asp-page="Index">‹ All requisitions</a>
+}
+
+@section Badges {
+    <partial name="_RequisitionStatusBadge" model="r.Status" />
+}
+
+@section Actions {
+    @if (r.CanEdit)
+    {
+        <a role="button" class="secondary outline" asp-page="Edit" asp-route-id="@r.Id">Edit</a>
+    }
+
+    @if (r.CanSubmit)
+    {
+        <form method="post" asp-page-handler="Submit" asp-route-id="@r.Id">
+            <input type="hidden" name="rowVersion" value="@r.RowVersion" />
+            <button type="submit" hx-post="@Action("Submit")"
+                    hx-confirm="Submit @r.Number for approval? It can no longer be edited unless you withdraw it.">Submit</button>
+        </form>
+    }
+
+    @if (r.CanWithdraw)
+    {
+        <form method="post" asp-page-handler="Withdraw" asp-route-id="@r.Id">
+            <input type="hidden" name="rowVersion" value="@r.RowVersion" />
+            <button type="submit" class="secondary outline" hx-post="@Action("Withdraw")"
+                    hx-confirm="Withdraw @r.Number? It goes back to being a draft you can edit.">Withdraw</button>
+        </form>
+    }
+
+    @if (r.CanDelete)
+    {
+        @* Rarely used and cannot be undone: tucked into a menu. It is still its own form, so it posts without JavaScript. *@
+        <details class="menu">
+            <summary class="menu-toggle" aria-label="More actions"><svg class="ico" aria-hidden="true"><use href="#i-dots"/></svg></summary>
+            <div class="menu-pop">
+                <form method="post" asp-page-handler="Delete" asp-route-id="@r.Id">
+                    <input type="hidden" name="rowVersion" value="@r.RowVersion" />
+                    <button type="submit" class="menu-item danger" hx-post="@Action("Delete")"
+                            hx-confirm="Delete draft @r.Number permanently? This cannot be undone.">Delete draft</button>
+                </form>
+            </div>
+        </details>
+    }
+}
+
+<div class="detail-cols">
+    <div class="detail-main">
+        <section class="card" aria-label="Requested parts">
+            <div class="card-head">
+                <h2 class="card-title">Parts</h2>
+                @if (r.Lines.Count > 0)
+                {
+                    <span class="muted">@r.Lines.Count @(r.Lines.Count == 1 ? "part" : "parts")</span>
+                }
+            </div>
+            @if (r.Lines.Count == 0)
+            {
+                <p class="card-empty muted">No parts yet@(r.CanEdit ? ". Edit this draft to add them." : ".")</p>
+            }
+            else
+            {
+                <div class="table-wrap">
+                    <table class="po-lines">
+                        <thead>
+                            <tr>
+                                <th scope="col">Part</th>
+                                <th scope="col" class="num">Requested</th>
+                                <th scope="col" class="num">On hand</th>
+                                <th scope="col" class="num">On order</th>
+                                <th scope="col">Note</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var line in r.Lines)
+                            {
+                                <tr>
+                                    <td>
+                                        <span class="cell-main"><a asp-page="/Products/Detail" asp-route-id="@line.ProductId"><strong>@line.Sku</strong></a> @line.ProductName
+                                        @if (!line.ProductIsActive)
+                                        {
+                                            <span class="badge badge-inactive">Archived</span>
+                                        }</span>
+                                    </td>
+                                    <td class="num">@line.QuantityRequested @line.Unit</td>
+                                    <td class="num">@line.OnHand</td>
+                                    <td class="num">@line.OnOrder</td>
+                                    <td>@(line.Note ?? "—")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </section>
+    </div>
+
+    <div class="side-stack">
+        <section class="card" aria-label="Requisition">
+            <div class="card-head"><h2 class="card-title">Requisition</h2></div>
+            <dl class="kv">
+                <dt>Number</dt>
+                <dd>@r.Number</dd>
+                <dt>Requested by</dt>
+                <dd>@r.RequestedByName</dd>
+                <dt>Needed by</dt>
+                <dd>@PurchaseOrderDisplay.Date(r.NeededBy)</dd>
+                <dt>Reason</dt>
+                <dd class="pre-line kv-note">@(string.IsNullOrWhiteSpace(r.Reason) ? "—" : r.Reason)</dd>
+            </dl>
+        </section>
+
+        <section class="card" aria-label="History">
+            <div class="card-head"><h2 class="card-title">History</h2></div>
+            <ol class="timeline">
+                <li><strong>Created by @r.RequestedByName</strong> <span>@Html.LocalTime(r.CreatedAt)</span></li>
+                @if (r.SubmittedAt is not null)
+                {
+                    <li><strong>Submitted by @r.SubmittedByName</strong> <span>@Html.LocalTime(r.SubmittedAt)</span></li>
+                }
+                @if (r.DecidedAt is not null)
+                {
+                    <li><strong>@RequisitionDisplay.StatusLabel(r.Status)</strong> <span>@Html.LocalTime(r.DecidedAt)</span></li>
+                }
+            </ol>
+        </section>
+    </div>
+</div>

@@ -370,6 +370,8 @@ main.container > .page-title { max-width: 28rem; margin: 1.5rem auto 0; text-ali
 
 /* ---------- Tables ---------- */
 .table-wrap {
+  /* position: the visually-hidden header labels are absolutely positioned; without this they escape the scroller and widen the page. */
+  position: relative;
   overflow-x: auto; -webkit-overflow-scrolling: touch; margin-bottom: var(--pico-spacing);
   background: var(--it-card); border: 1px solid var(--it-line); border-radius: var(--it-radius); box-shadow: var(--it-shadow);
 }

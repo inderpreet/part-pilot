@@ -1,7 +1,7 @@
 # WI-11-2 — RequisitionService, CanRequest policy
 
 - **Feature:** [F11 — Requisitions](../../Features/F11-requisitions.md)
-- **Status:** Planned
+- **Status:** Done
 - **Depends on:** WI-11-1
 - **Estimate:** M
 
@@ -16,20 +16,20 @@ All requisition rules live in one service, and any signed-in user can use it wit
 
 ## Tasks
 
-- [ ] Policy `CanRequest`: any active user with a role. Named separately from `CanView` so the Viewer exception is explicit.
-- [ ] `RequisitionService`: create draft, update header, add, update and remove line, submit, withdraw, delete draft, search, get.
-- [ ] Number issued through `DocumentSequence` (same retry approach as projects).
-- [ ] Rules: active parts only, whole quantity ≥ 1, one line per part, reason required on submit, at least one line on submit.
-- [ ] Ownership via an explicit actor (`RequisitionActor(UserId, CanSeeAll, IsAdmin)`): only the requester or an Admin edits a draft or withdraws; Viewers can read only their own.
-- [ ] Status transitions enforced in the service, with `RowVersion` conflicts returned as errors.
-- [ ] `IRequisitionEvents` fan-out publisher (created, submitted, withdrawn), like `IProjectEvents`.
-- [ ] Tests: each transition and each refused transition, ownership per role, Viewer can create and submit, archived part refused, concurrent edit conflict.
+- [x] Policy `CanRequest`: any active user with a role. Named separately from `CanView` so the Viewer exception is explicit.
+- [x] `RequisitionService`: create draft, update header, add, update and remove line, submit, withdraw, delete draft, search, get.
+- [x] Number issued through `DocumentSequence` (same retry approach as projects).
+- [x] Rules: active parts only, whole quantity ≥ 1, one line per part, reason required on submit, at least one line on submit.
+- [x] Ownership via an explicit actor (`RequisitionActor(UserId, CanSeeAll, IsAdmin)`): only the requester or an Admin edits a draft or withdraws; Viewers can read only their own.
+- [x] Status transitions enforced in the service, with `RowVersion` conflicts returned as errors.
+- [x] `IRequisitionEvents` fan-out publisher (created, submitted, withdrawn), like `IProjectEvents`.
+- [x] Tests: each transition and each refused transition, ownership per role, Viewer can create and submit, archived part refused, concurrent edit conflict.
 
 ## Acceptance criteria
 
-- [ ] A Viewer can raise and submit a requisition, and cannot see another user's.
-- [ ] A submitted requisition cannot be edited until withdrawn.
-- [ ] Nothing in this service touches stock or POs.
+- [x] A Viewer can raise and submit a requisition, and cannot see another user's.
+- [x] A submitted requisition cannot be edited until withdrawn.
+- [x] Nothing in this service touches stock or POs.
 
 ## Notes
 

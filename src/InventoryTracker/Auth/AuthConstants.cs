@@ -12,6 +12,12 @@ public static class Policies
     /// <summary>Any signed-in, active user (Admin, Staff, Viewer).</summary>
     public const string CanView = nameof(CanView);
 
+    /// <summary>
+    /// Any signed-in, active user with a role: raise and track requisitions (F11). The one write allowed to Viewers, named
+    /// separately from <see cref="CanView"/> so that exception is visible. Ownership is enforced by <c>RequisitionService</c>.
+    /// </summary>
+    public const string CanRequest = nameof(CanRequest);
+
     /// <summary>Admin, or a role the Admin has granted Import data (F07).</summary>
     public const string CanImportData = nameof(CanImportData);
 
