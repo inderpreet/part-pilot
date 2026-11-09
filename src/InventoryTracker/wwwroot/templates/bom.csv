@@ -1,0 +1,3 @@
+project_number,project_name,target_units,description,notes,sku,quantity_per_unit,note,part_name,part_unit,part_unit_cost
+,Robot Arm,2,Sample BOM,Order connectors early,MCU-1,1,controller,Microcontroller,each,4.20
+,Robot Arm,2,,,CAP-1,4,,100nF capacitor,each,0.02

@@ -31,6 +31,10 @@
     </form>
 
     @section Actions {
+        @if (Model.CanImportBoms)
+        {
+            <a role="button" class="secondary outline" href="/Import">Import</a>
+        }
         @if (Model.CanEdit)
         {
             <a role="button" asp-page="Edit">New BOM</a>

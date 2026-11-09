@@ -686,8 +686,9 @@ public sealed class ProjectService(
         int projectId, NewPartInput part, int quantityPerUnit, ProjectActor actor, CancellationToken cancellationToken = default)
     {
         RequireActor(actor);
+        var note = Clean(part.LineNote);
         var errors = new List<Error>();
-        ValidateLine(quantityPerUnit, null, errors);
+        ValidateLine(quantityPerUnit, note, errors);
         if (errors.Count > 0)
         {
             return Result.Failure<BomLineItem>([.. errors]);
@@ -714,7 +715,7 @@ public sealed class ProjectService(
                     return Result.Failure<long>([.. created.Errors]);
                 }
 
-                return await AddLineCoreAsync(projectId, created.Value.Id, quantityPerUnit, null, cancellationToken);
+                return await AddLineCoreAsync(projectId, created.Value.Id, quantityPerUnit, note, cancellationToken);
             },
             Fail<long>,
             cancellationToken);
@@ -1045,7 +1046,7 @@ public sealed class ProjectService(
     private Task<BomLineItem?> GetLineAsync(long lineId, CancellationToken cancellationToken)
         => LineItems(db.BomLines.AsNoTracking().Where(l => l.Id == lineId)).FirstOrDefaultAsync(cancellationToken);
 
-    private static List<Error> ValidateProject(string? name, string? description, int targetUnits, string? notes)
+    internal static List<Error> ValidateProject(string? name, string? description, int targetUnits, string? notes)
     {
         var errors = new List<Error>();
         if (name is null)
@@ -1079,7 +1080,7 @@ public sealed class ProjectService(
         return errors;
     }
 
-    private static void ValidateLine(int quantityPerUnit, string? note, List<Error> errors)
+    internal static void ValidateLine(int quantityPerUnit, string? note, List<Error> errors)
     {
         if (quantityPerUnit < 1)
         {

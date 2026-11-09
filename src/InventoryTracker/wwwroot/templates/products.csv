@@ -1,0 +1,2 @@
+sku,name,description,category,unit,barcode,bin_location,reorder_point,reorder_quantity,unit_cost,active
+WID-1,Widget,A sample part,Hardware,each,1234567890123,A-1,10,25,12.50,true

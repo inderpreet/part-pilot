@@ -1,5 +1,6 @@
 using System.Net;
 using InventoryTracker.Auth;
+using InventoryTracker.Data;
 using InventoryTracker.Services;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc.RazorPages;
@@ -176,11 +177,98 @@ public class AuthorizationPolicyTests(AppFactory factory) : IClassFixture<AppFac
     {
         var provider = factory.Services.GetRequiredService<IAuthorizationPolicyProvider>();
 
-        foreach (var name in new[] { Policies.RequireAdmin, Policies.CanEdit, Policies.CanView })
+        foreach (var name in new[]
+                 {
+                     Policies.RequireAdmin, Policies.CanEdit, Policies.CanView,
+                     Policies.CanImportData, Policies.CanImportBoms, Policies.CanExportData, Policies.CanExportBoms,
+                     Policies.CanImport, Policies.CanExport,
+                 })
         {
             Assert.NotNull(await provider.GetPolicyAsync(name));
         }
 
         Assert.NotNull(await provider.GetFallbackPolicyAsync());
+    }
+
+    public static TheoryData<string, DataPermission, bool, HttpStatusCode> PermissionMatrix()
+    {
+        var data = new TheoryData<string, DataPermission, bool, HttpStatusCode>();
+        foreach (var permission in Enum.GetValues<DataPermission>())
+        {
+            foreach (var allowed in new[] { true, false })
+            {
+                data.Add("Admin", permission, allowed, Ok);
+                data.Add("Staff", permission, allowed, allowed ? Ok : Forbidden);
+                data.Add("Viewer", permission, allowed, allowed ? Ok : Forbidden);
+                data.Add("Inactive", permission, allowed, Forbidden);
+            }
+        }
+
+        return data;
+    }
+
+    [Theory]
+    [MemberData(nameof(PermissionMatrix))]
+    public async Task Data_permission_matrix(string role, DataPermission permission, bool allowed, HttpStatusCode expected)
+    {
+        var endpoint = "/__policy/" + permission switch
+        {
+            DataPermission.ImportData => "import-data",
+            DataPermission.ImportBoms => "import-boms",
+            DataPermission.ExportData => "export-data",
+            _ => "export-boms",
+        };
+
+        async Task SetAllAsync(Func<string, bool> value) => await factory.WithScopeAsync(async sp =>
+        {
+            var settings = sp.GetRequiredService<ISettingsService>();
+            foreach (var configurable in DataPermissions.ConfigurableRoles)
+            {
+                Assert.True((await settings.SetAsync(SettingKeys.Permission(permission, configurable), value(configurable))).Succeeded);
+            }
+        });
+
+        await SetAllAsync(_ => allowed);
+        try
+        {
+            using var client = factory.CreateClientAs(role);
+            Assert.Equal(expected, (await client.GetAsync(endpoint)).StatusCode);
+        }
+        finally
+        {
+            await SetAllAsync(r => DataPermissions.DefaultAllowed(permission, r));
+        }
+    }
+
+    [Fact]
+    public async Task Data_permissions_follow_the_settings_and_always_let_an_Admin_through()
+    {
+        using var admin = factory.CreateClientAs("Admin");
+        using var staff = factory.CreateClientAs("Staff");
+        using var viewer = factory.CreateClientAs("Viewer");
+
+        Assert.Equal(Ok, (await admin.GetAsync("/__policy/import-data")).StatusCode);
+        Assert.Equal(Forbidden, (await staff.GetAsync("/__policy/import-data")).StatusCode);
+        Assert.Equal(Ok, (await staff.GetAsync("/__policy/export-data")).StatusCode);
+        Assert.Equal(Forbidden, (await viewer.GetAsync("/__policy/export-boms")).StatusCode);
+        Assert.Equal(Ok, (await staff.GetAsync("/__policy/export")).StatusCode);
+        Assert.Equal(Forbidden, (await staff.GetAsync("/__policy/import")).StatusCode);
+
+        await factory.WithScopeAsync(async sp =>
+        {
+            var settings = sp.GetRequiredService<ISettingsService>();
+            Assert.True((await settings.SetAsync(SettingKeys.Permission(DataPermission.ImportData, Roles.Staff), true)).Succeeded);
+        });
+
+        Assert.Equal(Ok, (await staff.GetAsync("/__policy/import-data")).StatusCode);
+        Assert.Equal(Ok, (await staff.GetAsync("/__policy/import")).StatusCode);
+
+        await factory.WithScopeAsync(async sp =>
+        {
+            var settings = sp.GetRequiredService<ISettingsService>();
+            Assert.True((await settings.SetAsync(SettingKeys.Permission(DataPermission.ImportData, Roles.Staff), false)).Succeeded);
+        });
+
+        Assert.Equal(Forbidden, (await staff.GetAsync("/__policy/import-data")).StatusCode);
     }
 }

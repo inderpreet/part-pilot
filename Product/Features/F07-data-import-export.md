@@ -1,6 +1,6 @@
 # F07 — Data import/export & backup
 
-- **Status:** Planned
+- **Status:** Done
 - **Depends on:** F03, F04, F10
 - **Roles:** Admin always; Staff and Viewers per the permissions an Admin grants (FR-9). Backup is Admin only.
 
@@ -70,6 +70,10 @@ database. An Admin decides which roles may import and export, separately for mas
 - Blank cell on update = leave unchanged (not clear), except explicit `""` handling is not supported.
 - A stock-count import and a BOM *Replace* are previewed with what they will change before anything is written.
 - Imports are audited (F08) as one summary entry per batch, not per row, through an event hook (no audit rows are written by this feature).
+- The preview reports every rule the services would refuse as a row error (archived parts and categories, field lengths, supplier email and website, duplicate barcodes, BOM name collisions), so "skip invalid rows" can exclude them. A service refusal that still reaches commit rolls everything back, names the row and keeps the upload so the preview can be shown again.
+- A BOM *Replace* leaves a project completely unchanged when any of its rows is invalid, even with "skip invalid rows"; *Merge* applies that project's valid rows.
+- A stray quote inside a plain field (`3.5" screw`) is kept as typed. A quoted field that is not closed properly is a file error.
+- Import removes the apostrophe the export adds to neutralise formulas (FR-4), so an exported file imports back unchanged.
 
 ## BOM CSV
 
@@ -86,14 +90,16 @@ database. An Admin decides which roles may import and export, separately for mas
 ## Data model
 
 `ImportBatch` — see architecture §5 (Kind adds `Boms`; `Options` records mode and create-missing for BOM imports).
-CSV column specs in WI-07-1. Permissions are stored as settings (`perm.<name>.staff`, `perm.<name>.viewer`), no new table.
+CSV column specs in WI-07-1. Permissions are stored as settings (`Permission.<Name>.Staff`, `Permission.<Name>.Viewer`), no new table.
 
 ## Screens / endpoints
 
 | Route | Purpose | Policy |
 |---|---|---|
 | `/Import` | Choose kind, upload, preview, commit, history | `CanImportData` or `CanImportBoms` (each kind needs its own) |
-| `/Import/Template/{kind}` | Download CSV template | the kind's import policy |
+| `/Import?handler=Template&kind={kind}` | Download CSV template | the kind's import policy |
+| `/Import?batch={id}` | Summary of one committed import (linked from the history list) | `CanImportData` or `CanImportBoms` |
+| `/Stock/Movements?importBatchId={id}` | Stock movements posted by one opening-stock import | `CanView` |
 | `/Export` | Export menu + downloads | `CanExportData` or `CanExportBoms` (each export needs its own) |
 | `/Admin/Backup` | Download DB backup | RequireAdmin |
 | `/Admin/Settings` | "Data permissions" card (matrix of the four permissions by role) | RequireAdmin |
@@ -107,12 +113,24 @@ CSV column specs in WI-07-1. Permissions are stored as settings (`perm.<name>.st
 
 | ID | Title | Status |
 |---|---|---|
-| [WI-07-1](../work-items/F07-data-import-export/WI-07-1-db-schema.md) | ImportBatch schema, CSV formats, permission settings | Planned |
-| [WI-07-2](../work-items/F07-data-import-export/WI-07-2-api.md) | Import/Export/Backup services, permission policies | Planned |
-| [WI-07-3](../work-items/F07-data-import-export/WI-07-3-frontend.md) | Upload, preview, export, backup pages, permissions card | Planned |
-| [WI-07-4](../work-items/F07-data-import-export/WI-07-4-xlsx-and-scheduled-backups.md) | .xlsx import and scheduled backups | Deferred |
+| [WI-07-1](../work-items/F07-data-import-export/WI-07-1-db-schema.md) | ImportBatch schema, CSV formats, permission settings | Done |
+| [WI-07-2](../work-items/F07-data-import-export/WI-07-2-api.md) | Import/Export/Backup services, permission policies | Done |
+| [WI-07-3](../work-items/F07-data-import-export/WI-07-3-frontend.md) | Upload, preview, export, backup pages, permissions card | Done |
+| [WI-07-4](../work-items/F07-data-import-export/WI-07-4-xlsx-and-scheduled-backups.md) | .xlsx import and scheduled backups | Blocked |
 
 ## Open questions
 
 - .xlsx import and automatic scheduled backups to a folder (nightly, keep last N) are wanted, but later: see WI-07-4.
 - Should a Viewer ever be allowed to import? The matrix allows it for completeness; the defaults deny it. Revisit if Admins ask to remove the option.
+
+## Decisions (this implementation)
+
+- Nav: Import and Export sit in the Insights group, after Reports. Each is shown only when the matching policy passes (`CanImport` / `CanExport`).
+- An existing **archived** project named in a BOM CSV is updated in place and stays archived.
+- **Replace** (and Merge) is allowed on a project that already has builds; the preview lists lines that Replace will remove. Builds are not imported or exported.
+- Commit re-checks the permission for the staged kind, so a permission revoked after the preview applies at once.
+- Staged uploads are deleted on commit, cancel and expiry; files left by a crashed process are swept at the next start once past the 30-minute limit.
+
+## Reviews
+
+- [2026-11-09 12:04 code review](../reviews/2026-11-09-1204-F07-code-review.md): 26 issues, all resolved.

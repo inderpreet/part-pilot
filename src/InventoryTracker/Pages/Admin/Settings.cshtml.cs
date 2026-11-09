@@ -14,24 +14,17 @@ public class SettingsModel(ISettingsService settings) : PageModel
     [BindProperty]
     public SettingsInput Input { get; set; } = new();
 
-    public async Task OnGetAsync()
-    {
-        var current = await settings.GetBusinessSettingsAsync(HttpContext.RequestAborted);
-        Input = new SettingsInput
-        {
-            CompanyName = current.CompanyName,
-            CurrencyCode = current.CurrencyCode,
-            CurrencySymbol = current.CurrencySymbol,
-            AllowNegativeStock = current.AllowNegativeStock,
-            PurchaseOrderNumberPrefix = current.PurchaseOrderNumberPrefix,
-            ProjectNumberPrefix = current.ProjectNumberPrefix,
-        };
-    }
+    [BindProperty]
+    public PermissionsInput Permissions { get; set; } = new();
+
+    public async Task OnGetAsync() => await LoadAsync();
 
     public async Task<IActionResult> OnPostAsync()
     {
         if (!ModelState.IsValid)
         {
+            var perms = await settings.GetDataPermissionsAsync(HttpContext.RequestAborted);
+            Permissions = From(perms);
             return Page();
         }
 
@@ -48,6 +41,53 @@ public class SettingsModel(ISettingsService settings) : PageModel
         this.Flash("Settings saved.");
         return RedirectToPage();
     }
+
+    public async Task<IActionResult> OnPostPermissionsAsync()
+    {
+        var result = await settings.UpdateDataPermissionsAsync(
+            new DataPermissionSettings(
+                Permissions.StaffImportData, Permissions.ViewerImportData,
+                Permissions.StaffImportBoms, Permissions.ViewerImportBoms,
+                Permissions.StaffExportData, Permissions.ViewerExportData,
+                Permissions.StaffExportBoms, Permissions.ViewerExportBoms),
+            HttpContext.RequestAborted);
+        if (!result.Succeeded)
+        {
+            await LoadAsync();
+            ModelState.AddErrors(result);
+            return Page();
+        }
+
+        this.Flash("Data permissions saved.");
+        return RedirectToPage();
+    }
+
+    private async Task LoadAsync()
+    {
+        var current = await settings.GetBusinessSettingsAsync(HttpContext.RequestAborted);
+        Input = new SettingsInput
+        {
+            CompanyName = current.CompanyName,
+            CurrencyCode = current.CurrencyCode,
+            CurrencySymbol = current.CurrencySymbol,
+            AllowNegativeStock = current.AllowNegativeStock,
+            PurchaseOrderNumberPrefix = current.PurchaseOrderNumberPrefix,
+            ProjectNumberPrefix = current.ProjectNumberPrefix,
+        };
+        Permissions = From(await settings.GetDataPermissionsAsync(HttpContext.RequestAborted));
+    }
+
+    private static PermissionsInput From(DataPermissionSettings perms) => new()
+    {
+        StaffImportData = perms.StaffImportData,
+        ViewerImportData = perms.ViewerImportData,
+        StaffImportBoms = perms.StaffImportBoms,
+        ViewerImportBoms = perms.ViewerImportBoms,
+        StaffExportData = perms.StaffExportData,
+        ViewerExportData = perms.ViewerExportData,
+        StaffExportBoms = perms.StaffExportBoms,
+        ViewerExportBoms = perms.ViewerExportBoms,
+    };
 
     public sealed class SettingsInput
     {
@@ -73,5 +113,17 @@ public class SettingsModel(ISettingsService settings) : PageModel
         [StringLength(BusinessSettings.ProjectPrefixMaxLength)]
         [Display(Name = "BOM number prefix")]
         public string? ProjectNumberPrefix { get; set; }
+    }
+
+    public sealed class PermissionsInput
+    {
+        public bool StaffImportData { get; set; }
+        public bool ViewerImportData { get; set; }
+        public bool StaffImportBoms { get; set; }
+        public bool ViewerImportBoms { get; set; }
+        public bool StaffExportData { get; set; }
+        public bool ViewerExportData { get; set; }
+        public bool StaffExportBoms { get; set; }
+        public bool ViewerExportBoms { get; set; }
     }
 }

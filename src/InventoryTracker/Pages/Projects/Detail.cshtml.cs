@@ -31,6 +31,8 @@ public class DetailModel(IProjectService projects, ICurrentUser currentUser, IAu
     /// <summary>Only used to show "Change number"; its handlers enforce <c>RequireAdmin</c> themselves.</summary>
     public bool IsAdmin => currentUser.IsAdmin;
 
+    public bool CanExportBoms { get; private set; }
+
     /// <summary>
     /// A form shown on the page itself when its handler is opened without htmx (no JavaScript, or a plain link). With htmx the
     /// same form arrives as a dialog instead.
@@ -432,6 +434,7 @@ public class DetailModel(IProjectService projects, ICurrentUser currentUser, IAu
         Project = project;
         Status = status;
         Builds = await projects.GetBuildsAsync(id, HttpContext.RequestAborted);
+        CanExportBoms = (await authorization.AuthorizeAsync(User, Policies.CanExportBoms)).Succeeded;
         return true;
     }
 

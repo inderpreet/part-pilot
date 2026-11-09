@@ -61,8 +61,10 @@ public class StockTransaction : IHasCreatedAt
 
     public PurchaseOrderLine? PurchaseOrderLine { get; set; }
 
-    /// <summary>Set by CSV import (F07). The column exists now; its foreign key is added by WI-07-1.</summary>
+    /// <summary>Set by CSV import (F07): the opening-stock import that posted this row.</summary>
     public long? ImportBatchId { get; set; }
+
+    public ImportBatch? ImportBatch { get; set; }
 
     /// <summary>For a <see cref="StockTransactionType.Reversal"/>: the transaction it negates. Unique, so each row is reversed at most once.</summary>
     public long? ReversesTransactionId { get; set; }

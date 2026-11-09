@@ -1,0 +1,237 @@
+@page "/Import"
+@model InventoryTracker.Pages.Import.IndexModel
+@using InventoryTracker.Data.Entities
+@using InventoryTracker.Services
+@{
+    ViewData["Title"] = "Import";
+}
+
+@section Subtitle {
+    <p>Load parts, suppliers, opening stock or BOMs from a CSV. Nothing is written until you confirm the preview.</p>
+}
+
+<div id="import-panel">
+<partial name="_ValidationSummary" model="ViewData.ModelState" />
+
+@if (Model.Summary is { } summary)
+{
+    <section class="card">
+        <header><strong>Import #@summary.Id finished</strong></header>
+        <p>@ImportKinds.Label(summary.Kind) from <code>@summary.FileName</code>:
+            @summary.CreatedCount created, @summary.UpdatedCount updated, @summary.SkippedCount skipped
+            (@summary.RowCount rows).</p>
+        <p><small>By @summary.CreatedByName, @Html.LocalTime(summary.CreatedAt)</small></p>
+        @if (summary.Kind == ImportKind.Boms)
+        {
+            <p><a asp-page="/Projects/Index">Open BOMs</a></p>
+        }
+        else if (summary.Kind == ImportKind.OpeningStock)
+        {
+            <p><a asp-page="/Stock/Movements" asp-route-importBatchId="@summary.Id">Open stock movements from this import</a></p>
+        }
+        <p><a asp-page="Index">Import another file</a></p>
+    </section>
+}
+else if (Model.Preview is { } preview)
+{
+    var replace = preview.Replacements;
+    <section class="card">
+        <header>
+            <strong>Preview</strong>
+            <span class="badge badge-ok">@preview.CreateCount create</span>
+            <span class="badge badge-submitted">@preview.UpdateCount update</span>
+            <span class="badge badge-draft">@preview.SkipCount skip</span>
+            @if (preview.ErrorCount > 0)
+            {
+                <span class="badge badge-out">@preview.ErrorCount error</span>
+            }
+        </header>
+        <p><code>@preview.FileName</code> · @ImportKinds.Label(preview.Kind) · @preview.RowCount rows</p>
+
+        @if (replace.Count > 0)
+        {
+            <p class="flash-error">Replace will remove @replace.Sum(r => r.RemovedCount) existing BOM line(s) that are not in the file:</p>
+            <ul>
+                @foreach (var item in replace)
+                {
+                    <li><strong>@item.ProjectNumber</strong> @item.ProjectName — @string.Join(", ", item.RemovedSkus)</li>
+                }
+            </ul>
+        }
+
+        @if (preview.Options.Mode == BomImportMode.Replace && preview.Kind == ImportKind.Boms && preview.ErrorCount > 0)
+        {
+            <p>A project with any invalid row is left completely unchanged by Replace, even when you skip invalid rows.</p>
+        }
+
+        @if (preview.ProjectChanges.Count > 0)
+        {
+            <p>These project details will change:</p>
+            <ul>
+                @foreach (var item in preview.ProjectChanges)
+                {
+                    <li><strong>@item.ProjectNumber</strong> @item.ProjectName — @string.Join("; ", item.Changes)</li>
+                }
+            </ul>
+        }
+
+        @if (preview.ErrorCount > 0)
+        {
+            <details open>
+                <summary>Errors only (@preview.ErrorCount)</summary>
+                <div class="table-wrap">
+                    <table>
+                        <thead>
+                            <tr><th>Row</th><th>Key</th><th>Error</th></tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var row in preview.Rows.Where(r => r.Action == ImportRowAction.Error).Take(200))
+                            {
+                                <tr>
+                                    <td>@row.LineNumber</td>
+                                    <td>@row.Key</td>
+                                    <td>@row.Error</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            </details>
+        }
+
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>Row</th><th>Action</th><th>Key</th><th>Detail</th></tr>
+                </thead>
+                <tbody>
+                    @{
+                        string? currentProject = null;
+                    }
+                    @foreach (var row in preview.Rows.Take(200))
+                    {
+                        if (preview.Kind == ImportKind.Boms && row.Project != currentProject)
+                        {
+                            currentProject = row.Project;
+                            <tr class="import-group"><th colspan="4" scope="colgroup">@row.Project</th></tr>
+                        }
+
+                        var badge = row.Action switch
+                        {
+                            ImportRowAction.Create => "badge-ok",
+                            ImportRowAction.Update => "badge-submitted",
+                            ImportRowAction.Skip => "badge-draft",
+                            _ => "badge-out",
+                        };
+                        <tr>
+                            <td>@row.LineNumber</td>
+                            <td><span class="badge @badge">@row.Action</span></td>
+                            <td>@row.Key</td>
+                            <td>@(row.Error ?? row.Summary)</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        @if (preview.RowCount > 200)
+        {
+            <p><small>Showing the first 200 rows of @preview.RowCount.</small></p>
+        }
+
+        <form method="post" asp-page-handler="Commit" class="action-bar action-bar-static">
+            <input type="hidden" name="Token" value="@preview.Token" />
+            <input type="hidden" name="Kind" value="@preview.Kind" />
+            @if (preview.ErrorCount > 0)
+            {
+                <label>
+                    <input type="checkbox" name="SkipInvalid" value="true" />
+                    Skip invalid rows
+                </label>
+            }
+            @if (replace.Count > 0)
+            {
+                <button type="submit" class="danger"
+                        hx-post="@Url.Page("Index", "Commit")"
+                        hx-target="#import-panel" hx-select="#import-panel" hx-swap="outerHTML"
+                        hx-confirm="Replace will remove @replace.Sum(r => r.RemovedCount) BOM line(s) that are not in the file. Continue?">
+                    Commit import
+                </button>
+            }
+            else
+            {
+                <button type="submit">Commit import</button>
+            }
+            <button type="submit" formaction="@Url.Page("Index", "Cancel")" class="secondary outline" formnovalidate>Cancel</button>
+        </form>
+    </section>
+}
+else
+{
+    <form method="post" asp-page-handler="Upload" enctype="multipart/form-data" class="card form-card">
+        <label>
+            What to import
+            <select name="Kind" required>
+                @foreach (var kind in Model.AllowedKinds)
+                {
+                    <option value="@kind" selected="@(kind == Model.Kind)">@ImportKinds.Label(kind)</option>
+                }
+            </select>
+        </label>
+        <p>
+            Download a template:
+            @foreach (var kind in Model.AllowedKinds)
+            {
+                <a asp-page="Index" asp-page-handler="Template" asp-route-kind="@kind">@ImportKinds.Label(kind)</a>
+                if (kind != Model.AllowedKinds[^1])
+                {
+                    <text> · </text>
+                }
+            }
+        </p>
+        <label>
+            CSV file
+            <input type="file" name="file" accept=".csv,text/csv" required />
+        </label>
+        @if (Model.AllowedKinds.Contains(ImportKind.Boms))
+        {
+            <fieldset>
+                <legend>BOM options</legend>
+                <label><input type="radio" name="Mode" value="@BomImportMode.Merge" checked="@(Model.Mode == BomImportMode.Merge)" /> Merge — add and update lines, never remove</label>
+                <label><input type="radio" name="Mode" value="@BomImportMode.Replace" checked="@(Model.Mode == BomImportMode.Replace)" /> Replace — the file becomes the BOM for each project it names</label>
+                <label><input type="checkbox" name="CreateMissingParts" value="true" checked="@Model.CreateMissingParts" /> Create missing parts from the row</label>
+            </fieldset>
+        }
+        <div class="action-bar">
+            <button type="submit">Preview</button>
+        </div>
+    </form>
+}
+
+@if (Model.History.Items.Count > 0 && Model.Preview is null)
+{
+    <section class="card" style="margin-top: 1.5rem;">
+        <header><strong>Recent imports</strong></header>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>When</th><th>Kind</th><th>File</th><th>Created</th><th>Updated</th><th>Skipped</th><th>By</th></tr>
+                </thead>
+                <tbody>
+                    @foreach (var batch in Model.History.Items)
+                    {
+                        <tr>
+                            <td>@Html.LocalTime(batch.CreatedAt)</td>
+                            <td>@ImportKinds.Label(batch.Kind)</td>
+                            <td><a asp-page="Index" asp-route-batch="@batch.Id">@batch.FileName</a></td>
+                            <td>@batch.CreatedCount</td>
+                            <td>@batch.UpdatedCount</td>
+                            <td>@batch.SkippedCount</td>
+                            <td>@batch.CreatedByName</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </section>
+}
+</div>

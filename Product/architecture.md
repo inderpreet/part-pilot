@@ -107,7 +107,7 @@ PurchaseOrder(Id, Number UQ, SupplierId→Supplier, Status, OrderDate, ExpectedD
 PurchaseOrderLine(Id, PurchaseOrderId→PurchaseOrder, ProductId→Product, QuantityOrdered, QuantityReceived, UnitCostCents)
 DocumentSequence(Name, Year, NextValue)  PK (Name, Year)  -- numbering (PurchaseOrder, and Project in F10), one row per name and year
 
-Project(Id, Name UQ, Number UQ (Admin-changeable), Description, TargetUnits, Notes, IsActive, RowVersion)   -- F10, planned
+Project(Id, Name UQ, Number UQ (Admin-changeable), Description, TargetUnits, Notes, IsActive, RowVersion)   -- F10
 BomLine(Id, ProjectId→Project Cascade, ProductId→Product Restrict, QuantityPerUnit, Note)  UQ (ProjectId, ProductId)
 ProjectBuild(Id, ProjectId→Project Restrict, Units, Note, UserId→AspNetUsers, CreatedAt)   -- immutable
 
@@ -160,9 +160,9 @@ needed `QuantityPerUnit × remaining units` against on hand, on order and **in d
   the fallback policy require an authenticated user carrying the `inv:active` claim. Applied with
   `[Authorize(Policy = ...)]` on page models; a page that names a policy is not evaluated against the fallback, so each policy
   repeats the active check.
-- Data permissions (F07, planned): `CanImportData`, `CanImportBoms`, `CanExportData`, `CanExportBoms` (and `CanImport` / `CanExport`, either of the
+- Data permissions (F07): `CanImportData`, `CanImportBoms`, `CanExportData`, `CanExportBoms` (and `CanImport` / `CanExport`, either of the
   pair). Admin always passes; Staff and Viewer pass when an Admin has allowed it for that role on the Settings page (settings
-  `perm.<name>.staff|viewer`, read through `ISettingsService`, so a change applies on the next request). Backup stays `RequireAdmin`.
+  `Permission.<Name>.Staff|Viewer`, read through `ISettingsService`, so a change applies on the next request). Backup stays `RequireAdmin`.
 - Sessions are re-validated every `Auth:ValidationIntervalSeconds` (default 60). `ActiveUserSecurityStampValidator` rejects
   deactivated users. The security stamp rotates on role change, deactivation and any password change/reset, which ends other sessions.
 - Business rules live in `UserService` (last active Admin cannot be demoted/deactivated; one role per user). Admin-affecting

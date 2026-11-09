@@ -1,7 +1,7 @@
 # WI-07-1 — ImportBatch schema, CSV formats, permission settings
 
 - **Feature:** [F07 — Data import/export & backup](../../Features/F07-data-import-export.md)
-- **Status:** Planned
+- **Status:** Done
 - **Depends on:** WI-03-1, WI-04-1, WI-10-1
 - **Estimate:** S
 
@@ -17,15 +17,15 @@ data permissions have settings keys with defaults.
 
 ## Tasks
 
-- [ ] `ImportBatch`: Id, Kind (string: Products, Suppliers, ProductSuppliers, OpeningStock, Boms), FileName (255), RowCount, CreatedCount,
+- [x] `ImportBatch`: Id, Kind (string: Products, Suppliers, ProductSuppliers, OpeningStock, Boms), FileName (255), RowCount, CreatedCount,
       UpdatedCount, SkippedCount, Options (string?, 200: for BOMs `mode=Merge|Replace;createMissingParts=true|false`), CreatedById (FK users), CreatedAt.
-- [ ] Add FK `StockTransaction.ImportBatchId → ImportBatch.Id` (`Restrict`); the column exists already, so the migration adds the table and the FK.
-- [ ] Migration `AddImportBatch` (applies to an empty DB and to the previous schema).
-- [ ] Setting keys with defaults in `SettingKeys`: `perm.import_data.staff`, `perm.import_data.viewer`, `perm.import_boms.staff`,
-      `perm.import_boms.viewer`, `perm.export_data.staff`, `perm.export_data.viewer`, `perm.export_boms.staff`, `perm.export_boms.viewer`
-      (defaults: Staff exports allowed, everything else denied). Unknown keys stay rejected by `SettingsService`.
-- [ ] Finalise CSV specs below; add template files to `wwwroot/templates/` (embedded).
-- [ ] Schema tests: table and FK exist, `Restrict` delete of a batch with transactions fails, defaults present.
+- [x] Add FK `StockTransaction.ImportBatchId → ImportBatch.Id` (`Restrict`); the column exists already, so the migration adds the table and the FK.
+- [x] Migration `AddImportBatch` (applies to an empty DB and to the previous schema).
+- [x] Setting keys with defaults in `SettingKeys`: `Permission.{ImportData|ImportBoms|ExportData|ExportBoms}.{Staff|Viewer}`
+      (same shape as `Company.Name`; Admin has no key). Defaults: Staff exports allowed, everything else denied.
+      Unknown keys stay rejected by `SettingsService`.
+- [x] Finalise CSV specs below; add template files to `wwwroot/templates/` (embedded).
+- [x] Schema tests: table and FK exist, `Restrict` delete of a batch with transactions fails, defaults present.
 
 ## CSV specifications
 
@@ -56,8 +56,8 @@ data permissions have settings keys with defaults.
 
 ## Acceptance criteria
 
-- [ ] Specs reviewed and templates downloadable; migration applies.
-- [ ] The eight permission settings exist with the documented defaults.
+- [x] Specs reviewed and templates downloadable; migration applies.
+- [x] The eight permission settings exist with the documented defaults.
 
 ## Notes
 

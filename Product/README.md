@@ -27,7 +27,7 @@ executable: run it, open the browser, sign in. Data lives in a single SQLite fil
 | [F04](Features/F04-suppliers.md) | Suppliers | Supplier directory and product–supplier pricing | F02 | Done |
 | [F05](Features/F05-purchase-orders.md) | Purchase orders & receiving | PO lifecycle, receiving into stock | F03, F04 | Done |
 | [F06](Features/F06-dashboard-alerts-reports.md) | Dashboard, alerts & reports | KPIs, low-stock alerts, reorder suggestions, reports | F03, F05 | Done |
-| [F07](Features/F07-data-import-export.md) | Data import/export & backup | CSV import/export of parts, suppliers, stock and BOMs, opening stock, admin-set import/export permissions, DB backup download | F03, F04, F10 | Planned |
+| [F07](Features/F07-data-import-export.md) | Data import/export & backup | CSV import/export of parts, suppliers, stock and BOMs, opening stock, admin-set import/export permissions, DB backup download | F03, F04, F10 | Done |
 | [F08](Features/F08-audit-log.md) | Audit log | Who changed what and when; sign-in events | F01 | Planned |
 | [F09](Features/F09-ui-overhaul.md) | UI overhaul | Left rail shell, list cards, actions, forms and detail pages on the screens that exist | F05 | Done |
 | [F10](Features/F10-project-boms.md) | Projects & BOMs | Numbered projects with bills of materials from catalog or new parts, status check against stock, orders and draft POs, order shortages, build (issue parts) | F02, F03, F04, F05, F09 | Done |
@@ -66,10 +66,10 @@ F00 has an extra packaging item. F09 has no schema and no service layer; it is s
 | [WI-06-1](work-items/F06-dashboard-alerts-reports/WI-06-1-db-schema.md) | Dashboard — query indexes, reporting queries | Done |
 | [WI-06-2](work-items/F06-dashboard-alerts-reports/WI-06-2-api.md) | Dashboard — ReportService, reorder suggestions | Done |
 | [WI-06-3](work-items/F06-dashboard-alerts-reports/WI-06-3-frontend.md) | Dashboard — dashboard, low-stock, reports pages | Done |
-| [WI-07-1](work-items/F07-data-import-export/WI-07-1-db-schema.md) | Import/export — ImportBatch schema, CSV formats, permission settings | Planned |
-| [WI-07-2](work-items/F07-data-import-export/WI-07-2-api.md) | Import/export — Import/Export/Backup services, permission policies | Planned |
-| [WI-07-3](work-items/F07-data-import-export/WI-07-3-frontend.md) | Import/export — upload, preview, export, backup pages, permissions card | Planned |
-| [WI-07-4](work-items/F07-data-import-export/WI-07-4-xlsx-and-scheduled-backups.md) | Import/export — .xlsx import and scheduled backups | Deferred |
+| [WI-07-1](work-items/F07-data-import-export/WI-07-1-db-schema.md) | Import/export — ImportBatch schema, CSV formats, permission settings | Done |
+| [WI-07-2](work-items/F07-data-import-export/WI-07-2-api.md) | Import/export — Import/Export/Backup services, permission policies | Done |
+| [WI-07-3](work-items/F07-data-import-export/WI-07-3-frontend.md) | Import/export — upload, preview, export, backup pages, permissions card | Done |
+| [WI-07-4](work-items/F07-data-import-export/WI-07-4-xlsx-and-scheduled-backups.md) | Import/export — .xlsx import and scheduled backups | Blocked |
 | [WI-08-1](work-items/F08-audit-log/WI-08-1-db-schema.md) | Audit — AuditEntry schema | Planned |
 | [WI-08-2](work-items/F08-audit-log/WI-08-2-api.md) | Audit — SaveChanges interceptor, AuditService | Planned |
 | [WI-08-3](work-items/F08-audit-log/WI-08-3-frontend.md) | Audit — audit log viewer, entity history | Planned |

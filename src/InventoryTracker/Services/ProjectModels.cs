@@ -160,7 +160,7 @@ public sealed record ProjectInput(string? Name, string? Number, string? Descript
 public sealed record BomLineInput(int ProductId, int QuantityPerUnit, string? Note);
 
 /// <summary>The short form for a part that is not in the catalog yet. Everything else takes the catalog defaults.</summary>
-public sealed record NewPartInput(string? Sku, string? Name, string? Unit, long UnitCostCents);
+public sealed record NewPartInput(string? Sku, string? Name, string? Unit, long UnitCostCents, string? LineNote = null);
 
 /// <summary>A project that uses a product, with how many of it one unit takes.</summary>
 public sealed record ProductProjectUse(int ProjectId, string Number, string Name, bool IsActive, int QuantityPerUnit);

@@ -1,0 +1,26 @@
+@page "/Admin/Backup"
+@model InventoryTracker.Pages.Admin.BackupModel
+@{
+    ViewData["Title"] = "Backup";
+}
+
+@section Leading {
+    <a asp-page="Index">‹ Administration</a>
+}
+
+@section Subtitle {
+    <p>Download a consistent copy of the database while the app is running. Restore is a manual step.</p>
+}
+
+<section class="card">
+    <form method="post">
+        <button type="submit">Download backup</button>
+    </form>
+    <h2>Restore (manual)</h2>
+    <ol>
+        <li>Stop the Part Pilot application.</li>
+        <li>Replace the <code>inventory.db</code> file (and, if present, <code>inventory.db-wal</code> and <code>inventory.db-shm</code>) with the downloaded backup. Rename the backup to <code>inventory.db</code>.</li>
+        <li>Start the application again.</li>
+    </ol>
+    <p>The backup file includes user accounts and password hashes. Keep it as carefully as the live database.</p>
+</section>

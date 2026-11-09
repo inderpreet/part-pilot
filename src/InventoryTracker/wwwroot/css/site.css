@@ -853,12 +853,18 @@ a.stat:hover, .stat-link:hover { text-decoration: none; border-color: var(--it-l
 .card-head .card-link { font-size: var(--it-text-sm); font-weight: 500; white-space: nowrap; }
 @media (max-width: 64rem) { .dash-grid { grid-template-columns: 1fr; } }
 .report-links { display: grid; grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr)); gap: 1rem; margin: 0; padding: 0; list-style: none; }
+.report-links + .report-links { margin-top: 1rem; }
 .report-links li { margin: 0; padding: 0; list-style: none; }
 .report-links li::before { content: none; }
-.report-links a { display: block; height: 100%; padding: 1rem 1.1rem; border: 1px solid var(--it-line); border-radius: var(--it-radius); background: var(--it-card); box-shadow: var(--it-shadow); color: var(--it-ink); text-decoration: none; }
+.report-links a, .report-links .report-card { display: flex; flex-direction: column; height: 100%; padding: 1rem 1.1rem; border: 1px solid var(--it-line); border-radius: var(--it-radius); background: var(--it-card); box-shadow: var(--it-shadow); color: var(--it-ink); text-decoration: none; }
 .report-links a:hover { border-color: var(--it-line-strong); box-shadow: 0 2px 6px rgba(16, 24, 40, 0.08); text-decoration: none; }
 .report-links strong { display: block; font-size: var(--it-text); font-weight: 600; }
-.report-links span { display: block; margin-top: 0.25rem; color: var(--it-muted); font-size: var(--it-text-sm); }
+.report-links > li > a > span, .report-links .report-card > span { display: block; margin-top: 0.25rem; color: var(--it-muted); font-size: var(--it-text-sm); }
+.report-links .report-card form { display: flex; flex-direction: column; flex: 1; margin: 0.85rem 0 0; }
+.report-links .report-card .field-grid { grid-template-columns: minmax(0, 1fr); }
+.report-links .report-card form label { margin-bottom: 0.65rem; font-size: var(--it-text-sm); font-weight: 600; color: var(--it-ink-2); }
+.report-links .report-card form label.inline-check { display: flex; align-items: center; gap: 0.4rem; font-weight: 500; }
+.report-links .report-card form button { width: auto; margin-top: auto; align-self: start; }
 .report-bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 0.5rem 1rem; padding: 0.6rem 1.1rem; border-bottom: 1px solid var(--it-line); font-size: var(--it-text-sm); color: var(--it-muted); }
 .report-bar p { margin: 0; }
 .report-bar a[role="button"] { width: auto; margin: 0; }

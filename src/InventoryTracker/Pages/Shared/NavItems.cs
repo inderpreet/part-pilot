@@ -38,6 +38,8 @@ public static class NavItems
         new("BOMs", "/Projects", Policies.CanView, Group: NavGroups.Inventory, Icon: "clipboard"),
         new("Low stock", "/Reports/LowStock", Policies.CanView, Group: NavGroups.Insights, Icon: "alert", LowStockBadge: true),
         new("Reports", "/Reports", Policies.CanView, Group: NavGroups.Insights, Icon: "chart"),
+        new("Import", "/Import", Policies.CanImport, Group: NavGroups.Insights, Icon: "upload"),
+        new("Export", "/Export", Policies.CanExport, Group: NavGroups.Insights, Icon: "download"),
         new("Admin", "/Admin", Policies.RequireAdmin, Group: NavGroups.Foot, Icon: "gear"),
     ];
 

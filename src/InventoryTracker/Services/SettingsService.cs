@@ -27,7 +27,22 @@ public interface ISettingsService
 
     /// <summary>Validates and saves all business settings at once (all or nothing).</summary>
     Task<Result<BusinessSettings>> UpdateBusinessSettingsAsync(BusinessSettings settings, CancellationToken cancellationToken = default);
+
+    Task<DataPermissionSettings> GetDataPermissionsAsync(CancellationToken cancellationToken = default);
+
+    Task<Result> UpdateDataPermissionsAsync(DataPermissionSettings settings, CancellationToken cancellationToken = default);
 }
+
+/// <summary>The four data permissions for Staff and Viewer (F07 FR-9). Admin is always allowed.</summary>
+public sealed record DataPermissionSettings(
+    bool StaffImportData,
+    bool ViewerImportData,
+    bool StaffImportBoms,
+    bool ViewerImportBoms,
+    bool StaffExportData,
+    bool ViewerExportData,
+    bool StaffExportBoms,
+    bool ViewerExportBoms);
 
 /// <summary>The settings an Admin edits on the Settings page (F01 FR-7).</summary>
 public sealed record BusinessSettings(
@@ -258,6 +273,60 @@ public sealed class SettingsService(IServiceScopeFactory scopeFactory, BrandingS
 
         _cache = null;
         return Result.Success(new BusinessSettings(company, code, symbol, settings.AllowNegativeStock, prefix, projectPrefix));
+    }
+
+    public async Task<DataPermissionSettings> GetDataPermissionsAsync(CancellationToken cancellationToken = default)
+    {
+        var all = await GetAllAsync(cancellationToken);
+        bool Read(DataPermission permission, string role)
+            => bool.TryParse(all[SettingKeys.Permission(permission, role)], out var value) && value;
+
+        return new DataPermissionSettings(
+            Read(DataPermission.ImportData, Roles.Staff),
+            Read(DataPermission.ImportData, Roles.Viewer),
+            Read(DataPermission.ImportBoms, Roles.Staff),
+            Read(DataPermission.ImportBoms, Roles.Viewer),
+            Read(DataPermission.ExportData, Roles.Staff),
+            Read(DataPermission.ExportData, Roles.Viewer),
+            Read(DataPermission.ExportBoms, Roles.Staff),
+            Read(DataPermission.ExportBoms, Roles.Viewer));
+    }
+
+    public async Task<Result> UpdateDataPermissionsAsync(DataPermissionSettings settings, CancellationToken cancellationToken = default)
+    {
+        var values = new Dictionary<string, string>
+        {
+            [SettingKeys.Permission(DataPermission.ImportData, Roles.Staff)] = settings.StaffImportData ? "true" : "false",
+            [SettingKeys.Permission(DataPermission.ImportData, Roles.Viewer)] = settings.ViewerImportData ? "true" : "false",
+            [SettingKeys.Permission(DataPermission.ImportBoms, Roles.Staff)] = settings.StaffImportBoms ? "true" : "false",
+            [SettingKeys.Permission(DataPermission.ImportBoms, Roles.Viewer)] = settings.ViewerImportBoms ? "true" : "false",
+            [SettingKeys.Permission(DataPermission.ExportData, Roles.Staff)] = settings.StaffExportData ? "true" : "false",
+            [SettingKeys.Permission(DataPermission.ExportData, Roles.Viewer)] = settings.ViewerExportData ? "true" : "false",
+            [SettingKeys.Permission(DataPermission.ExportBoms, Roles.Staff)] = settings.StaffExportBoms ? "true" : "false",
+            [SettingKeys.Permission(DataPermission.ExportBoms, Roles.Viewer)] = settings.ViewerExportBoms ? "true" : "false",
+        };
+
+        await using (var scope = scopeFactory.CreateAsyncScope())
+        {
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+            var existing = await db.AppSettings.Where(s => values.Keys.Contains(s.Key)).ToDictionaryAsync(s => s.Key, StringComparer.OrdinalIgnoreCase, cancellationToken);
+            foreach (var (key, value) in values)
+            {
+                if (existing.TryGetValue(key, out var row))
+                {
+                    row.Value = value;
+                }
+                else
+                {
+                    db.AppSettings.Add(new AppSetting { Key = key, Value = value });
+                }
+            }
+
+            await db.SaveChangesAsync(cancellationToken);
+        }
+
+        _cache = null;
+        return Result.Success();
     }
 
     private static void EnsureKnown(string key)

@@ -25,7 +25,7 @@ public class MovementsModel(IStockService stock, IProductService products, ICurr
 
     public bool IsFiltered =>
         Query.SearchTerm is not null || Query.ProductId is not null || Query.Type is not null || !string.IsNullOrEmpty(Query.UserId)
-        || Query.From is not null || Query.To is not null;
+        || Query.From is not null || Query.To is not null || Query.ImportBatchId is not null;
 
     /// <summary>Where a no-JavaScript Reverse button returns to: this page with its current filters.</summary>
     public string CurrentUrl => $"{Request.Path}{Request.QueryString}";
@@ -45,6 +45,7 @@ public class MovementsModel(IStockService stock, IProductService products, ICurr
                 ProductId = query.ProductId,
                 Type = query.Type,
                 UserId = query.UserId,
+                ImportBatchId = query.ImportBatchId,
                 From = from,
                 To = to,
             },
@@ -72,6 +73,9 @@ public class MovementsModel(IStockService stock, IProductService products, ICurr
         public StockTransactionType? Type { get; set; }
 
         public string? UserId { get; set; }
+
+        /// <summary>Set by the link on an import summary (F07).</summary>
+        public long? ImportBatchId { get; set; }
 
         public DateOnly? From { get; set; }
 

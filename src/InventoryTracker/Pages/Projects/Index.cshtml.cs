@@ -8,7 +8,7 @@ using Microsoft.AspNetCore.Mvc.RazorPages;
 namespace InventoryTracker.Pages.Projects;
 
 [Authorize(Policy = Policies.CanView)]
-public class IndexModel(IProjectService projects, ICurrentUser currentUser) : PageModel
+public class IndexModel(IProjectService projects, ICurrentUser currentUser, IAuthorizationService authorization) : PageModel
 {
     public ProjectListQuery Query { get; private set; } = new();
 
@@ -16,6 +16,8 @@ public class IndexModel(IProjectService projects, ICurrentUser currentUser) : Pa
 
     /// <summary>Only used to hide edit actions; the pages behind them enforce <c>CanEdit</c> themselves.</summary>
     public bool CanEdit => currentUser.CanEdit;
+
+    public bool CanImportBoms { get; private set; }
 
     /// <summary>True when a search is applied (the tab alone is not a filter).</summary>
     public bool IsFiltered => Query.SearchTerm is not null;
@@ -25,6 +27,7 @@ public class IndexModel(IProjectService projects, ICurrentUser currentUser) : Pa
     {
         Query = query;
         Projects = await projects.SearchAsync(query, HttpContext.RequestAborted);
+        CanImportBoms = (await authorization.AuthorizeAsync(User, Policies.CanImportBoms)).Succeeded;
 
         return this.IsHtmx() ? Partial("_ProjectResults", this) : Page();
     }

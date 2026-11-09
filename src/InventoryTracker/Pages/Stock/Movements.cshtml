@@ -40,6 +40,7 @@
     </label>
 
     <input type="hidden" name="productId" value="@Model.Query.ProductId" />
+    <input type="hidden" name="importBatchId" value="@Model.Query.ImportBatchId" />
     <input type="hidden" name="tz" value="@Model.Query.Tz" data-tz-offset />
     <button type="submit" class="visually-hidden" tabindex="-1">Apply filters</button>
 
@@ -51,6 +52,11 @@
         <a role="button" class="outline" asp-page="Count">Stock count</a>
         <a role="button" asp-page="Bulk">Bulk movement</a>
     }
+}
+
+@if (Model.Query.ImportBatchId is { } importBatchId)
+{
+    <p class="muted">Showing movements from import #@importBatchId · <a asp-page="Movements">show all movements</a></p>
 }
 
 @if (Model.Query.ProductId is not null)

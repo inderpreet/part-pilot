@@ -256,10 +256,9 @@ public sealed class ProductService(AppDbContext db) : IProductService
         product.UnitCostCents = input.UnitCostCents;
     }
 
-    private async Task<List<Error>> ValidateAsync(ProductInput input, Product? existing, CancellationToken cancellationToken)
+    /// <summary>The rules that need no database, so an import can report them per row in its preview.</summary>
+    internal static void ValidateFields(ProductInput input, List<Error> errors)
     {
-        var errors = new List<Error>();
-
         var sku = Clean(input.Sku);
         if (sku is null)
         {
@@ -299,6 +298,13 @@ public sealed class ProductService(AppDbContext db) : IProductService
         {
             errors.Add(new Error("product.cost_negative", "Unit cost cannot be negative.", ProductFields.UnitCost));
         }
+    }
+
+    private async Task<List<Error>> ValidateAsync(ProductInput input, Product? existing, CancellationToken cancellationToken)
+    {
+        var errors = new List<Error>();
+        ValidateFields(input, errors);
+        var sku = Clean(input.Sku);
 
         if (existing is not null && sku is not null && !string.Equals(existing.Sku, sku, StringComparison.Ordinal)
             && await IsSkuLockedAsync(existing.Id, cancellationToken))

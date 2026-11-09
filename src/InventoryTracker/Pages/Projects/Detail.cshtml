@@ -26,6 +26,10 @@
 }
 
 @section Actions {
+    @if (Model.CanExportBoms)
+    {
+        <a role="button" class="secondary outline" href="/Export?projectId=@p.Id">Export BOM</a>
+    }
     @if (Model.CanEdit)
     {
         <partial name="_ProjectActions" model="bom" />

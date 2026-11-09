@@ -1,0 +1,2 @@
+sku,supplier,supplier_sku,unit_cost,lead_time_days,min_order_quantity,preferred
+WID-1,Acme Tools,ACME-WID,11.00,7,5,true

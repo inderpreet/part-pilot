@@ -106,11 +106,18 @@ public static class AuthServiceCollectionExtensions
 
         // Every policy - not just the fallback - requires an authenticated *active* user, because a page that names
         // a policy is not evaluated against the fallback policy.
+        services.AddSingleton<IAuthorizationHandler, DataPermissionHandler>();
         services.AddAuthorizationBuilder()
             .SetFallbackPolicy(ActiveUser().Build())
             .AddPolicy(Policies.RequireAdmin, p => Apply(p).RequireRole(Roles.Admin))
             .AddPolicy(Policies.CanEdit, p => Apply(p).RequireRole(Roles.Admin, Roles.Staff))
-            .AddPolicy(Policies.CanView, p => Apply(p).RequireRole(Roles.Admin, Roles.Staff, Roles.Viewer));
+            .AddPolicy(Policies.CanView, p => Apply(p).RequireRole(Roles.Admin, Roles.Staff, Roles.Viewer))
+            .AddPolicy(Policies.CanImportData, p => Apply(p).AddRequirements(new DataPermissionRequirement(DataPermission.ImportData)))
+            .AddPolicy(Policies.CanImportBoms, p => Apply(p).AddRequirements(new DataPermissionRequirement(DataPermission.ImportBoms)))
+            .AddPolicy(Policies.CanExportData, p => Apply(p).AddRequirements(new DataPermissionRequirement(DataPermission.ExportData)))
+            .AddPolicy(Policies.CanExportBoms, p => Apply(p).AddRequirements(new DataPermissionRequirement(DataPermission.ExportBoms)))
+            .AddPolicy(Policies.CanImport, p => Apply(p).AddRequirements(new DataPermissionRequirement(DataPermission.ImportData, DataPermission.ImportBoms)))
+            .AddPolicy(Policies.CanExport, p => Apply(p).AddRequirements(new DataPermissionRequirement(DataPermission.ExportData, DataPermission.ExportBoms)));
 
         // Keys that sign the auth cookie and antiforgery tokens live beside the database so they survive restarts
         // (sessions would otherwise all end on every restart) and travel with a backup of that folder.

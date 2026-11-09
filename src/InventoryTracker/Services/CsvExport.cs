@@ -59,10 +59,21 @@ public static class CsvExport
 
     /// <summary>
     /// Stops a spreadsheet from running a cell as a formula (CSV injection): text that starts with <c>=</c>, <c>+</c>, <c>-</c>,
-    /// <c>@</c>, a tab or a carriage return gets a leading apostrophe.
+    /// <c>@</c>, a tab or a carriage return gets a leading apostrophe. Text already written as apostrophes before such a
+    /// character gets one too, so <see cref="Restore"/> is an exact inverse.
     /// </summary>
     public static string? Neutralise(string? text)
-        => !string.IsNullOrEmpty(text) && text[0] is '=' or '+' or '-' or '@' or '\t' or '\r' ? "'" + text : text;
+        => text is not null && StartsLikeFormula(text) ? "'" + text : text;
+
+    /// <summary>Removes the apostrophe <see cref="Neutralise"/> added, so an exported file imports back unchanged.</summary>
+    public static string Restore(string text)
+        => text.Length > 1 && text[0] == '\'' && StartsLikeFormula(text[1..]) ? text[1..] : text;
+
+    private static bool StartsLikeFormula(string text)
+    {
+        var rest = text.TrimStart('\'');
+        return rest.Length > 0 && rest[0] is '=' or '+' or '-' or '@' or '\t' or '\r';
+    }
 
     private static async Task WriteCoreAsync<T>(Stream destination, IReadOnlyList<CsvColumn<T>> columns, Func<Func<T, Task>, Task> enumerate)
     {

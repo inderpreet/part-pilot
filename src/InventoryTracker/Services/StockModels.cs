@@ -69,6 +69,9 @@ public class MovementQuery : ListQuery
 
     public string? UserId { get; set; }
 
+    /// <summary>Only the movements posted by this CSV import (F07).</summary>
+    public long? ImportBatchId { get; set; }
+
     public DateTime? From { get; set; }
 
     public DateTime? To { get; set; }

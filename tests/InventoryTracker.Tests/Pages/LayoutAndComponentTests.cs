@@ -71,7 +71,7 @@ public partial class LayoutAndComponentTests(AppFactory factory) : IClassFixture
         var html = await client.GetStringAsync("/");
 
         // Built sections are links; Admin is visible because the test user is an administrator.
-        foreach (var label in new[] { "Dashboard", "Parts", "Stock", "Suppliers", "Purchase Orders", "BOMs", "Reports", "Admin" })
+        foreach (var label in new[] { "Dashboard", "Parts", "Stock", "Suppliers", "Purchase Orders", "BOMs", "Reports", "Import", "Export", "Admin" })
         {
             Assert.Contains($"<span>{label}</span></a>", html);
         }

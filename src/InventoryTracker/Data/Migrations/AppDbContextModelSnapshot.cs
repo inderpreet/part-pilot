@@ -62,6 +62,46 @@ namespace InventoryTracker.Data.Migrations
                         {
                             Key = "Project.NumberPrefix",
                             Value = "PRJ-"
+                        },
+                        new
+                        {
+                            Key = "Permission.ImportData.Staff",
+                            Value = "false"
+                        },
+                        new
+                        {
+                            Key = "Permission.ImportData.Viewer",
+                            Value = "false"
+                        },
+                        new
+                        {
+                            Key = "Permission.ImportBoms.Staff",
+                            Value = "false"
+                        },
+                        new
+                        {
+                            Key = "Permission.ImportBoms.Viewer",
+                            Value = "false"
+                        },
+                        new
+                        {
+                            Key = "Permission.ExportData.Staff",
+                            Value = "true"
+                        },
+                        new
+                        {
+                            Key = "Permission.ExportData.Viewer",
+                            Value = "false"
+                        },
+                        new
+                        {
+                            Key = "Permission.ExportBoms.Staff",
+                            Value = "true"
+                        },
+                        new
+                        {
+                            Key = "Permission.ExportBoms.Viewer",
+                            Value = "false"
                         });
                 });
 
@@ -229,6 +269,59 @@ namespace InventoryTracker.Data.Migrations
                     b.ToTable("DocumentSequences", null, t =>
                         {
                             t.HasCheckConstraint("CK_DocumentSequences_NextValue", "\"NextValue\" >= 1");
+                        });
+                });
+
+            modelBuilder.Entity("InventoryTracker.Data.Entities.ImportBatch", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CreatedById")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("CreatedCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Kind")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Options")
+                        .HasMaxLength(200)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("RowCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("SkippedCount")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("UpdatedCount")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.HasIndex("CreatedById");
+
+                    b.ToTable("ImportBatches", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_ImportBatches_Counts", "\"RowCount\" >= 0 AND \"CreatedCount\" >= 0 AND \"UpdatedCount\" >= 0 AND \"SkippedCount\" >= 0");
+
+                            t.HasCheckConstraint("CK_ImportBatches_Kind", "\"Kind\" IN ('Products', 'Suppliers', 'ProductSuppliers', 'OpeningStock', 'Boms')");
                         });
                 });
 
@@ -631,6 +724,8 @@ namespace InventoryTracker.Data.Migrations
 
                     b.HasKey("Id");
 
+                    b.HasIndex("ImportBatchId");
+
                     b.HasIndex("OccurredAt");
 
                     b.HasIndex("PurchaseOrderLineId");
@@ -886,6 +981,17 @@ namespace InventoryTracker.Data.Migrations
                     b.Navigation("Project");
                 });
 
+            modelBuilder.Entity("InventoryTracker.Data.Entities.ImportBatch", b =>
+                {
+                    b.HasOne("InventoryTracker.Data.Entities.ApplicationUser", "CreatedBy")
+                        .WithMany()
+                        .HasForeignKey("CreatedById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("CreatedBy");
+                });
+
             modelBuilder.Entity("InventoryTracker.Data.Entities.Product", b =>
                 {
                     b.HasOne("InventoryTracker.Data.Entities.Category", "Category")
@@ -974,6 +1080,11 @@ namespace InventoryTracker.Data.Migrations
 
             modelBuilder.Entity("InventoryTracker.Data.Entities.StockTransaction", b =>
                 {
+                    b.HasOne("InventoryTracker.Data.Entities.ImportBatch", "ImportBatch")
+                        .WithMany()
+                        .HasForeignKey("ImportBatchId")
+                        .OnDelete(DeleteBehavior.Restrict);
+
                     b.HasOne("InventoryTracker.Data.Entities.Product", "Product")
                         .WithMany("StockTransactions")
                         .HasForeignKey("ProductId")
@@ -995,6 +1106,8 @@ namespace InventoryTracker.Data.Migrations
                         .HasForeignKey("UserId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("ImportBatch");
 
                     b.Navigation("Product");
 

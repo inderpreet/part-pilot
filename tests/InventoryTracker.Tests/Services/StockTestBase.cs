@@ -40,6 +40,16 @@ public sealed class FakeSettings : ISettingsService
 
     public Task<Result<BusinessSettings>> UpdateBusinessSettingsAsync(BusinessSettings settings, CancellationToken cancellationToken = default)
         => throw new NotSupportedException();
+
+    public Task<DataPermissionSettings> GetDataPermissionsAsync(CancellationToken cancellationToken = default)
+        => Task.FromResult(new DataPermissionSettings(
+            StaffImportData: false, ViewerImportData: false,
+            StaffImportBoms: false, ViewerImportBoms: false,
+            StaffExportData: true, ViewerExportData: false,
+            StaffExportBoms: true, ViewerExportBoms: false));
+
+    public Task<Result> UpdateDataPermissionsAsync(DataPermissionSettings settings, CancellationToken cancellationToken = default)
+        => throw new NotSupportedException();
 }
 
 /// <summary>Catalog test database plus a user to post as, a controllable clock, and stock helpers.</summary>

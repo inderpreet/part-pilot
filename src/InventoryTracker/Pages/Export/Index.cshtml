@@ -1,0 +1,79 @@
+@page "/Export"
+@model InventoryTracker.Pages.Export.IndexModel
+@{
+    ViewData["Title"] = "Export";
+}
+
+@section Subtitle {
+    <p>Download CSV files for spreadsheets. Text is written so Excel will not treat it as a formula.</p>
+}
+
+@if (Model.CanExportData)
+{
+    <ul class="report-links">
+        <li>
+            <a asp-page="Index" asp-page-handler="Products">
+                <strong>Parts</strong>
+                <span>Catalog with on-hand quantity.</span>
+            </a>
+        </li>
+        <li>
+            <a asp-page="Index" asp-page-handler="Suppliers">
+                <strong>Suppliers</strong>
+                <span>Names, contacts and notes.</span>
+            </a>
+        </li>
+        <li>
+            <a asp-page="Index" asp-page-handler="Links">
+                <strong>Part–supplier links</strong>
+                <span>Prices, lead times and preferred flags.</span>
+            </a>
+        </li>
+    </ul>
+}
+
+<ul class="report-links">
+    @if (Model.CanExportData)
+    {
+        <li>
+            <div class="report-card">
+                <strong>Stock transactions</strong>
+                <span>The ledger. Leave dates blank for everything.</span>
+                <form method="get" asp-page-handler="Transactions">
+                    <div class="field-grid">
+                        <label>From <input type="date" name="from" /></label>
+                        <label>To <input type="date" name="to" /></label>
+                    </div>
+                    <input type="hidden" name="tz" data-tz-offset />
+                    <button type="submit">Download CSV</button>
+                </form>
+            </div>
+        </li>
+    }
+    @if (Model.CanExportBoms)
+    {
+        <li>
+            <div class="report-card">
+                <strong>BOMs</strong>
+                <span>Projects and their parts, in the same format as BOM import.</span>
+                <form method="get" asp-page-handler="Boms">
+                    <label>
+                        Project
+                        <select name="projectId">
+                            <option value="">All active</option>
+                            @foreach (var project in Model.Projects)
+                            {
+                                <option value="@project.Id" selected="@(project.Id == Model.ProjectId)">@project.Number — @project.Name@(project.IsActive ? "" : " (archived)")</option>
+                            }
+                        </select>
+                    </label>
+                    <label class="inline-check">
+                        <input type="checkbox" name="includeArchived" value="true" checked="@Model.IncludeArchived" />
+                        Include archived
+                    </label>
+                    <button type="submit">Download CSV</button>
+                </form>
+            </div>
+        </li>
+    }
+</ul>

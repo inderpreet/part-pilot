@@ -1,7 +1,7 @@
 # WI-07-4 — .xlsx import and scheduled backups
 
 - **Feature:** [F07 — Data import/export & backup](../../Features/F07-data-import-export.md)
-- **Status:** Deferred
+- **Status:** Blocked
 - **Depends on:** WI-07-3
 - **Estimate:** M
 

@@ -42,6 +42,8 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole, str
 
     public DbSet<ProjectBuild> ProjectBuilds => Set<ProjectBuild>();
 
+    public DbSet<ImportBatch> ImportBatches => Set<ImportBatch>();
+
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
         configurationBuilder.Properties<DateTime>().HaveConversion<UtcDateTimeConverter>();

@@ -11,6 +11,24 @@ public static class Policies
 
     /// <summary>Any signed-in, active user (Admin, Staff, Viewer).</summary>
     public const string CanView = nameof(CanView);
+
+    /// <summary>Admin, or a role the Admin has granted Import data (F07).</summary>
+    public const string CanImportData = nameof(CanImportData);
+
+    /// <summary>Admin, or a role the Admin has granted Import BOMs (F07).</summary>
+    public const string CanImportBoms = nameof(CanImportBoms);
+
+    /// <summary>Admin, or a role the Admin has granted Export data (F07).</summary>
+    public const string CanExportData = nameof(CanExportData);
+
+    /// <summary>Admin, or a role the Admin has granted Export BOMs (F07).</summary>
+    public const string CanExportBoms = nameof(CanExportBoms);
+
+    /// <summary>Either import permission (nav to /Import).</summary>
+    public const string CanImport = nameof(CanImport);
+
+    /// <summary>Either export permission (nav to /Export).</summary>
+    public const string CanExport = nameof(CanExport);
 }
 
 /// <summary>Custom claim types written into the auth cookie.</summary>

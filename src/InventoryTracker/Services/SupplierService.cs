@@ -444,6 +444,19 @@ public sealed class SupplierService(AppDbContext db) : ISupplierService
 
     private async Task<List<Error>> ValidateAsync(SupplierInput input, int existingId, CancellationToken cancellationToken)
     {
+        var errors = ValidateFields(input);
+        if (Clean(input.Name) is { Length: <= Supplier.NameMaxLength } name
+            && await db.Suppliers.AnyAsync(s => s.Name == name && s.Id != existingId, cancellationToken))
+        {
+            errors.Add(NameTaken(name));
+        }
+
+        return errors;
+    }
+
+    /// <summary>The rules that need no database, so an import can report them per row in its preview.</summary>
+    internal static List<Error> ValidateFields(SupplierInput input)
+    {
         var errors = new List<Error>();
 
         var name = Clean(input.Name);
@@ -454,10 +467,6 @@ public sealed class SupplierService(AppDbContext db) : ISupplierService
         else if (name.Length > Supplier.NameMaxLength)
         {
             errors.Add(new Error("supplier.name_too_long", $"Name can be at most {Supplier.NameMaxLength} characters.", SupplierFields.Name));
-        }
-        else if (await db.Suppliers.AnyAsync(s => s.Name == name && s.Id != existingId, cancellationToken))
-        {
-            errors.Add(NameTaken(name));
         }
 
         TooLong(errors, input.ContactName, Supplier.ContactNameMaxLength, SupplierFields.ContactName, "Contact name");
@@ -492,7 +501,7 @@ public sealed class SupplierService(AppDbContext db) : ISupplierService
         return errors;
     }
 
-    private static List<Error> ValidateLink(SupplierLinkInput input)
+    internal static List<Error> ValidateLink(SupplierLinkInput input)
     {
         var errors = new List<Error>();
 

@@ -7,7 +7,7 @@ namespace InventoryTracker.Tests.Pages;
 /// <summary>WI-01-3: the Admin area (user management, settings), role gating and the htmx fragments.</summary>
 public class AdminPagesTests
 {
-    private static readonly string[] AdminUrls = ["/Admin", "/Admin/Users", "/Admin/Users/Edit", "/Admin/Settings"];
+    private static readonly string[] AdminUrls = ["/Admin", "/Admin/Users", "/Admin/Users/Edit", "/Admin/Settings", "/Admin/Backup"];
 
     private static HttpRequestMessage Htmx(string url, HttpMethod? method = null)
     {

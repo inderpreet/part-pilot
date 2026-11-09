@@ -58,6 +58,7 @@ builder.Services.AddSuppliers();
 builder.Services.AddPurchaseOrders();
 builder.Services.AddProjects();
 builder.Services.AddReporting();
+builder.Services.AddDataTransfer();
 
 builder.Services.AddHealthChecks().AddCheck<DatabaseHealthCheck>(DatabaseHealthCheck.Name);
 builder.Services.AddRazorPages();
@@ -126,6 +127,12 @@ if (app.Environment.IsEnvironment("Testing"))
     app.MapGet("/__policy/admin", () => "ok").RequireAuthorization(Policies.RequireAdmin);
     app.MapGet("/__policy/edit", () => "ok").RequireAuthorization(Policies.CanEdit);
     app.MapGet("/__policy/view", () => "ok").RequireAuthorization(Policies.CanView);
+    app.MapGet("/__policy/import-data", () => "ok").RequireAuthorization(Policies.CanImportData);
+    app.MapGet("/__policy/import-boms", () => "ok").RequireAuthorization(Policies.CanImportBoms);
+    app.MapGet("/__policy/export-data", () => "ok").RequireAuthorization(Policies.CanExportData);
+    app.MapGet("/__policy/export-boms", () => "ok").RequireAuthorization(Policies.CanExportBoms);
+    app.MapGet("/__policy/import", () => "ok").RequireAuthorization(Policies.CanImport);
+    app.MapGet("/__policy/export", () => "ok").RequireAuthorization(Policies.CanExport);
     app.MapGet("/__policy/fallback", () => "ok"); // no metadata: only the fallback policy applies
 }
 

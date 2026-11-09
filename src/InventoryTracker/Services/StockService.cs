@@ -150,6 +150,11 @@ public sealed class StockService(AppDbContext db, ISettingsService settings, ICl
             rows = rows.Where(t => t.UserId == userId);
         }
 
+        if (query.ImportBatchId is { } batchId)
+        {
+            rows = rows.Where(t => t.ImportBatchId == batchId);
+        }
+
         if (query.From is { } from)
         {
             rows = rows.Where(t => t.OccurredAt >= from);
