@@ -99,7 +99,7 @@ A `DocumentSequence` row named "Project" (per year) numbers projects; no schema 
 
 - Reserving or allocating stock to a project, or showing competing demand from other projects (possible follow-up: an "also needed by N other active projects" hint).
 - Sub-assemblies (a BOM inside a BOM), alternate or substitute parts, BOM revisions and versions.
-- BOM CSV import or export (F07 can add it), emailing BOMs, cost history.
+- BOM CSV import or export (now part of [F07](F07-data-import-export.md) FR-8), emailing BOMs, cost history.
 - A public API (or any other integration) for outside systems to read BOMs by project number. That belongs to the architecture-level API question, not to F10. F10 only guarantees what such an API would need: a unique, indexed project number that only an Admin can change and BOM data available through `ProjectService`.
 - Reversing a whole build in one click. Individual issue rows can be reversed from the stock history.
 - Fractional quantities (same limit as the rest of v1).

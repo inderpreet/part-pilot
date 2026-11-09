@@ -1,4 +1,4 @@
-# WI-07-3 — Upload, preview, export, backup pages
+# WI-07-3 — Upload, preview, export, backup pages, permissions card
 
 - **Feature:** [F07 — Data import/export & backup](../../Features/F07-data-import-export.md)
 - **Status:** Planned
@@ -7,28 +7,36 @@
 
 ## Goal
 
-Admins import data through a guided upload → preview → commit flow; users export CSVs; Admins download backups.
+Users with the permission import data through a guided upload → preview → commit flow and export CSVs; Admins download backups
+and decide who may import and export.
 
 ## Scope
 
-- In: `/Admin/Import`, `/Export`, `/Admin/Backup`, Admin menu entries.
+- In: `/Import`, `/Export`, `/Admin/Backup`, nav entries, "Data permissions" card on `/Admin/Settings`.
 - Out: restore UI.
 
 ## Tasks
 
-- [ ] `/Admin/Import` step 1: choose kind, template download link, file input (`hx-encoding="multipart/form-data"`).
-- [ ] Step 2 preview: counts (create/update/skip/error), table with row number, action badge, error messages; filter "errors only"; "skip invalid rows" checkbox; Commit / Cancel.
-- [ ] Step 3 summary: counts, link to batch (and to stock movements filtered by batch for opening stock).
+- [ ] `/Import` step 1: choose kind (only the kinds the user may import), template download link, file input (`hx-encoding="multipart/form-data"`).
+      For BOMs also a **mode** (Merge / Replace) and a **Create missing parts** checkbox.
+- [ ] Step 2 preview: counts (create/update/skip/error), table with row number, action badge, error messages; filter "errors only";
+      "skip invalid rows" checkbox; Commit / Cancel. BOM preview groups rows by project, shows the lines a Replace removes; a danger confirm on Replace.
+- [ ] Step 3 summary: counts, link to batch (and to stock movements filtered by batch for opening stock; to the projects for BOMs).
 - [ ] Import history list (recent `ImportBatch` rows).
-- [ ] `/Export`: buttons per export; date range for transactions.
+- [ ] `/Export`: buttons per export the user may use; date range for transactions; BOM export of all active projects or one project; "include archived" tick.
 - [ ] `/Admin/Backup`: explanation + "Download backup" button; manual restore instructions.
-- [ ] Page tests: upload invalid CSV shows errors; Staff cannot access `/Admin/Import`; export returns CSV.
+- [ ] Settings page: "Data permissions" card, a matrix of the four permissions by Staff and Viewer (Admin column shown as always allowed); saved with the other settings or its own Save.
+- [ ] Nav: "Import" and "Export" items visible by their policy; a Project page "Export BOM" action and an Import link on the Projects list for users who may.
+- [ ] Page tests: upload invalid CSV shows errors; a role without the permission gets 403 and the nav item is hidden; granting the permission on the Settings page opens it;
+      export returns CSV; BOM merge and replace end to end; Viewer cannot mutate.
 
 ## Acceptance criteria
 
 - [ ] Full opening-stock import from template works end to end and on-hand values match file.
+- [ ] A BOM CSV for three projects imports end to end; exporting it and importing again changes nothing.
 - [ ] Backup download opens in a SQLite browser with all tables.
+- [ ] Layout checked at 390, 768 and 1440 px.
 
 ## Notes
 
-—
+Use the F09 patterns (page header, list card, status chips, confirm dialog); see architecture D17.
