@@ -14,7 +14,8 @@ executable: run it, open the browser, sign in. Data lives in a single SQLite fil
 |---|---|
 | **Admin** | Everything, plus user management, settings, audit log, backups, imports |
 | **Staff** | Create/edit products, suppliers, POs; record stock movements; receive POs; export |
-| **Viewer** | Read-only access to catalog, stock, POs, dashboard, reports |
+| **Manager** (planned, F12) | Everything Staff can do, plus approving requisitions |
+| **Viewer** | Read-only access to catalog, stock, POs, dashboard, reports. May raise and track their own requisitions (planned, F11) |
 
 ## Features
 
@@ -31,14 +32,20 @@ executable: run it, open the browser, sign in. Data lives in a single SQLite fil
 | [F08](Features/F08-audit-log.md) | Audit log | Who changed what and when; sign-in events | F01 | Planned |
 | [F09](Features/F09-ui-overhaul.md) | UI overhaul | Left rail shell, list cards, actions, forms and detail pages on the screens that exist | F05 | Done |
 | [F10](Features/F10-project-boms.md) | Projects & BOMs | Numbered projects with bills of materials from catalog or new parts, status check against stock, orders and draft POs, order shortages, build (issue parts) | F02, F03, F04, F05, F09 | Done |
+| [F11](Features/F11-requisitions.md) | Requisitions | Any signed-in user requests catalog parts with quantities and tracks the request | F01, F02 | Planned |
+| [F12](Features/F12-requisition-approvals.md) | Requisition approvals | Manager role; approve, reduce or reject each requisition line | F11 | Planned |
+| [F13](Features/F13-requisition-to-po.md) | Requisition to purchase order | Send approved lines to a new or existing draft PO, with links both ways | F05, F12 | Planned |
+| [F14](Features/F14-deployment-automation.md) | Deployment automation | Docker image and Python scripts run by a GitHub Action: pull, build, update, health check, rollback; HTTPS and Coolify notes | F00 | Planned |
 
 Suggested build order: F00 → F01 → F02 → F03 → F04 → F05 → F09 → F10 → F08 → F06 → F07 (F10 is independent of F06–F08 and can move; F07 builds on F10 for BOM import and export).
+Remaining plan: F08, then F11 → F12 → F13 in that order. F14 is independent and can happen at any point.
 F09 is a presentation overhaul of F00–F05 (shipped; the shared patterns are shown at `/Dev/Components`). F06, F07 and F08 should use its shared patterns (architecture D17) when they build screens.
 
 ## Work items
 
 Each feature is split into three work items, done in order: **1 DB schema → 2 API (services + endpoints) → 3 Frontend**.
 F00 has an extra packaging item. F09 has no schema and no service layer; it is split into incremental UI work items (foundation, shell, header, lists, actions, forms, detail, finish) instead.
+F14 has no schema or UI; its work items follow the deployment steps instead (image, pull and build, update and health, workflow, docs).
 
 | ID | Title | Status |
 |---|---|---|
@@ -86,6 +93,20 @@ F00 has an extra packaging item. F09 has no schema and no service layer; it is s
 | [WI-10-2](work-items/F10-project-boms/WI-10-2-api.md) | Projects — ProjectService (BOM, status, build), PO add-lines | Done |
 | [WI-10-3](work-items/F10-project-boms/WI-10-3-frontend-projects.md) | Projects — list, project page, BOM editing, new part | Done |
 | [WI-10-4](work-items/F10-project-boms/WI-10-4-frontend-order-build.md) | Projects — order shortages, build, builds history | Done |
+| [WI-11-1](work-items/F11-requisitions/WI-11-1-db-schema.md) | Requisitions — Requisition, RequisitionLine schema | Planned |
+| [WI-11-2](work-items/F11-requisitions/WI-11-2-api.md) | Requisitions — RequisitionService, CanRequest policy | Planned |
+| [WI-11-3](work-items/F11-requisitions/WI-11-3-frontend.md) | Requisitions — list, editor, detail | Planned |
+| [WI-12-1](work-items/F12-requisition-approvals/WI-12-1-db-schema.md) | Approvals — Manager role, RequisitionLineDecision, permission settings | Planned |
+| [WI-12-2](work-items/F12-requisition-approvals/WI-12-2-api.md) | Approvals — Manager policies, decision service | Planned |
+| [WI-12-3](work-items/F12-requisition-approvals/WI-12-3-frontend.md) | Approvals — queue, decision form, role and permission UI | Planned |
+| [WI-13-1](work-items/F13-requisition-to-po/WI-13-1-db-schema.md) | Requisition to PO — RequisitionLineOrder schema | Planned |
+| [WI-13-2](work-items/F13-requisition-to-po/WI-13-2-api.md) | Requisition to PO — conversion service, release on cancel | Planned |
+| [WI-13-3](work-items/F13-requisition-to-po/WI-13-3-frontend.md) | Requisition to PO — to-order list, PO and requisition links | Planned |
+| [WI-14-1](work-items/F14-deployment-automation/WI-14-1-docker-image.md) | Deployment — Dockerfile, /data layout, trusted proxies | Planned |
+| [WI-14-2](work-items/F14-deployment-automation/WI-14-2-pull-and-build.md) | Deployment — automation/ base, pull and build scripts | Planned |
+| [WI-14-3](work-items/F14-deployment-automation/WI-14-3-update-health-rollback.md) | Deployment — update, health check, rollback, deploy.py | Planned |
+| [WI-14-4](work-items/F14-deployment-automation/WI-14-4-github-workflow.md) | Deployment — self-hosted runner workflow | Planned |
+| [WI-14-5](work-items/F14-deployment-automation/WI-14-5-docs.md) | Deployment — automation README, Docker, Caddy and Coolify docs | Planned |
 
 ## Non-functional requirements
 

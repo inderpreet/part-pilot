@@ -84,7 +84,7 @@ All tables have `Id INTEGER PRIMARY KEY`. Audited/mutable entities have `Created
 ```
 AppSetting(Key PK, Value)
 
-AspNetUsers (Identity, extended: DisplayName, IsActive, LastSignInAt)  AspNetRoles: Admin, Staff, Viewer
+AspNetUsers (Identity, extended: DisplayName, IsActive, LastSignInAt)  AspNetRoles: Admin, Staff, Viewer (Manager planned, F12)
 
 Category(Id, Name UQ, Description, IsActive)
 Product(Id, Sku UQ, Name, Description, CategoryId→Category?, Unit, Barcode UQ?, BinLocation,
@@ -113,12 +113,19 @@ ProjectBuild(Id, ProjectId→Project Restrict, Units, Note, UserId→AspNetUsers
 
 ImportBatch(Id, Kind, FileName, RowCount, CreatedCount, UpdatedCount, SkippedCount, Options?, CreatedById, CreatedAt)   -- Kind: Products, Suppliers, ProductSuppliers, OpeningStock, Boms (F07)
 
+Requisition(Id, Number UQ, Status, RequestedById→AspNetUsers, NeededBy?, Reason, SubmittedAt?, DecidedAt?, RowVersion)   -- F11, planned
+  Status ∈ {Draft, Submitted, Approved, Rejected, Cancelled}; "Ordered" / "Partly ordered" are derived from RequisitionLineOrder (F13)
+RequisitionLine(Id, RequisitionId→Requisition Cascade, ProductId→Product Restrict, QuantityRequested, Note)  UQ (RequisitionId, ProductId)
+RequisitionLineDecision(Id, RequisitionLineId→RequisitionLine UQ Cascade, Decision, QuantityApproved, Reason, DecidedById→AspNetUsers, DecidedAt)   -- F12, planned
+RequisitionLineOrder(Id, RequisitionLineId→RequisitionLine UQ Cascade, PurchaseOrderLineId→PurchaseOrderLine Cascade, QuantityOrdered, ConvertedById→AspNetUsers, ConvertedAt)   -- F13, planned
+
 AuditEntry(Id, OccurredAt, UserId?, UserName, Action, EntityType, EntityId, ChangesJson, IpAddress)
 ```
 
 Relationships: Category 1–* Product; Product 1–* StockTransaction; Product *–* Supplier via ProductSupplier;
 Supplier 1–* PurchaseOrder 1–* PurchaseOrderLine *–1 Product; PurchaseOrderLine 1–* StockTransaction (receipts);
 Project 1–* BomLine *–1 Product; Project 1–* ProjectBuild (a build's issue rows are linked by `StockTransaction.Reference`, D18).
+Requisition 1–* RequisitionLine *–1 Product (planned); RequisitionLine 1–0..1 RequisitionLineDecision; RequisitionLine 1–0..1 RequisitionLineOrder *–1 PurchaseOrderLine. Requisitions never change stock or on-order figures.
 
 Derived values (not stored): **on order** = Σ(QuantityOrdered − QuantityReceived) over lines of Submitted /
 PartiallyReceived POs; **stock value** = Σ(QuantityOnHand × UnitCostCents); **low stock** =
@@ -256,10 +263,13 @@ dotnet publish src/InventoryTracker -c Release -r <rid> --self-contained true
 | D20 | Dashboard, low-stock and report reads share composable `IQueryable` definitions in `Services/ReportingQueries.cs` (on-order per product, low stock with its preferred supplier), returning property-initialised row classes (EF cannot sort or page after a constructor-projected record). Indexes were added only where a measured query on the demo data set (10k products, 200 suppliers, 2k POs, 1M ledger rows, `DevSeeder`, `--seed-demo`, `INVENTORY_BENCH=1` benchmark) missed its budget: `IX_StockTransactions_Type` became `(Type, OccurredAt, ProductId, QuantityDelta)` and `(ProductId, OccurredAt)` was added. Nothing was added for products or purchase orders, which were already far inside the budget | One definition keeps the nav badge, the low-stock page and the CSV exports in agreement. Measuring first avoids paying write cost on indexes nothing needs; the wide ledger index lets the usage report aggregate 90 days of issues in ~55 ms instead of ~300-900 ms of random table reads. The demo seeder writes the ledger with plain SQL (a million EF entities take minutes) and keeps the ledger invariants by construction |
 | D21 | CSV exports use CsvHelper **33.1.0** (`Services/CsvExport.cs`: UTF-8 with BOM, CRLF, invariant numbers, money as `12.50`, and a leading `=  +  -  @` on text cells neutralised against spreadsheet formula injection). The nav low-stock badge is a singleton `LowStockCounter` (60 s age limit) that also recounts as soon as a `SaveChangesInterceptor` (`ReportingChangeInterceptor`) reports that a save touched parts, stock transactions or purchase orders; dashboard tiles are not cached. The badge is rendered server-side by `_Layout` from the counter (a `Low stock` item in the Insights rail group) rather than fetched with `hx-get` after load, so it is right on first paint and needs no endpoint | CsvHelper 34.0.0 is a rewrite with a different API; 33.x is the stable, documented one. Interceptor-driven invalidation covers every write path (services, imports, receipts) without each caller remembering to invalidate, and keeps the badge correct after a movement instead of up to a minute late |
 | D22 | F07 imports are two steps: a **preview** parses and validates the upload into a temp file keyed by a random token (expires after 30 min, never keyed by a user-supplied name) and writes nothing; a **commit** re-reads that file and applies it in one DB transaction through the existing services (`ProductService`, `SupplierService`, `StockService`, `ProjectService`), never by writing tables directly, so every business rule holds for imports too. BOMs are one flat CSV (one row per line) matched by project number, with Merge or Replace chosen at upload and a missing part either an error or created from the row. Who may import or export is a per-role setting an Admin edits (see the data permissions under Auth) rather than a fixed role check, and backup stays Admin only | Going through services keeps SKU locks, negative-stock rules and project uniqueness in one place, and a transaction makes a failed file leave nothing behind. A token-keyed temp file means the preview and the commit act on the same bytes without trusting the browser to send them back. Settings rows reuse the cache and the Settings page instead of a new roles/permissions table, which one business with three roles does not need |
+| D23 | Planned (F14): deployment scripts in `automation/` are Python 3.11+ standard library, run on the server only | Readable by operators and no packages to install; not part of the shipped executable, so the no-Node and single-binary rules are unaffected |
+| D24 | Planned (F14): HTTPS is left to a reverse proxy. The app gains `INVENTORY_TRUSTED_PROXIES` for forwarded headers, off by default | Keeps certificates out of the app; `SameAsRequest` cookies become `Secure` only when the proxy is trusted |
+| D25 | Planned (F11–F13): decisions and PO links are separate tables, and the requisition status check holds every status from the first migration | Adding a foreign key to an existing SQLite table needs a rebuild (D16); new tables do not. Cascades release lines automatically when a PO line goes away |
 
 ## 14. Open questions
 
 - Is a JSON API (`/api/v1`) needed for integrations (e.g. e-commerce sync)? Currently out of scope. F10 expects outside systems to read BOMs by **project number** (`Project.Number`, unique; only an Admin can change it) when such an API is built; F10 itself builds no API.
 - Fractional quantities (kg, m)? v1 assumes whole units; changing later means `int` → scaled `long`.
-- HTTPS: run behind a reverse proxy, or support a self-signed/PFX cert via config?
+- HTTPS: planned answer is a reverse proxy (Caddy, or Coolify's), see D24 and F14. A built-in PFX option is still undecided.
 - Currency: single currency per install assumed.
