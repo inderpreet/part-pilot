@@ -20,35 +20,45 @@ public class AuthorizationPolicyTests(AppFactory factory) : IClassFixture<AppFac
         var data = new TheoryData<string, string, HttpStatusCode>();
         void Row(string role, string endpoint, HttpStatusCode status) => data.Add(role, endpoint, status);
 
-        foreach (var endpoint in new[] { "admin", "edit", "view", "fallback" })
+        foreach (var endpoint in new[] { "admin", "approve", "edit", "view", "fallback" })
         {
             Row("Anonymous", endpoint, ToLogin);
         }
 
         Row("Admin", "admin", Ok);
+        Row("Admin", "approve", Ok);
         Row("Admin", "edit", Ok);
         Row("Admin", "view", Ok);
         Row("Admin", "fallback", Ok);
 
+        Row("Manager", "admin", Forbidden);
+        Row("Manager", "approve", Ok);
+        Row("Manager", "edit", Ok);
+        Row("Manager", "view", Ok);
+        Row("Manager", "fallback", Ok);
+
         Row("Staff", "admin", Forbidden);
+        Row("Staff", "approve", Forbidden);
         Row("Staff", "edit", Ok);
         Row("Staff", "view", Ok);
         Row("Staff", "fallback", Ok);
 
         // The acceptance criterion: a Viewer gets 403 on a CanEdit endpoint.
         Row("Viewer", "admin", Forbidden);
+        Row("Viewer", "approve", Forbidden);
         Row("Viewer", "edit", Forbidden);
         Row("Viewer", "view", Ok);
         Row("Viewer", "fallback", Ok);
 
         // Signed in and active but with no role: only the fallback policy (authenticated + active) lets them in.
         Row("NoRole", "admin", Forbidden);
+        Row("NoRole", "approve", Forbidden);
         Row("NoRole", "edit", Forbidden);
         Row("NoRole", "view", Forbidden);
         Row("NoRole", "fallback", Ok);
 
         // A deactivated account is refused by every policy, the fallback included, whatever role it had.
-        foreach (var endpoint in new[] { "admin", "edit", "view", "fallback" })
+        foreach (var endpoint in new[] { "admin", "approve", "edit", "view", "fallback" })
         {
             Row("Inactive", endpoint, Forbidden);
         }
@@ -179,7 +189,7 @@ public class AuthorizationPolicyTests(AppFactory factory) : IClassFixture<AppFac
 
         foreach (var name in new[]
                  {
-                     Policies.RequireAdmin, Policies.CanEdit, Policies.CanView,
+                     Policies.RequireAdmin, Policies.CanEdit, Policies.CanView, Policies.CanRequest, Policies.CanApprove,
                      Policies.CanImportData, Policies.CanImportBoms, Policies.CanExportData, Policies.CanExportBoms,
                      Policies.CanImport, Policies.CanExport,
                  })
@@ -198,6 +208,7 @@ public class AuthorizationPolicyTests(AppFactory factory) : IClassFixture<AppFac
             foreach (var allowed in new[] { true, false })
             {
                 data.Add("Admin", permission, allowed, Ok);
+                data.Add("Manager", permission, allowed, allowed ? Ok : Forbidden);
                 data.Add("Staff", permission, allowed, allowed ? Ok : Forbidden);
                 data.Add("Viewer", permission, allowed, allowed ? Ok : Forbidden);
                 data.Add("Inactive", permission, allowed, Forbidden);

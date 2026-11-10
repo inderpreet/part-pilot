@@ -40,6 +40,17 @@ public class DetailModel(IRequisitionService requisitions, ICurrentUser currentU
     public Task<IActionResult> OnPostDeleteAsync(int id, long rowVersion)
         => ActAsync(id, async () => await requisitions.DeleteDraftAsync(id, rowVersion, Actor, HttpContext.RequestAborted), "Draft {0} deleted.", toListOnSuccess: true);
 
+    /// <summary>Open to approvers only, which the page-level policy cannot express per handler.</summary>
+    public async Task<IActionResult> OnPostCancelAsync(int id, long rowVersion, string? reason)
+    {
+        if (!await this.CanApproveAsync())
+        {
+            return Forbid();
+        }
+
+        return await ActAsync(id, async () => await requisitions.CancelSubmittedAsync(id, rowVersion, reason, Actor, HttpContext.RequestAborted), "{0} cancelled.");
+    }
+
     private async Task<IActionResult> ActAsync(int id, Func<Task<Result>> action, string success, bool toListOnSuccess = false)
     {
         var requisition = await requisitions.GetAsync(id, Actor, HttpContext.RequestAborted);

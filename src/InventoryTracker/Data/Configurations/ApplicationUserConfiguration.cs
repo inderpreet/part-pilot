@@ -16,7 +16,7 @@ public class ApplicationUserConfiguration : IEntityTypeConfiguration<Application
 }
 
 /// <summary>
-/// Seeds the three roles. IDs and concurrency stamps are fixed so the seed is identical on every machine and a
+/// Seeds the roles. IDs and concurrency stamps are fixed so the seed is identical on every machine and a
 /// later migration never sees a spurious change.
 /// </summary>
 public class RoleConfiguration : IEntityTypeConfiguration<IdentityRole>
@@ -24,11 +24,13 @@ public class RoleConfiguration : IEntityTypeConfiguration<IdentityRole>
     public const string AdminId = "a1b2c3d4-0001-4000-8000-000000000001";
     public const string StaffId = "a1b2c3d4-0002-4000-8000-000000000002";
     public const string ViewerId = "a1b2c3d4-0003-4000-8000-000000000003";
+    public const string ManagerId = "a1b2c3d4-0004-4000-8000-000000000004";
 
     public void Configure(EntityTypeBuilder<IdentityRole> builder)
     {
         builder.HasData(
             Seed(AdminId, Roles.Admin),
+            Seed(ManagerId, Roles.Manager),
             Seed(StaffId, Roles.Staff),
             Seed(ViewerId, Roles.Viewer));
     }

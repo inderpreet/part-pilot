@@ -324,7 +324,7 @@ public sealed class CatalogSchemaTests : IAsyncLifetime
             await context.Database.MigrateAsync();
             Assert.Empty(await context.Database.GetPendingMigrationsAsync());
             Assert.Equal(1L, await SqliteTestDb.ScalarAsync(context, "SELECT COUNT(*) FROM sqlite_master WHERE name='Products'"));
-            Assert.Equal(3, await context.Roles.CountAsync());
+            Assert.Equal(Roles.All.Count, await context.Roles.CountAsync());
             Assert.Equal("Kept Co", (await context.AppSettings.SingleAsync(s => s.Key == SettingKeys.CompanyName)).Value);
         }
     }

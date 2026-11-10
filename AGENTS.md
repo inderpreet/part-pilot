@@ -61,12 +61,12 @@ dotnet ef migrations add <Name> --project src/InventoryTracker --output-dir Data
 - **Stock**: quantity on hand changes **only** through `StockService` which writes a `StockTransaction` and
   updates `Product.QuantityOnHand` in the same DB transaction. Never edit or delete stock transactions; correct with a new one.
 - **Soft delete** reference data (`IsActive = false`); never hard-delete rows referenced by transactions or POs.
-- **Authorization**: policies `RequireAdmin`, `CanEdit` (Admin, Staff), `CanView` (all signed-in), `CanRequest` (all signed-in; the one write allowed to Viewers, raising and tracking their own requisitions, with ownership enforced by `RequisitionService`). Every page has `[Authorize(Policy = ...)]`.
+- **Authorization**: policies `RequireAdmin`, `CanEdit` (Admin, Manager, Staff), `CanApprove` (Admin, Manager; deciding and cancelling submitted requisitions), `CanView` (all signed-in), `CanRequest` (all signed-in; the one write allowed to Viewers, raising and tracking their own requisitions, with ownership enforced by `RequisitionService`). Every page has `[Authorize(Policy = ...)]`.
 - **Validation**: DataAnnotations on input models + service-level rule checks returning `Result`/errors rendered in forms.
 - Nullable reference types on; warnings as errors; file-scoped namespaces; `async` all the way for DB calls.
 - No new NuGet packages or JS libraries without noting it in Product/architecture.md → Decisions.
 - **Navigation**: sections whose pages do not exist yet are listed in Pages/Shared/NavItems.cs with Available: false (rendered as inert labels, never links). The work item that adds a section's first page flips it to 	rue.
-- **Auth in tests**: use AppFactory (X-Test-Role header selects Admin/Staff/Viewer without signing in); use CreateAnonymousClient() + WebForms.LoginAsync when the real cookie flow matters (session rejection, lockout, ReturnUrl).
+- **Auth in tests**: use AppFactory (X-Test-Role header selects Admin/Manager/Staff/Viewer without signing in); use CreateAnonymousClient() + WebForms.LoginAsync when the real cookie flow matters (session rejection, lockout, ReturnUrl).
 
 ## Definition of done
 

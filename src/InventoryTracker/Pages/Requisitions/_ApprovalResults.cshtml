@@ -1,0 +1,42 @@
+@model InventoryTracker.Pages.Requisitions.ApprovalsModel
+@if (Model.Queue.TotalCount == 0)
+{
+    <partial name="_EmptyState" model="@(new EmptyStateModel("Nothing waiting", "Submitted requisitions appear here until someone decides them."))" />
+}
+else
+{
+    <div class="table-wrap">
+        <table class="striped">
+            <thead>
+                <tr>
+                    <th scope="col">Number</th>
+                    <th scope="col">Requested by</th>
+                    <th scope="col">Needed by</th>
+                    <th scope="col">Submitted</th>
+                    <th scope="col" class="num">Parts</th>
+                    <th scope="col" class="num">Estimated value</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var item in Model.Queue.Items)
+                {
+                    <tr>
+                        <td><a asp-page="Decide" asp-route-id="@item.Id">@item.Number</a></td>
+                        <td>
+                            @item.RequestedByName
+                            @if (item.IsOwn)
+                            {
+                                <span class="badge badge-draft">Yours</span>
+                            }
+                        </td>
+                        <td>@PurchaseOrderDisplay.Date(item.NeededBy)</td>
+                        <td>@Html.LocalDate(item.SubmittedAt)</td>
+                        <td class="num">@item.LineCount</td>
+                        <td class="num">@Html.Money(item.EstimatedValueCents)</td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+    <partial name="_Pager" model="@PagerModel.From(Model.Queue)" />
+}

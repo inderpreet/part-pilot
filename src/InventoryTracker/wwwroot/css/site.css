@@ -889,3 +889,27 @@ tfoot.report-total th, tfoot.report-total td { border-top: 2px solid var(--it-li
 td.check, th.check { width: 2.5rem; text-align: center; }
 td.check input, th.check input { margin: 0; }
 .list-card .toolbar input[type="checkbox"] { width: 1.25em; height: 1.25em; }
+
+
+/* F12 decision form: a table on wide screens, one stacked card per part on phones. */
+.decide-lines td { white-space: normal; vertical-align: top; }
+.decide-lines input[type="number"] { width: 6rem; margin: 0; padding: 0.25rem 0.5rem; }
+.decide-lines input[type="text"] { min-width: 12rem; margin: 0; padding: 0.25rem 0.5rem; }
+.decide-lines .field-error { margin: 0.25rem 0 0; }
+.decide-lines small.muted { display: block; }
+.decide-choice { display: flex; gap: 0.75rem; }
+.decide-choice label { margin: 0; white-space: nowrap; }
+.card-note { margin: var(--pico-spacing); font-size: var(--it-text-sm); }
+.decide-form > .card + .card { margin-top: var(--pico-spacing); }
+.menu-form { width: min(18rem, calc(100vw - 3rem)); padding: 0.5rem; }
+.menu-form textarea { margin-bottom: 0.5rem; }
+@media (max-width: 48rem) {
+  .decide-lines thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .decide-lines, .decide-lines tbody, .decide-lines tr, .decide-lines td { display: block; width: 100%; }
+  .decide-lines tr { padding: 0.75rem var(--pico-spacing); border-bottom: 1px solid var(--it-line); }
+  .decide-lines td { padding: 0.25rem 0; border: 0; text-align: left; }
+  .decide-lines td.num { text-align: left; }
+  .decide-lines td:first-child { position: static; padding-left: 0; border: 0; box-shadow: none; background: transparent; }
+  .decide-lines td[data-label]::before { content: attr(data-label); display: block; color: var(--pico-muted-color); font-size: var(--it-text-xs); }
+  .decide-lines input[type="text"] { width: 100%; min-width: 0; }
+}

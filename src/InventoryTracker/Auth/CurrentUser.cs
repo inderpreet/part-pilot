@@ -21,8 +21,11 @@ public interface ICurrentUser
 
     bool IsAdmin { get; }
 
-    /// <summary>Admin or Staff.</summary>
+    /// <summary>Admin, Manager or Staff.</summary>
     bool CanEdit { get; }
+
+    /// <summary>Admin or Manager.</summary>
+    bool CanApprove { get; }
 }
 
 public sealed class CurrentUser(IHttpContextAccessor accessor) : ICurrentUser
@@ -41,5 +44,7 @@ public sealed class CurrentUser(IHttpContextAccessor accessor) : ICurrentUser
 
     public bool IsAdmin => Principal?.IsInRole(Roles.Admin) == true;
 
-    public bool CanEdit => IsAdmin || Principal?.IsInRole(Roles.Staff) == true;
+    public bool CanEdit => CanApprove || Principal?.IsInRole(Roles.Staff) == true;
+
+    public bool CanApprove => IsAdmin || Principal?.IsInRole(Roles.Manager) == true;
 }

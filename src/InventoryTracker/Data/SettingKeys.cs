@@ -65,9 +65,9 @@ public enum DataPermission
 public static class DataPermissions
 {
     /// <summary>The roles an Admin can grant permissions to. Admin always has every permission.</summary>
-    public static IReadOnlyList<string> ConfigurableRoles { get; } = [Roles.Staff, Roles.Viewer];
+    public static IReadOnlyList<string> ConfigurableRoles { get; } = [Roles.Manager, Roles.Staff, Roles.Viewer];
 
-    /// <summary>Staff may export by default; nothing else is allowed until an Admin says so.</summary>
+    /// <summary>Managers and Staff may export by default; nothing else is allowed until an Admin says so.</summary>
     public static bool DefaultAllowed(DataPermission permission, string role)
-        => role == Roles.Staff && permission is DataPermission.ExportData or DataPermission.ExportBoms;
+        => role is Roles.Manager or Roles.Staff && permission is DataPermission.ExportData or DataPermission.ExportBoms;
 }

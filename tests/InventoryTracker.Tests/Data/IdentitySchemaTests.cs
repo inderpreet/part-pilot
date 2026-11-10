@@ -25,7 +25,7 @@ public sealed class IdentitySchemaTests : IAsyncLifetime
     };
 
     [Fact]
-    public async Task Fresh_database_has_identity_tables_and_three_seeded_roles()
+    public async Task Fresh_database_has_identity_tables_and_the_seeded_roles()
     {
         await using var context = _db.CreateContext();
 
@@ -37,8 +37,8 @@ public sealed class IdentitySchemaTests : IAsyncLifetime
         }
 
         var roles = await context.Roles.AsNoTracking().OrderBy(r => r.Name).ToListAsync();
-        Assert.Equal(["Admin", "Staff", "Viewer"], roles.Select(r => r.Name));
-        Assert.Equal(["ADMIN", "STAFF", "VIEWER"], roles.Select(r => r.NormalizedName));
+        Assert.Equal(["Admin", "Manager", "Staff", "Viewer"], roles.Select(r => r.Name));
+        Assert.Equal(["ADMIN", "MANAGER", "STAFF", "VIEWER"], roles.Select(r => r.NormalizedName));
         Assert.All(roles, r => Assert.False(string.IsNullOrEmpty(r.ConcurrencyStamp)));
         Assert.Equal(Roles.All.OrderBy(r => r), roles.Select(r => r.Name!));
     }
@@ -170,7 +170,7 @@ public sealed class IdentitySchemaTests : IAsyncLifetime
             await context.Database.MigrateAsync();
             Assert.Empty(await context.Database.GetPendingMigrationsAsync());
             Assert.True(await TableExistsAsync(context, "AspNetUsers"));
-            Assert.Equal(3, await context.Roles.CountAsync());
+            Assert.Equal(Roles.All.Count, await context.Roles.CountAsync());
             Assert.Equal("Kept Co", (await context.AppSettings.SingleAsync(s => s.Key == SettingKeys.CompanyName)).Value);
         }
     }

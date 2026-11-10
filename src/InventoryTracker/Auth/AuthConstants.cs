@@ -6,10 +6,10 @@ public static class Policies
     /// <summary>Admin only: user management, settings.</summary>
     public const string RequireAdmin = nameof(RequireAdmin);
 
-    /// <summary>Admin or Staff: anything that changes data.</summary>
+    /// <summary>Admin, Manager or Staff: anything that changes data.</summary>
     public const string CanEdit = nameof(CanEdit);
 
-    /// <summary>Any signed-in, active user (Admin, Staff, Viewer).</summary>
+    /// <summary>Any signed-in, active user (Admin, Manager, Staff, Viewer).</summary>
     public const string CanView = nameof(CanView);
 
     /// <summary>
@@ -17,6 +17,9 @@ public static class Policies
     /// separately from <see cref="CanView"/> so that exception is visible. Ownership is enforced by <c>RequisitionService</c>.
     /// </summary>
     public const string CanRequest = nameof(CanRequest);
+
+    /// <summary>Admin or Manager: decide or cancel submitted requisitions (F12).</summary>
+    public const string CanApprove = nameof(CanApprove);
 
     /// <summary>Admin, or a role the Admin has granted Import data (F07).</summary>
     public const string CanImportData = nameof(CanImportData);

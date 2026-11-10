@@ -19,7 +19,7 @@ public static class AuthServiceCollectionExtensions
     public const string CookieName = ".Inventory.Auth";
 
     /// <summary>
-    /// Registers Identity (cookie auth, no external logins), the three authorization policies plus the fallback
+    /// Registers Identity (cookie auth, no external logins), the authorization policies plus the fallback
     /// policy, persisted data-protection keys, and the user/sign-in services.
     /// </summary>
     public static IServiceCollection AddInventoryAuth(this IServiceCollection services)
@@ -110,9 +110,10 @@ public static class AuthServiceCollectionExtensions
         services.AddAuthorizationBuilder()
             .SetFallbackPolicy(ActiveUser().Build())
             .AddPolicy(Policies.RequireAdmin, p => Apply(p).RequireRole(Roles.Admin))
-            .AddPolicy(Policies.CanEdit, p => Apply(p).RequireRole(Roles.Admin, Roles.Staff))
-            .AddPolicy(Policies.CanView, p => Apply(p).RequireRole(Roles.Admin, Roles.Staff, Roles.Viewer))
+            .AddPolicy(Policies.CanEdit, p => Apply(p).RequireRole(Roles.Admin, Roles.Manager, Roles.Staff))
+            .AddPolicy(Policies.CanView, p => Apply(p).RequireRole(Roles.Admin, Roles.Manager, Roles.Staff, Roles.Viewer))
             .AddPolicy(Policies.CanRequest, p => Apply(p).RequireRole(Roles.All))
+            .AddPolicy(Policies.CanApprove, p => Apply(p).RequireRole(Roles.Admin, Roles.Manager))
             .AddPolicy(Policies.CanImportData, p => Apply(p).AddRequirements(new DataPermissionRequirement(DataPermission.ImportData)))
             .AddPolicy(Policies.CanImportBoms, p => Apply(p).AddRequirements(new DataPermissionRequirement(DataPermission.ImportBoms)))
             .AddPolicy(Policies.CanExportData, p => Apply(p).AddRequirements(new DataPermissionRequirement(DataPermission.ExportData)))

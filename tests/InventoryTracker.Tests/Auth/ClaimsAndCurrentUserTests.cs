@@ -70,6 +70,7 @@ public class ClaimsAndCurrentUserTests : IAsyncLifetime
 
     [Theory]
     [InlineData(Roles.Admin, true, true)]
+    [InlineData(Roles.Manager, false, true)]
     [InlineData(Roles.Staff, false, true)]
     [InlineData(Roles.Viewer, false, false)]
     public async Task Current_user_flags_follow_the_role(string role, bool isAdmin, bool canEdit)

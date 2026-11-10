@@ -128,6 +128,7 @@ if (app.Environment.IsEnvironment("Testing"))
     app.MapGet("/__policy/admin", () => "ok").RequireAuthorization(Policies.RequireAdmin);
     app.MapGet("/__policy/edit", () => "ok").RequireAuthorization(Policies.CanEdit);
     app.MapGet("/__policy/view", () => "ok").RequireAuthorization(Policies.CanView);
+    app.MapGet("/__policy/approve", () => "ok").RequireAuthorization(Policies.CanApprove);
     app.MapGet("/__policy/import-data", () => "ok").RequireAuthorization(Policies.CanImportData);
     app.MapGet("/__policy/import-boms", () => "ok").RequireAuthorization(Policies.CanImportBoms);
     app.MapGet("/__policy/export-data", () => "ok").RequireAuthorization(Policies.CanExportData);

@@ -67,6 +67,9 @@ public class Requisition : IHasTimestamps, IHasRowVersion
     public DateTime UpdatedAt { get; set; }
 
     public List<RequisitionLine> Lines { get; set; } = [];
+
+    /// <summary>Set when it was cancelled (F12).</summary>
+    public RequisitionCancellation? Cancellation { get; set; }
 }
 
 /// <summary>One part on a requisition. At most one line per product per requisition.</summary>
@@ -95,4 +98,7 @@ public class RequisitionLine : IHasTimestamps
     public DateTime CreatedAt { get; set; }
 
     public DateTime UpdatedAt { get; set; }
+
+    /// <summary>The approval decision (F12); <c>null</c> until one is made.</summary>
+    public RequisitionLineDecision? Decision { get; set; }
 }

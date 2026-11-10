@@ -4,15 +4,22 @@ namespace InventoryTracker.Services;
 
 /// <summary>
 /// Who is acting on a requisition. <paramref name="CanSeeAll"/> widens reading to everyone's requisitions;
-/// <paramref name="IsAdmin"/> also allows changing someone else's. Everyone else works only on their own.
+/// <paramref name="IsAdmin"/> also allows changing someone else's; <paramref name="CanApprove"/> allows deciding and cancelling
+/// submitted ones (F12). Everyone else works only on their own.
 /// </summary>
-public sealed record RequisitionActor(string UserId, bool CanSeeAll = false, bool IsAdmin = false);
+public sealed record RequisitionActor(string UserId, bool CanSeeAll = false, bool IsAdmin = false, bool CanApprove = false)
+{
+    public bool SeesEveryone => CanSeeAll || IsAdmin || CanApprove;
+}
 
 /// <summary>The ownership and status rules, in one place so the service and the pages agree.</summary>
 public static class RequisitionRules
 {
     public static bool CanSee(RequisitionActor actor, string requestedById)
-        => actor.CanSeeAll || actor.IsAdmin || requestedById == actor.UserId;
+        => actor.SeesEveryone || requestedById == actor.UserId;
+
+    /// <summary>Only a submitted requisition can be decided or cancelled by an approver.</summary>
+    public static bool CanDecide(RequisitionStatus status) => status == RequisitionStatus.Submitted;
 
     /// <summary>Only the requester or an Admin may edit, submit, withdraw or delete.</summary>
     public static bool CanChange(RequisitionActor actor, string requestedById)
@@ -77,7 +84,34 @@ public sealed record RequisitionLineItem(
     int QuantityRequested,
     string? Note,
     int OnHand,
-    int OnOrder);
+    int OnOrder,
+    RequisitionLineOutcome? Outcome = null);
+
+/// <summary>What was decided about a line (F12).</summary>
+public sealed record RequisitionLineOutcome(
+    RequisitionDecision Decision,
+    int QuantityApproved,
+    string? Reason,
+    string DecidedById,
+    string DecidedByName,
+    DateTime DecidedAt);
+
+/// <summary>Why a requisition was cancelled (F12).</summary>
+public sealed record RequisitionCancellationInfo(string Reason, string CancelledByName, DateTime CancelledAt);
+
+/// <summary>One row of the approval queue. The value is an estimate from current part costs; it is shown, never stored.</summary>
+public sealed record ApprovalQueueItem(
+    int Id,
+    string Number,
+    string RequestedByName,
+    DateOnly? NeededBy,
+    DateTime? SubmittedAt,
+    int LineCount,
+    long EstimatedValueCents,
+    bool IsOwn);
+
+/// <summary>The decision on one line. Quantity is ignored for a rejection.</summary>
+public sealed record RequisitionLineDecisionInput(long LineId, RequisitionDecision? Decision, int? QuantityApproved, string? Reason);
 
 /// <summary>A requisition as one actor sees it; <see cref="CanChange"/> and the flags below it are worked out for that actor.</summary>
 public sealed record RequisitionDetail(
@@ -95,8 +129,16 @@ public sealed record RequisitionDetail(
     DateTime CreatedAt,
     DateTime UpdatedAt,
     IReadOnlyList<RequisitionLineItem> Lines,
-    bool CanChange)
+    bool CanChange,
+    bool CanApprove = false,
+    string? DecidedByName = null,
+    bool DecidedByRequester = false,
+    RequisitionCancellationInfo? Cancellation = null)
 {
+    public bool CanDecide => CanApprove && RequisitionRules.CanDecide(Status);
+
+    public bool CanCancel => CanDecide;
+
     public bool CanEdit => CanChange && RequisitionRules.CanEditContent(Status);
 
     public bool CanSubmit => CanEdit;
@@ -133,6 +175,11 @@ public static class RequisitionFields
     public const string ProductId = nameof(ProductId);
     public const string Quantity = nameof(Quantity);
     public const string Note = nameof(Note);
+    public const string QuantityApproved = nameof(QuantityApproved);
+    public const string Decision = nameof(Decision);
+
+    /// <summary>Key of a field on one row of a decision, by its position in the submitted list: <c>Lines[2].Reason</c>.</summary>
+    public static string DecisionRow(int index, string member) => $"Lines[{index}].{member}";
 }
 
 public enum RequisitionEventType
@@ -140,6 +187,8 @@ public enum RequisitionEventType
     Created,
     Submitted,
     Withdrawn,
+    Decided,
+    Cancelled,
 }
 
 /// <summary>Something that happened to a requisition. Published only after the change is committed.</summary>

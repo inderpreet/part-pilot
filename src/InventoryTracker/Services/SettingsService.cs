@@ -33,7 +33,7 @@ public interface ISettingsService
     Task<Result> UpdateDataPermissionsAsync(DataPermissionSettings settings, CancellationToken cancellationToken = default);
 }
 
-/// <summary>The four data permissions for Staff and Viewer (F07 FR-9). Admin is always allowed.</summary>
+/// <summary>The four data permissions for Manager, Staff and Viewer (F07 FR-9, F12 FR-9). Admin is always allowed.</summary>
 public sealed record DataPermissionSettings(
     bool StaffImportData,
     bool ViewerImportData,
@@ -42,7 +42,11 @@ public sealed record DataPermissionSettings(
     bool StaffExportData,
     bool ViewerExportData,
     bool StaffExportBoms,
-    bool ViewerExportBoms);
+    bool ViewerExportBoms,
+    bool ManagerImportData,
+    bool ManagerImportBoms,
+    bool ManagerExportData,
+    bool ManagerExportBoms);
 
 /// <summary>The settings an Admin edits on the Settings page (F01 FR-7).</summary>
 public sealed record BusinessSettings(
@@ -287,7 +291,7 @@ public sealed class SettingsService(IServiceScopeFactory scopeFactory, BrandingS
         }
 
         _cache = null;
-        return Result.Success(new BusinessSettings(company, code, symbol, settings.AllowNegativeStock, prefix, projectPrefix));
+        return Result.Success(new BusinessSettings(company, code, symbol, settings.AllowNegativeStock, prefix, projectPrefix, requisitionPrefix));
     }
 
     public async Task<DataPermissionSettings> GetDataPermissionsAsync(CancellationToken cancellationToken = default)
@@ -304,7 +308,11 @@ public sealed class SettingsService(IServiceScopeFactory scopeFactory, BrandingS
             Read(DataPermission.ExportData, Roles.Staff),
             Read(DataPermission.ExportData, Roles.Viewer),
             Read(DataPermission.ExportBoms, Roles.Staff),
-            Read(DataPermission.ExportBoms, Roles.Viewer));
+            Read(DataPermission.ExportBoms, Roles.Viewer),
+            Read(DataPermission.ImportData, Roles.Manager),
+            Read(DataPermission.ImportBoms, Roles.Manager),
+            Read(DataPermission.ExportData, Roles.Manager),
+            Read(DataPermission.ExportBoms, Roles.Manager));
     }
 
     public async Task<Result> UpdateDataPermissionsAsync(DataPermissionSettings settings, CancellationToken cancellationToken = default)
@@ -319,6 +327,10 @@ public sealed class SettingsService(IServiceScopeFactory scopeFactory, BrandingS
             [SettingKeys.Permission(DataPermission.ExportData, Roles.Viewer)] = settings.ViewerExportData ? "true" : "false",
             [SettingKeys.Permission(DataPermission.ExportBoms, Roles.Staff)] = settings.StaffExportBoms ? "true" : "false",
             [SettingKeys.Permission(DataPermission.ExportBoms, Roles.Viewer)] = settings.ViewerExportBoms ? "true" : "false",
+            [SettingKeys.Permission(DataPermission.ImportData, Roles.Manager)] = settings.ManagerImportData ? "true" : "false",
+            [SettingKeys.Permission(DataPermission.ImportBoms, Roles.Manager)] = settings.ManagerImportBoms ? "true" : "false",
+            [SettingKeys.Permission(DataPermission.ExportData, Roles.Manager)] = settings.ManagerExportData ? "true" : "false",
+            [SettingKeys.Permission(DataPermission.ExportBoms, Roles.Manager)] = settings.ManagerExportBoms ? "true" : "false",
         };
 
         await using (var scope = scopeFactory.CreateAsyncScope())

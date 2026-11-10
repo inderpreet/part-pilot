@@ -1,6 +1,6 @@
 # F12 — Requisition approvals
 
-- **Status:** Planned
+- **Status:** Done
 - **Depends on:** F11
 - **Roles:** New **Manager** role and Admin decide. Requesters see the outcome.
 
@@ -35,10 +35,14 @@ lower quantity, or reject it with a reason. Only approved quantities can be orde
 - **Managers and Admins can decide their own requisitions.** The detail page shows when the requester decided it, so self-approval stays visible.
 - Concurrency: `Requisition.RowVersion`, and the status is re-checked inside the transaction, so two Managers cannot both decide.
 - A Manager cannot raise an approved quantity above the request.
+- "Approve all" refills the form with every line approved at its requested quantity; nothing is decided until the form is saved.
+- A rejected line stores an approved quantity of 0, whatever the form held.
+- A part archived after submission can still be approved; F13 refuses to order it.
+- A Manager who is not the requester cannot withdraw a requisition (F11 FR-3: requester or Admin); they can cancel it with a reason.
 
 ## Data model
 
-`RequisitionLineDecision`, and role `Manager` in `AspNetRoles` — see architecture §5. A separate table avoids a rebuild of `RequisitionLines` to add a foreign key (D16).
+`RequisitionLineDecision`, `RequisitionCancellation` (who cancelled and why, FR-7), and role `Manager` in `AspNetRoles` — see architecture §5. Separate tables avoid a rebuild of `RequisitionLines` and `Requisitions` to add a foreign key (D16, D25).
 
 ## Screens / endpoints
 
@@ -60,9 +64,9 @@ lower quantity, or reject it with a reason. Only approved quantities can be orde
 
 | ID | Title | Status |
 |---|---|---|
-| [WI-12-1](../work-items/F12-requisition-approvals/WI-12-1-db-schema.md) | Manager role, RequisitionLineDecision, permission settings | Planned |
-| [WI-12-2](../work-items/F12-requisition-approvals/WI-12-2-api.md) | Manager policies, decision service | Planned |
-| [WI-12-3](../work-items/F12-requisition-approvals/WI-12-3-frontend.md) | Approval queue, decision form, role and permission UI | Planned |
+| [WI-12-1](../work-items/F12-requisition-approvals/WI-12-1-db-schema.md) | Manager role, RequisitionLineDecision, permission settings | Done |
+| [WI-12-2](../work-items/F12-requisition-approvals/WI-12-2-api.md) | Manager policies, decision service | Done |
+| [WI-12-3](../work-items/F12-requisition-approvals/WI-12-3-frontend.md) | Approval queue, decision form, role and permission UI | Done |
 
 ## Open questions
 

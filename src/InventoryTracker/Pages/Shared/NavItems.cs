@@ -11,8 +11,9 @@ namespace InventoryTracker.Pages.Shared;
 /// <paramref name="Group"/> is the rail section it sits under (<see cref="NavGroups"/>); <c>null</c> means the top of the rail.
 /// <paramref name="Icon"/> is the id of a symbol in <c>_Icons.cshtml</c> (without the <c>i-</c> prefix).
 /// <paramref name="LowStockBadge"/> shows the number of low-stock parts next to the label (F06 FR-3).
+/// <paramref name="ApprovalsBadge"/> shows the number of requisitions awaiting a decision (F12 FR-8).
 /// </summary>
-public sealed record NavItem(string Label, string Href, string Policy, bool Available = true, string? Group = null, string Icon = "home", bool LowStockBadge = false);
+public sealed record NavItem(string Label, string Href, string Policy, bool Available = true, string? Group = null, string Icon = "home", bool LowStockBadge = false, bool ApprovalsBadge = false);
 
 /// <summary>Rail sections. <see cref="Foot"/> items sit at the bottom of the rail, above the user card.</summary>
 public static class NavGroups
@@ -35,6 +36,7 @@ public static class NavItems
         new("Stock", "/Stock", Policies.CanView, Group: NavGroups.Inventory, Icon: "layers"),
         new("Suppliers", "/Suppliers", Policies.CanView, Group: NavGroups.Inventory, Icon: "users"),
         new("Requisitions", "/Requisitions", Policies.CanRequest, Group: NavGroups.Inventory, Icon: "cart"),
+        new("Approvals", "/Requisitions/Approvals", Policies.CanApprove, Group: NavGroups.Inventory, Icon: "check", ApprovalsBadge: true),
         new("Purchase Orders", "/PurchaseOrders", Policies.CanView, Group: NavGroups.Inventory, Icon: "file"),
         new("BOMs", "/Projects", Policies.CanView, Group: NavGroups.Inventory, Icon: "clipboard"),
         new("Low stock", "/Reports/LowStock", Policies.CanView, Group: NavGroups.Insights, Icon: "alert", LowStockBadge: true),

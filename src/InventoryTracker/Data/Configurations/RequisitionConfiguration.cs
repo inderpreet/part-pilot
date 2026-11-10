@@ -68,3 +68,55 @@ public class RequisitionLineConfiguration : IEntityTypeConfiguration<Requisition
         builder.HasIndex(l => l.ProductId);
     }
 }
+
+public class RequisitionLineDecisionConfiguration : IEntityTypeConfiguration<RequisitionLineDecision>
+{
+    public void Configure(EntityTypeBuilder<RequisitionLineDecision> builder)
+    {
+        var decisions = string.Join(", ", Enum.GetNames<RequisitionDecision>().Select(n => $"'{n}'"));
+
+        builder.ToTable("RequisitionLineDecisions", t =>
+        {
+            t.HasCheckConstraint("CK_RequisitionLineDecisions_Decision", $"\"Decision\" IN ({decisions})");
+            t.HasCheckConstraint(
+                "CK_RequisitionLineDecisions_Quantity",
+                "(\"Decision\" = 'Approved' AND \"QuantityApproved\" >= 1) OR (\"Decision\" = 'Rejected' AND \"QuantityApproved\" = 0)");
+        });
+        builder.HasKey(d => d.Id);
+
+        builder.Property(d => d.Decision).IsRequired().HasConversion<string>().HasMaxLength(20);
+        builder.Property(d => d.Reason).HasMaxLength(RequisitionLineDecision.ReasonMaxLength);
+
+        // One decision per line (the foreign key's unique index), which also stops two people deciding the same line.
+        builder.HasOne(d => d.RequisitionLine)
+            .WithOne(l => l.Decision)
+            .HasForeignKey<RequisitionLineDecision>(d => d.RequisitionLineId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasOne(d => d.DecidedBy)
+            .WithMany()
+            .HasForeignKey(d => d.DecidedById)
+            .OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
+public class RequisitionCancellationConfiguration : IEntityTypeConfiguration<RequisitionCancellation>
+{
+    public void Configure(EntityTypeBuilder<RequisitionCancellation> builder)
+    {
+        builder.ToTable("RequisitionCancellations");
+        builder.HasKey(c => c.Id);
+
+        builder.Property(c => c.Reason).IsRequired().HasMaxLength(RequisitionCancellation.ReasonMaxLength);
+
+        builder.HasOne(c => c.Requisition)
+            .WithOne(r => r.Cancellation)
+            .HasForeignKey<RequisitionCancellation>(c => c.RequisitionId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasOne(c => c.CancelledBy)
+            .WithMany()
+            .HasForeignKey(c => c.CancelledById)
+            .OnDelete(DeleteBehavior.Restrict);
+    }
+}

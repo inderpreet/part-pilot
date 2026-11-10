@@ -9,6 +9,7 @@
 @inject IAuthorizationService Authorization
 @inject ICurrentUser CurrentUser
 @inject ILowStockCounter LowStockCounter
+@inject IRequisitionService Requisitions
 @{
     // Antiforgery token for every htmx request, sent as a header (configured as "RequestVerificationToken").
     var token = Antiforgery.GetAndStoreTokens(Context).RequestToken;
@@ -55,6 +56,22 @@
     }
 
     ViewData["LowStockCount"] = lowStockCount;
+
+    // Requisitions awaiting a decision (F12): an indexed count, only for people who can decide. Never fatal.
+    var approvalsCount = 0;
+    if (signedIn && navItems.Any(i => i.ApprovalsBadge))
+    {
+        try
+        {
+            approvalsCount = await Requisitions.CountAwaitingDecisionAsync(Context.RequestAborted);
+        }
+        catch (Exception)
+        {
+            approvalsCount = 0;
+        }
+    }
+
+    ViewData["ApprovalsCount"] = approvalsCount;
     var crumb = ViewData["Crumb"] as string;
 
     var userName = CurrentUser.DisplayName ?? "";

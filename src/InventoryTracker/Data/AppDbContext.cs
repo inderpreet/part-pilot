@@ -48,6 +48,10 @@ public class AppDbContext : IdentityDbContext<ApplicationUser, IdentityRole, str
 
     public DbSet<RequisitionLine> RequisitionLines => Set<RequisitionLine>();
 
+    public DbSet<RequisitionLineDecision> RequisitionLineDecisions => Set<RequisitionLineDecision>();
+
+    public DbSet<RequisitionCancellation> RequisitionCancellations => Set<RequisitionCancellation>();
+
     protected override void ConfigureConventions(ModelConfigurationBuilder configurationBuilder)
     {
         configurationBuilder.Properties<DateTime>().HaveConversion<UtcDateTimeConverter>();

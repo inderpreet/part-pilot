@@ -20,6 +20,23 @@ public static class RequisitionDisplay
         _ => "badge-draft",
     };
 
+    /// <summary>A line's decision in words; an approval of less than was asked for reads "Reduced".</summary>
+    public static string OutcomeLabel(RequisitionLineItem line) => line.Outcome switch
+    {
+        null => "—",
+        { Decision: RequisitionDecision.Rejected } => "Rejected",
+        { QuantityApproved: var quantity } when quantity < line.QuantityRequested => "Reduced",
+        _ => "Approved",
+    };
+
+    public static string OutcomeCss(RequisitionLineItem line) => OutcomeLabel(line) switch
+    {
+        "Approved" => "badge-received",
+        "Reduced" => "badge-submitted",
+        "Rejected" => "badge-cancelled",
+        _ => "badge-draft",
+    };
+
     public static string TabLabel(RequisitionTab tab) => tab switch
     {
         RequisitionTab.Mine => "Mine",
@@ -27,7 +44,7 @@ public static class RequisitionDisplay
         _ => tab.ToString(),
     };
 
-    /// <summary>Admin and Staff read everyone's requisitions; only an Admin may change someone else's.</summary>
+    /// <summary>Admin, Manager and Staff read everyone's requisitions; only an Admin may change someone else's; Admin and Manager decide.</summary>
     public static RequisitionActor ToRequisitionActor(this ICurrentUser user)
-        => new(user.Id!, CanSeeAll: user.CanEdit, IsAdmin: user.IsAdmin);
+        => new(user.Id!, CanSeeAll: user.CanEdit, IsAdmin: user.IsAdmin, CanApprove: user.CanApprove);
 }

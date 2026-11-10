@@ -49,7 +49,9 @@ public sealed class FakeSettings : ISettingsService
             StaffImportData: false, ViewerImportData: false,
             StaffImportBoms: false, ViewerImportBoms: false,
             StaffExportData: true, ViewerExportData: false,
-            StaffExportBoms: true, ViewerExportBoms: false));
+            StaffExportBoms: true, ViewerExportBoms: false,
+            ManagerImportData: false, ManagerImportBoms: false,
+            ManagerExportData: true, ManagerExportBoms: true));
 
     public Task<Result> UpdateDataPermissionsAsync(DataPermissionSettings settings, CancellationToken cancellationToken = default)
         => throw new NotSupportedException();

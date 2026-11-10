@@ -100,30 +100,34 @@
             <div class="table-wrap">
                 <table>
                     <thead>
-                        <tr><th>Permission</th><th>Admin</th><th>Staff</th><th>Viewer</th></tr>
+                        <tr><th>Permission</th><th>Admin</th><th>Manager</th><th>Staff</th><th>Viewer</th></tr>
                     </thead>
                     <tbody>
                         <tr>
                             <td>Import data</td>
                             <td>Always</td>
+                            <td><input type="checkbox" name="Permissions.ManagerImportData" value="true" checked="@Model.Permissions.ManagerImportData" /><input type="hidden" name="Permissions.ManagerImportData" value="false" /></td>
                             <td><input type="checkbox" name="Permissions.StaffImportData" value="true" checked="@Model.Permissions.StaffImportData" /><input type="hidden" name="Permissions.StaffImportData" value="false" /></td>
                             <td><input type="checkbox" name="Permissions.ViewerImportData" value="true" checked="@Model.Permissions.ViewerImportData" /><input type="hidden" name="Permissions.ViewerImportData" value="false" /></td>
                         </tr>
                         <tr>
                             <td>Import BOMs</td>
                             <td>Always</td>
+                            <td><input type="checkbox" name="Permissions.ManagerImportBoms" value="true" checked="@Model.Permissions.ManagerImportBoms" /><input type="hidden" name="Permissions.ManagerImportBoms" value="false" /></td>
                             <td><input type="checkbox" name="Permissions.StaffImportBoms" value="true" checked="@Model.Permissions.StaffImportBoms" /><input type="hidden" name="Permissions.StaffImportBoms" value="false" /></td>
                             <td><input type="checkbox" name="Permissions.ViewerImportBoms" value="true" checked="@Model.Permissions.ViewerImportBoms" /><input type="hidden" name="Permissions.ViewerImportBoms" value="false" /></td>
                         </tr>
                         <tr>
                             <td>Export data</td>
                             <td>Always</td>
+                            <td><input type="checkbox" name="Permissions.ManagerExportData" value="true" checked="@Model.Permissions.ManagerExportData" /><input type="hidden" name="Permissions.ManagerExportData" value="false" /></td>
                             <td><input type="checkbox" name="Permissions.StaffExportData" value="true" checked="@Model.Permissions.StaffExportData" /><input type="hidden" name="Permissions.StaffExportData" value="false" /></td>
                             <td><input type="checkbox" name="Permissions.ViewerExportData" value="true" checked="@Model.Permissions.ViewerExportData" /><input type="hidden" name="Permissions.ViewerExportData" value="false" /></td>
                         </tr>
                         <tr>
                             <td>Export BOMs</td>
                             <td>Always</td>
+                            <td><input type="checkbox" name="Permissions.ManagerExportBoms" value="true" checked="@Model.Permissions.ManagerExportBoms" /><input type="hidden" name="Permissions.ManagerExportBoms" value="false" /></td>
                             <td><input type="checkbox" name="Permissions.StaffExportBoms" value="true" checked="@Model.Permissions.StaffExportBoms" /><input type="hidden" name="Permissions.StaffExportBoms" value="false" /></td>
                             <td><input type="checkbox" name="Permissions.ViewerExportBoms" value="true" checked="@Model.Permissions.ViewerExportBoms" /><input type="hidden" name="Permissions.ViewerExportBoms" value="false" /></td>
                         </tr>

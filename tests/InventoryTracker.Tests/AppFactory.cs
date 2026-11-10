@@ -155,6 +155,7 @@ public class AppFactory : WebApplicationFactory<Program>
 
             var users = scope.ServiceProvider.GetRequiredService<IUserService>();
             Check(await users.CreateFirstAdminAsync(TestAuth.Users.Admin, "Test Admin", "admin@example.test", TestAuth.Password, cancellationToken));
+            Check(await users.CreateAsync(new CreateUserInput(TestAuth.Users.Manager, "Test Manager", null, Roles.Manager, TestAuth.Password), cancellationToken: cancellationToken));
             Check(await users.CreateAsync(new CreateUserInput(TestAuth.Users.Staff, "Test Staff", null, Roles.Staff, TestAuth.Password), cancellationToken: cancellationToken));
             Check(await users.CreateAsync(new CreateUserInput(TestAuth.Users.Viewer, "Test Viewer", null, Roles.Viewer, TestAuth.Password), cancellationToken: cancellationToken));
         }

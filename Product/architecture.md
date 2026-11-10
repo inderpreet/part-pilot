@@ -84,7 +84,7 @@ All tables have `Id INTEGER PRIMARY KEY`. Audited/mutable entities have `Created
 ```
 AppSetting(Key PK, Value)
 
-AspNetUsers (Identity, extended: DisplayName, IsActive, LastSignInAt)  AspNetRoles: Admin, Staff, Viewer (Manager planned, F12)
+AspNetUsers (Identity, extended: DisplayName, IsActive, LastSignInAt)  AspNetRoles: Admin, Manager, Staff, Viewer
 
 Category(Id, Name UQ, Description, IsActive)
 Product(Id, Sku UQ, Name, Description, CategoryId→Category?, Unit, Barcode UQ?, BinLocation,
@@ -116,7 +116,8 @@ ImportBatch(Id, Kind, FileName, RowCount, CreatedCount, UpdatedCount, SkippedCou
 Requisition(Id, Number UQ, Status, RequestedById→AspNetUsers, NeededBy?, Reason?, SubmittedAt?, SubmittedById→AspNetUsers?, DecidedAt?, RowVersion)   -- F11
   Status ∈ {Draft, Submitted, Approved, Rejected, Cancelled}; "Ordered" / "Partly ordered" are derived from RequisitionLineOrder (F13)
 RequisitionLine(Id, RequisitionId→Requisition Cascade, ProductId→Product Restrict, QuantityRequested, Note)  UQ (RequisitionId, ProductId)
-RequisitionLineDecision(Id, RequisitionLineId→RequisitionLine UQ Cascade, Decision, QuantityApproved, Reason, DecidedById→AspNetUsers, DecidedAt)   -- F12, planned
+RequisitionLineDecision(Id, RequisitionLineId→RequisitionLine UQ Cascade, Decision, QuantityApproved, Reason, DecidedById→AspNetUsers Restrict, DecidedAt)   -- F12
+RequisitionCancellation(Id, RequisitionId→Requisition UQ Cascade, Reason, CancelledById→AspNetUsers Restrict, CancelledAt)   -- F12
 RequisitionLineOrder(Id, RequisitionLineId→RequisitionLine UQ Cascade, PurchaseOrderLineId→PurchaseOrderLine Cascade, QuantityOrdered, ConvertedById→AspNetUsers, ConvertedAt)   -- F13, planned
 
 AuditEntry(Id, OccurredAt, UserId?, UserName, Action, EntityType, EntityId, ChangesJson, IpAddress)
@@ -163,14 +164,14 @@ needed `QuantityPerUnit × remaining units` against on hand, on order and **in d
   8 h sliding. "Remember me" gives a persistent 14-day sliding cookie; otherwise it is a session cookie.
 - First run: if no users exist, every request except static files, `/Account/Setup`, `/health` and `/Error*` redirects to
   `/Account/Setup` (`HX-Redirect` for htmx). The "users exist" answer is cached once true. After the first Admin exists the page is 404.
-- Policies: `RequireAdmin` (Admin), `CanEdit` (Admin, Staff), `CanView` (any authenticated active user). Every policy **and**
+- Policies: `RequireAdmin` (Admin), `CanEdit` (Admin, Manager, Staff), `CanApprove` (Admin, Manager; F12), `CanView` (any authenticated active user). Every policy **and**
   the fallback policy require an authenticated user carrying the `inv:active` claim. Applied with
   `[Authorize(Policy = ...)]` on page models; a page that names a policy is not evaluated against the fallback, so each policy
   repeats the active check.
 - `CanRequest` (F11): any active user with a role. The one write allowed to Viewers, named apart from `CanView` so the exception is visible; `RequisitionService` enforces ownership (`RequisitionActor`).
 - Data permissions (F07): `CanImportData`, `CanImportBoms`, `CanExportData`, `CanExportBoms` (and `CanImport` / `CanExport`, either of the
-  pair). Admin always passes; Staff and Viewer pass when an Admin has allowed it for that role on the Settings page (settings
-  `Permission.<Name>.Staff|Viewer`, read through `ISettingsService`, so a change applies on the next request). Backup stays `RequireAdmin`.
+  pair). Admin always passes; Manager, Staff and Viewer pass when an Admin has allowed it for that role on the Settings page (settings
+  `Permission.<Name>.Manager|Staff|Viewer`, read through `ISettingsService`, so a change applies on the next request). Backup stays `RequireAdmin`.
 - Sessions are re-validated every `Auth:ValidationIntervalSeconds` (default 60). `ActiveUserSecurityStampValidator` rejects
   deactivated users. The security stamp rotates on role change, deactivation and any password change/reset, which ends other sessions.
 - Business rules live in `UserService` (last active Admin cannot be demoted/deactivated; one role per user). Admin-affecting
@@ -266,7 +267,7 @@ dotnet publish src/InventoryTracker -c Release -r <rid> --self-contained true
 | D22 | F07 imports are two steps: a **preview** parses and validates the upload into a temp file keyed by a random token (expires after 30 min, never keyed by a user-supplied name) and writes nothing; a **commit** re-reads that file and applies it in one DB transaction through the existing services (`ProductService`, `SupplierService`, `StockService`, `ProjectService`), never by writing tables directly, so every business rule holds for imports too. BOMs are one flat CSV (one row per line) matched by project number, with Merge or Replace chosen at upload and a missing part either an error or created from the row. Who may import or export is a per-role setting an Admin edits (see the data permissions under Auth) rather than a fixed role check, and backup stays Admin only | Going through services keeps SKU locks, negative-stock rules and project uniqueness in one place, and a transaction makes a failed file leave nothing behind. A token-keyed temp file means the preview and the commit act on the same bytes without trusting the browser to send them back. Settings rows reuse the cache and the Settings page instead of a new roles/permissions table, which one business with three roles does not need |
 | D23 | Planned (F14): deployment scripts in `automation/` are Python 3.11+ standard library, run on the server only | Readable by operators and no packages to install; not part of the shipped executable, so the no-Node and single-binary rules are unaffected |
 | D24 | Planned (F14): HTTPS is left to a reverse proxy. The app gains `INVENTORY_TRUSTED_PROXIES` for forwarded headers, off by default | Keeps certificates out of the app; `SameAsRequest` cookies become `Secure` only when the proxy is trusted |
-| D25 | Planned (F11–F13): decisions and PO links are separate tables, and the requisition status check holds every status from the first migration | Adding a foreign key to an existing SQLite table needs a rebuild (D16); new tables do not. Cascades release lines automatically when a PO line goes away |
+| D25 | F11–F13: decisions, cancellations (F12) and PO links are separate tables, and the requisition status check holds every status from the first migration | Adding a foreign key to an existing SQLite table needs a rebuild (D16); new tables do not. Cascades release lines automatically when a PO line goes away |
 | D26 | The built assembly and executable are `PartPilot` (`<AssemblyName>`), matching the product name. The project folder, namespace (`RootNamespace`), auth cookie, `inventory.db` and data-protection application name keep their names | Windows Smart App Control refused the `InventoryTracker.dll` built on the development machine while other unsigned builds loaded, and a clean rebuild reproduced the identical file. Renaming only the output changes no data and signs nobody out. An installed service must point at the new file name |
 
 ## 14. Open questions

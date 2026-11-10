@@ -49,7 +49,9 @@ public class SettingsModel(ISettingsService settings) : PageModel
                 Permissions.StaffImportData, Permissions.ViewerImportData,
                 Permissions.StaffImportBoms, Permissions.ViewerImportBoms,
                 Permissions.StaffExportData, Permissions.ViewerExportData,
-                Permissions.StaffExportBoms, Permissions.ViewerExportBoms),
+                Permissions.StaffExportBoms, Permissions.ViewerExportBoms,
+                Permissions.ManagerImportData, Permissions.ManagerImportBoms,
+                Permissions.ManagerExportData, Permissions.ManagerExportBoms),
             HttpContext.RequestAborted);
         if (!result.Succeeded)
         {
@@ -88,6 +90,10 @@ public class SettingsModel(ISettingsService settings) : PageModel
         ViewerExportData = perms.ViewerExportData,
         StaffExportBoms = perms.StaffExportBoms,
         ViewerExportBoms = perms.ViewerExportBoms,
+        ManagerImportData = perms.ManagerImportData,
+        ManagerImportBoms = perms.ManagerImportBoms,
+        ManagerExportData = perms.ManagerExportData,
+        ManagerExportBoms = perms.ManagerExportBoms,
     };
 
     public sealed class SettingsInput
@@ -130,5 +136,9 @@ public class SettingsModel(ISettingsService settings) : PageModel
         public bool ViewerExportData { get; set; }
         public bool StaffExportBoms { get; set; }
         public bool ViewerExportBoms { get; set; }
+        public bool ManagerImportData { get; set; }
+        public bool ManagerImportBoms { get; set; }
+        public bool ManagerExportData { get; set; }
+        public bool ManagerExportBoms { get; set; }
     }
 }

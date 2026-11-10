@@ -1,7 +1,9 @@
 @page "/Requisitions/{id:int}"
 @model InventoryTracker.Pages.Requisitions.DetailModel
+@using InventoryTracker.Data.Entities
 @{
     var r = Model.Requisition;
+    var decided = r.Lines.Any(l => l.Outcome is not null);
     ViewData["Title"] = $"Requisition {r.Number}";
     ViewData["Crumb"] = r.Number;
 
@@ -17,6 +19,11 @@
 }
 
 @section Actions {
+    @if (r.CanDecide)
+    {
+        <a role="button" asp-page="Decide" asp-route-id="@r.Id">Decide</a>
+    }
+
     @if (r.CanEdit)
     {
         <a role="button" class="secondary outline" asp-page="Edit" asp-route-id="@r.Id">Edit</a>
@@ -38,6 +45,25 @@
             <button type="submit" class="secondary outline" hx-post="@Action("Withdraw")"
                     hx-confirm="Withdraw @r.Number? It goes back to being a draft you can edit.">Withdraw</button>
         </form>
+    }
+
+    @if (r.CanCancel)
+    {
+        @* Its reason field needs room, and it is rarely the right choice: tucked into a menu, like deleting a draft. *@
+        <details class="menu">
+            <summary class="menu-toggle" aria-label="More actions"><svg class="ico" aria-hidden="true"><use href="#i-dots"/></svg></summary>
+            <div class="menu-pop">
+                <form method="post" asp-page-handler="Cancel" asp-route-id="@r.Id" class="menu-form">
+                    <input type="hidden" name="rowVersion" value="@r.RowVersion" />
+                    <label>
+                        Reason for cancelling
+                        <textarea name="reason" rows="2" maxlength="@RequisitionCancellation.ReasonMaxLength" required></textarea>
+                    </label>
+                    <button type="submit" class="menu-item danger" hx-post="@Action("Cancel")"
+                            hx-confirm="Cancel @r.Number? It cannot be decided after this.">Cancel requisition</button>
+                </form>
+            </div>
+        </details>
     }
 
     @if (r.CanDelete)
@@ -81,6 +107,12 @@
                                 <th scope="col" class="num">On hand</th>
                                 <th scope="col" class="num">On order</th>
                                 <th scope="col">Note</th>
+                                @if (decided)
+                                {
+                                    <th scope="col">Decision</th>
+                                    <th scope="col" class="num">Approved</th>
+                                    <th scope="col">Why</th>
+                                }
                             </tr>
                         </thead>
                         <tbody>
@@ -98,6 +130,12 @@
                                     <td class="num">@line.OnHand</td>
                                     <td class="num">@line.OnOrder</td>
                                     <td>@(line.Note ?? "—")</td>
+                                    @if (decided)
+                                    {
+                                        <td><span class="badge @RequisitionDisplay.OutcomeCss(line)">@RequisitionDisplay.OutcomeLabel(line)</span></td>
+                                        <td class="num">@(line.Outcome?.QuantityApproved ?? 0)</td>
+                                        <td>@(line.Outcome?.Reason ?? "—")</td>
+                                    }
                                 </tr>
                             }
                         </tbody>
@@ -132,7 +170,20 @@
                 }
                 @if (r.DecidedAt is not null)
                 {
-                    <li><strong>@RequisitionDisplay.StatusLabel(r.Status)</strong> <span>@Html.LocalTime(r.DecidedAt)</span></li>
+                    <li>
+                        <strong>@RequisitionDisplay.StatusLabel(r.Status) by @r.DecidedByName</strong> <span>@Html.LocalTime(r.DecidedAt)</span>
+                        @if (r.DecidedByRequester)
+                        {
+                            <small class="muted">The requester decided this themselves.</small>
+                        }
+                    </li>
+                }
+                @if (r.Cancellation is { } cancelled)
+                {
+                    <li>
+                        <strong>Cancelled by @cancelled.CancelledByName</strong> <span>@Html.LocalTime(cancelled.CancelledAt)</span>
+                        <small class="pre-line">@cancelled.Reason</small>
+                    </li>
                 }
             </ol>
         </section>

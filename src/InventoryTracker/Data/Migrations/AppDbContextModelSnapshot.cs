@@ -70,12 +70,22 @@ namespace InventoryTracker.Data.Migrations
                         },
                         new
                         {
+                            Key = "Permission.ImportData.Manager",
+                            Value = "false"
+                        },
+                        new
+                        {
                             Key = "Permission.ImportData.Staff",
                             Value = "false"
                         },
                         new
                         {
                             Key = "Permission.ImportData.Viewer",
+                            Value = "false"
+                        },
+                        new
+                        {
+                            Key = "Permission.ImportBoms.Manager",
                             Value = "false"
                         },
                         new
@@ -90,6 +100,11 @@ namespace InventoryTracker.Data.Migrations
                         },
                         new
                         {
+                            Key = "Permission.ExportData.Manager",
+                            Value = "true"
+                        },
+                        new
+                        {
                             Key = "Permission.ExportData.Staff",
                             Value = "true"
                         },
@@ -97,6 +112,11 @@ namespace InventoryTracker.Data.Migrations
                         {
                             Key = "Permission.ExportData.Viewer",
                             Value = "false"
+                        },
+                        new
+                        {
+                            Key = "Permission.ExportBoms.Manager",
+                            Value = "true"
                         },
                         new
                         {
@@ -737,6 +757,37 @@ namespace InventoryTracker.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("InventoryTracker.Data.Entities.RequisitionCancellation", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("CancelledAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("CancelledById")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Reason")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("RequisitionId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CancelledById");
+
+                    b.HasIndex("RequisitionId")
+                        .IsUnique();
+
+                    b.ToTable("RequisitionCancellations", (string)null);
+                });
+
             modelBuilder.Entity("InventoryTracker.Data.Entities.RequisitionLine", b =>
                 {
                     b.Property<long>("Id")
@@ -772,6 +823,49 @@ namespace InventoryTracker.Data.Migrations
                     b.ToTable("RequisitionLines", null, t =>
                         {
                             t.HasCheckConstraint("CK_RequisitionLines_QuantityRequested", "\"QuantityRequested\" >= 1");
+                        });
+                });
+
+            modelBuilder.Entity("InventoryTracker.Data.Entities.RequisitionLineDecision", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("DecidedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("DecidedById")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Decision")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<int>("QuantityApproved")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<string>("Reason")
+                        .HasMaxLength(500)
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("RequisitionLineId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("DecidedById");
+
+                    b.HasIndex("RequisitionLineId")
+                        .IsUnique();
+
+                    b.ToTable("RequisitionLineDecisions", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_RequisitionLineDecisions_Decision", "\"Decision\" IN ('Approved', 'Rejected')");
+
+                            t.HasCheckConstraint("CK_RequisitionLineDecisions_Quantity", "(\"Decision\" = 'Approved' AND \"QuantityApproved\" >= 1) OR (\"Decision\" = 'Rejected' AND \"QuantityApproved\" = 0)");
                         });
                 });
 
@@ -950,6 +1044,13 @@ namespace InventoryTracker.Data.Migrations
                             ConcurrencyStamp = "a1b2c3d4-0001-4000-8000-000000000001",
                             Name = "Admin",
                             NormalizedName = "ADMIN"
+                        },
+                        new
+                        {
+                            Id = "a1b2c3d4-0004-4000-8000-000000000004",
+                            ConcurrencyStamp = "a1b2c3d4-0004-4000-8000-000000000004",
+                            Name = "Manager",
+                            NormalizedName = "MANAGER"
                         },
                         new
                         {
@@ -1203,6 +1304,25 @@ namespace InventoryTracker.Data.Migrations
                     b.Navigation("SubmittedBy");
                 });
 
+            modelBuilder.Entity("InventoryTracker.Data.Entities.RequisitionCancellation", b =>
+                {
+                    b.HasOne("InventoryTracker.Data.Entities.ApplicationUser", "CancelledBy")
+                        .WithMany()
+                        .HasForeignKey("CancelledById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("InventoryTracker.Data.Entities.Requisition", "Requisition")
+                        .WithOne("Cancellation")
+                        .HasForeignKey("InventoryTracker.Data.Entities.RequisitionCancellation", "RequisitionId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CancelledBy");
+
+                    b.Navigation("Requisition");
+                });
+
             modelBuilder.Entity("InventoryTracker.Data.Entities.RequisitionLine", b =>
                 {
                     b.HasOne("InventoryTracker.Data.Entities.Product", "Product")
@@ -1220,6 +1340,25 @@ namespace InventoryTracker.Data.Migrations
                     b.Navigation("Product");
 
                     b.Navigation("Requisition");
+                });
+
+            modelBuilder.Entity("InventoryTracker.Data.Entities.RequisitionLineDecision", b =>
+                {
+                    b.HasOne("InventoryTracker.Data.Entities.ApplicationUser", "DecidedBy")
+                        .WithMany()
+                        .HasForeignKey("DecidedById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("InventoryTracker.Data.Entities.RequisitionLine", "RequisitionLine")
+                        .WithOne("Decision")
+                        .HasForeignKey("InventoryTracker.Data.Entities.RequisitionLineDecision", "RequisitionLineId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("DecidedBy");
+
+                    b.Navigation("RequisitionLine");
                 });
 
             modelBuilder.Entity("InventoryTracker.Data.Entities.StockTransaction", b =>
@@ -1344,7 +1483,14 @@ namespace InventoryTracker.Data.Migrations
 
             modelBuilder.Entity("InventoryTracker.Data.Entities.Requisition", b =>
                 {
+                    b.Navigation("Cancellation");
+
                     b.Navigation("Lines");
+                });
+
+            modelBuilder.Entity("InventoryTracker.Data.Entities.RequisitionLine", b =>
+                {
+                    b.Navigation("Decision");
                 });
 
             modelBuilder.Entity("InventoryTracker.Data.Entities.Supplier", b =>

@@ -1,0 +1,12 @@
+@page "/Requisitions/Approvals"
+@model InventoryTracker.Pages.Requisitions.ApprovalsModel
+@{
+    ViewData["Title"] = "Approvals";
+}
+
+<div class="card list-card">
+    <div class="load-bar" role="status" aria-label="Updating"></div>
+    <div id="results">
+        <partial name="_ApprovalResults" model="Model" />
+    </div>
+</div>

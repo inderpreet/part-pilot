@@ -54,6 +54,13 @@ public static class PageExtensions
         return (await authorization.AuthorizeAsync(page.User, Policies.CanEdit)).Succeeded;
     }
 
+    /// <summary>The same check for handlers that need <c>CanApprove</c> on a page open to more people (F12).</summary>
+    public static async Task<bool> CanApproveAsync(this PageModel page)
+    {
+        var authorization = page.HttpContext.RequestServices.GetRequiredService<IAuthorizationService>();
+        return (await authorization.AuthorizeAsync(page.User, Policies.CanApprove)).Succeeded;
+    }
+
     /// <summary>
     /// Adds each error of a failed <see cref="Result"/> to ModelState, keyed by its field (empty key = form-level).
     /// Pass <paramref name="prefix"/> (e.g. <c>"Input"</c>) when the form binds to a nested <c>Input</c> property so

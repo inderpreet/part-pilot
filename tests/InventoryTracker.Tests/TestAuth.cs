@@ -18,7 +18,7 @@ public static class TestAuth
 
     /// <summary>
     /// A request carrying this header is authenticated by <see cref="TestAuthHandler"/> instead of the cookie.
-    /// Values: Admin, Staff, Viewer, Inactive (valid cookie-less identity whose account is deactivated), NoRole.
+    /// Values: Admin, Manager, Staff, Viewer, Inactive (valid cookie-less identity whose account is deactivated), NoRole.
     /// Requests without the header go through the real cookie authentication.
     /// </summary>
     public const string RoleHeader = "X-Test-Role";
@@ -28,6 +28,7 @@ public static class TestAuth
     public static class Users
     {
         public const string Admin = "admin";
+        public const string Manager = "manager";
         public const string Staff = "staff";
         public const string Viewer = "viewer";
     }
@@ -60,7 +61,7 @@ public sealed class TestAuthHandler(IOptionsMonitor<AuthenticationSchemeOptions>
 
         switch (role)
         {
-            case "Admin" or "Staff" or "Viewer":
+            case "Admin" or "Manager" or "Staff" or "Viewer":
                 claims.Add(new Claim(ClaimTypes.Role, role));
                 claims.Add(new Claim(AppClaimTypes.Active, "true"));
                 break;

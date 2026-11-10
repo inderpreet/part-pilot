@@ -21,7 +21,7 @@ public sealed class DataPermissionRequirement : IAuthorizationRequirement
 }
 
 /// <summary>
-/// Admin always passes. Staff and Viewer pass when their setting for one of the named permissions is true.
+/// Admin always passes. Manager, Staff and Viewer pass when their setting for one of the named permissions is true.
 /// Settings are read live, so a change on the Settings page applies on the next request.
 /// </summary>
 public sealed class DataPermissionHandler(ISettingsService settings) : AuthorizationHandler<DataPermissionRequirement>
@@ -34,9 +34,7 @@ public sealed class DataPermissionHandler(ISettingsService settings) : Authoriza
             return;
         }
 
-        var role = context.User.IsInRole(Roles.Staff) ? Roles.Staff
-            : context.User.IsInRole(Roles.Viewer) ? Roles.Viewer
-            : null;
+        var role = DataPermissions.ConfigurableRoles.FirstOrDefault(context.User.IsInRole);
         if (role is null)
         {
             return;

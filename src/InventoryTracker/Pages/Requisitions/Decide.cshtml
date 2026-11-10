@@ -1,0 +1,106 @@
+@page "/Requisitions/{id:int}/Decide"
+@model InventoryTracker.Pages.Requisitions.DecideModel
+@using InventoryTracker.Data.Entities
+@{
+    var r = Model.Requisition;
+    ViewData["Title"] = $"Decide {r.Number}";
+    ViewData["Crumb"] = r.Number;
+}
+
+@section Leading {
+    <a asp-page="Approvals">‹ Approvals</a>
+}
+
+@section Actions {
+    <a role="button" class="secondary outline" asp-page="Decide" asp-route-id="@r.Id" asp-route-approveAll="true">Approve all</a>
+    <a role="button" class="secondary outline" asp-page="Detail" asp-route-id="@r.Id">View details</a>
+}
+
+<form method="post" novalidate class="decide-form">
+    <input type="hidden" name="RowVersion" value="@Model.RowVersion" />
+    <partial name="_ValidationSummary" model="ViewData.ModelState" />
+
+    @if (Model.IsOwn)
+    {
+        <p class="muted" role="note">You raised this requisition. The decision will show that you decided your own request.</p>
+    }
+
+    <section class="card" aria-label="Request">
+        <dl class="kv">
+            <dt>Requested by</dt>
+            <dd>@r.RequestedByName</dd>
+            <dt>Needed by</dt>
+            <dd>@PurchaseOrderDisplay.Date(r.NeededBy)</dd>
+            <dt>Reason</dt>
+            <dd class="pre-line kv-note">@r.Reason</dd>
+        </dl>
+    </section>
+
+    <section class="card" aria-label="Decide each part">
+        <div class="card-head"><h2 class="card-title">Decide each part</h2></div>
+        <div class="table-wrap">
+            <table class="decide-lines">
+                <thead>
+                    <tr>
+                        <th scope="col">Part</th>
+                        <th scope="col" class="num">On hand</th>
+                        <th scope="col" class="num">On order</th>
+                        <th scope="col" class="num">Requested</th>
+                        <th scope="col">Decision</th>
+                        <th scope="col">Approved quantity</th>
+                        <th scope="col">Reason</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @for (var i = 0; i < r.Lines.Count; i++)
+                    {
+                        var line = r.Lines[i];
+                        var row = Model.Lines[i];
+                        var decisionKey = $"Lines[{i}].Decision";
+                        var quantityKey = $"Lines[{i}].QuantityApproved";
+                        var reasonKey = $"Lines[{i}].Reason";
+                        <tr>
+                            <td>
+                                <input type="hidden" name="Lines[@i].LineId" value="@line.Id" />
+                                <span class="cell-main"><strong>@line.Sku</strong> @line.ProductName
+                                @if (!line.ProductIsActive)
+                                {
+                                    <span class="badge badge-inactive">Archived</span>
+                                }</span>
+                                @if (line.Note is not null)
+                                {
+                                    <small class="muted">@line.Note</small>
+                                }
+                            </td>
+                            <td class="num" data-label="On hand">@line.OnHand</td>
+                            <td class="num" data-label="On order">@line.OnOrder</td>
+                            <td class="num" data-label="Requested">@line.QuantityRequested @line.Unit</td>
+                            <td data-label="Decision">
+                                <div class="decide-choice" role="radiogroup" aria-label="Decision for @line.Sku" aria-invalid="@Html.AriaInvalid(decisionKey)">
+                                    <label><input type="radio" name="@decisionKey" value="@RequisitionDecision.Approved" checked="@(row.Decision == RequisitionDecision.Approved)" /> Approve</label>
+                                    <label><input type="radio" name="@decisionKey" value="@RequisitionDecision.Rejected" checked="@(row.Decision == RequisitionDecision.Rejected)" /> Reject</label>
+                                </div>
+                                @Html.FieldError(decisionKey)
+                            </td>
+                            <td data-label="Approved quantity">
+                                <input type="number" name="@quantityKey" value="@row.QuantityApproved" min="1" max="@line.QuantityRequested" step="1" inputmode="numeric"
+                                       aria-label="Approved quantity for @line.Sku" aria-invalid="@Html.AriaInvalid(quantityKey)" aria-describedby="@Html.DescribedBy(quantityKey)" />
+                                @Html.FieldError(quantityKey)
+                            </td>
+                            <td data-label="Reason">
+                                <input type="text" name="@reasonKey" value="@row.Reason" maxlength="@RequisitionLineDecision.ReasonMaxLength"
+                                       aria-label="Reason for @line.Sku" aria-invalid="@Html.AriaInvalid(reasonKey)" aria-describedby="@Html.DescribedBy(reasonKey)" />
+                                @Html.FieldError(reasonKey)
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+        <p class="card-note muted">Every part needs a decision. A reason is required when you reject a part or approve less than requested. The quantity is ignored for a rejected part. Decisions are final.</p>
+    </section>
+
+    <div class="action-bar form-actions">
+        <button type="submit">Save decision</button>
+    </div>
+</form>
