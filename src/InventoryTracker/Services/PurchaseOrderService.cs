@@ -974,6 +974,10 @@ public sealed class PurchaseOrderService(
                 }
 
                 number = order.Number;
+
+                // Requisition lines on this order go back to "to order" (F13); a draft deleted or a line removed does the same by cascade.
+                await db.RequisitionLineOrders.Where(o => o.PurchaseOrderLine!.PurchaseOrderId == id).ExecuteDeleteAsync(cancellationToken);
+
                 order.Status = PurchaseOrderStatus.Cancelled;
                 order.ClosedAt = clock.UtcNow;
                 await db.SaveChangesAsync(cancellationToken);

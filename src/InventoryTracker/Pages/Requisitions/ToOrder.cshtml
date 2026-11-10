@@ -1,0 +1,160 @@
+@page "/Requisitions/ToOrder"
+@model InventoryTracker.Pages.Requisitions.ToOrderModel
+@using InventoryTracker.Pages.Requisitions
+@{
+    ViewData["Title"] = Model.View.ForOrder is { } po ? $"Add approved lines to {po.Number}" : "To order";
+    var forOrder = Model.View.ForOrder;
+}
+
+@section Leading {
+    @if (forOrder is not null)
+    {
+        <a asp-page="/PurchaseOrders/Detail" asp-route-id="@forOrder.PurchaseOrderId">‹ @forOrder.Number</a>
+    }
+}
+
+@if (Model.Outcomes.Count > 0)
+{
+    <article class="card result-summary" role="status">
+        <strong>Sent @Model.Outcomes.Sum(o => o.LineCount) @(Model.Outcomes.Sum(o => o.LineCount) == 1 ? "line" : "lines") to purchase orders:</strong>
+        <ul>
+            @foreach (var outcome in Model.Outcomes)
+            {
+                <li><a asp-page="/PurchaseOrders/Detail" asp-route-id="@outcome.PurchaseOrderId">@outcome.Number</a> · @outcome.LineCount @(outcome.LineCount == 1 ? "line" : "lines")@(outcome.Created ? " · new draft" : "")</li>
+            }
+        </ul>
+        <small class="muted">The orders are drafts: review and submit them from the purchase order page.</small>
+    </article>
+}
+
+@if (Model.View.Groups.Count == 0)
+{
+    <div class="card list-card">
+        <partial name="_EmptyState" model="@(new EmptyStateModel("Nothing to order", forOrder is null ? "Approved requisition lines appear here until they are put on a purchase order." : $"No approved lines are waiting for {Model.View.ForOrderSupplierName}."))" />
+    </div>
+}
+else
+{
+    <form method="post" novalidate class="to-order-form">
+        @if (Model.PurchaseOrderId is { } id)
+        {
+            <input type="hidden" name="PurchaseOrderId" value="@id" />
+        }
+        <partial name="_ValidationSummary" model="ViewData.ModelState" />
+
+        @if (forOrder is not null)
+        {
+            <p class="muted">Selected lines go on draft <strong>@forOrder.Number</strong> for @Model.View.ForOrderSupplierName.</p>
+        }
+
+        @foreach (var group in Model.View.Groups)
+        {
+            var key = ToOrderModel.GroupKey(group);
+            var checkName = $"Selected_{key}";
+            var unassigned = group.SupplierId is null;
+            <section class="card to-order-group" aria-labelledby="group-@key">
+                <div class="card-head">
+                    <h2 class="card-title" id="group-@key">@(unassigned ? (forOrder is null ? "Choose a supplier" : "No preferred supplier") : group.SupplierName)</h2>
+                    <span class="muted">@group.Lines.Count @(group.Lines.Count == 1 ? "line" : "lines")</span>
+                </div>
+                @if (group.SupplierId is { } gid && Model.GroupErrors.TryGetValue(gid, out var groupError))
+                {
+                    <p class="field-error card-note">@groupError</p>
+                }
+                <div class="table-wrap">
+                    <table class="striped">
+                        <thead>
+                            <tr>
+                                <th scope="col" class="check"><input type="checkbox" data-check-all="@checkName" aria-label="Select every line in this group" /></th>
+                                <th scope="col">Part</th>
+                                <th scope="col" class="num">Approved</th>
+                                <th scope="col" class="num">On hand</th>
+                                <th scope="col" class="num">On order</th>
+                                <th scope="col" class="num">In draft</th>
+                                <th scope="col">Requisition</th>
+                                @if (unassigned && forOrder is null)
+                                {
+                                    <th scope="col">Supplier</th>
+                                }
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var line in group.Lines)
+                            {
+                                var blocked = line.Blocked;
+                                Model.RowErrors.TryGetValue(line.RequisitionLineId, out var rowError);
+                                <tr>
+                                    <td class="check">
+                                        <input type="checkbox" name="@checkName" value="@line.RequisitionLineId" checked="@Model.Selected.Contains(line.RequisitionLineId)"
+                                               disabled="@(blocked is not null)" aria-label="Order @line.Sku for @line.RequisitionNumber" />
+                                    </td>
+                                    <td>
+                                        <a asp-page="/Products/Detail" asp-route-id="@line.ProductId">@line.Sku</a> <small class="muted">@line.ProductName</small>
+                                        @if (blocked is not null)
+                                        {
+                                            <small class="field-error">@blocked</small>
+                                        }
+                                        @if (rowError is not null)
+                                        {
+                                            <small class="field-error">@rowError</small>
+                                        }
+                                        @if (line.BelowMinimum)
+                                        {
+                                            <small class="muted">Below the supplier's minimum of @line.MinOrderQuantity.</small>
+                                        }
+                                        @if (unassigned && line.PreferredSupplierName is not null && !line.PreferredSupplierIsActive)
+                                        {
+                                            <small class="muted">Preferred supplier @line.PreferredSupplierName is archived.</small>
+                                        }
+                                    </td>
+                                    <td class="num">@line.QuantityApproved <small class="muted">@line.Unit</small></td>
+                                    <td class="num">@line.OnHand</td>
+                                    <td class="num">@line.OnOrder</td>
+                                    <td class="num">@line.InDraft</td>
+                                    <td>
+                                        <a asp-page="Detail" asp-route-id="@line.RequisitionId">@line.RequisitionNumber</a>
+                                        <small class="muted">@line.RequestedByName@(line.NeededBy is { } needed ? $" · needed {PurchaseOrderDisplay.Date(needed)}" : "")</small>
+                                    </td>
+                                    @if (unassigned && forOrder is null)
+                                    {
+                                        <td>
+                                            <select name="SupplierFor[@line.RequisitionLineId]" aria-label="Supplier for @line.Sku" disabled="@(blocked is not null)">
+                                                <option value="">Choose…</option>
+                                                @foreach (var supplier in Model.View.Suppliers)
+                                                {
+                                                    <option value="@supplier.Id" selected="@(Model.SupplierFor.GetValueOrDefault(line.RequisitionLineId) == supplier.Id)">@supplier.Name</option>
+                                                }
+                                            </select>
+                                        </td>
+                                    }
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+                @if (group.SupplierId is { } supplierId && forOrder is null)
+                {
+                    var target = Model.TargetFor(supplierId);
+                    <label class="to-order-target">
+                        Send to
+                        <select name="Targets[@supplierId]">
+                            <option value="@ToOrderModel.NewDraft" selected="@(target == ToOrderModel.NewDraft)">New draft PO</option>
+                            @foreach (var draft in group.Drafts)
+                            {
+                                <option value="@draft.PurchaseOrderId" selected="@(target == draft.PurchaseOrderId.ToString(System.Globalization.CultureInfo.InvariantCulture))">@draft.Number (draft, @draft.LineCount @(draft.LineCount == 1 ? "line" : "lines"))</option>
+                            }
+                        </select>
+                    </label>
+                }
+                else if (group.SupplierId is null && forOrder is null)
+                {
+                    <p class="card-note muted">Each line goes to its chosen supplier: onto the order chosen for that supplier above, otherwise a new draft.</p>
+                }
+            </section>
+        }
+
+        <div class="action-bar form-actions">
+            <button type="submit">@(forOrder is null ? "Send selected to purchase orders" : $"Add selected to {forOrder.Number}")</button>
+        </div>
+    </form>
+}

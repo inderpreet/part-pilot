@@ -34,11 +34,11 @@ executable: run it, open the browser, sign in. Data lives in a single SQLite fil
 | [F10](Features/F10-project-boms.md) | Projects & BOMs | Numbered projects with bills of materials from catalog or new parts, status check against stock, orders and draft POs, order shortages, build (issue parts) | F02, F03, F04, F05, F09 | Done |
 | [F11](Features/F11-requisitions.md) | Requisitions | Any signed-in user requests catalog parts with quantities and tracks the request | F01, F02 | Done |
 | [F12](Features/F12-requisition-approvals.md) | Requisition approvals | Manager role; approve, reduce or reject each requisition line | F11 | Done |
-| [F13](Features/F13-requisition-to-po.md) | Requisition to purchase order | Send approved lines to a new or existing draft PO, with links both ways | F05, F12 | Planned |
+| [F13](Features/F13-requisition-to-po.md) | Requisition to purchase order | Send approved lines to a new or existing draft PO, with links both ways | F05, F12 | Done |
 | [F14](Features/F14-deployment-automation.md) | Deployment automation | Docker image and Python scripts run by a GitHub Action: pull, build, update, health check, rollback; HTTPS and Coolify notes | F00 | Planned |
 
 Suggested build order: F00 → F01 → F02 → F03 → F04 → F05 → F09 → F10 → F08 → F06 → F07 (F10 is independent of F06–F08 and can move; F07 builds on F10 for BOM import and export).
-Remaining plan: F08, then F13 (F11 and F12 are done). F14 is independent and can happen at any point.
+Remaining plan: F08 (F11, F12 and F13 are done). F14 is independent and can happen at any point.
 F09 is a presentation overhaul of F00–F05 (shipped; the shared patterns are shown at `/Dev/Components`). F06, F07 and F08 should use its shared patterns (architecture D17) when they build screens.
 
 ## Work items
@@ -99,9 +99,9 @@ F14 has no schema or UI; its work items follow the deployment steps instead (ima
 | [WI-12-1](work-items/F12-requisition-approvals/WI-12-1-db-schema.md) | Approvals — Manager role, RequisitionLineDecision, permission settings | Done |
 | [WI-12-2](work-items/F12-requisition-approvals/WI-12-2-api.md) | Approvals — Manager policies, decision service | Done |
 | [WI-12-3](work-items/F12-requisition-approvals/WI-12-3-frontend.md) | Approvals — queue, decision form, role and permission UI | Done |
-| [WI-13-1](work-items/F13-requisition-to-po/WI-13-1-db-schema.md) | Requisition to PO — RequisitionLineOrder schema | Planned |
-| [WI-13-2](work-items/F13-requisition-to-po/WI-13-2-api.md) | Requisition to PO — conversion service, release on cancel | Planned |
-| [WI-13-3](work-items/F13-requisition-to-po/WI-13-3-frontend.md) | Requisition to PO — to-order list, PO and requisition links | Planned |
+| [WI-13-1](work-items/F13-requisition-to-po/WI-13-1-db-schema.md) | Requisition to PO — RequisitionLineOrder schema | Done |
+| [WI-13-2](work-items/F13-requisition-to-po/WI-13-2-api.md) | Requisition to PO — conversion service, release on cancel | Done |
+| [WI-13-3](work-items/F13-requisition-to-po/WI-13-3-frontend.md) | Requisition to PO — to-order list, PO and requisition links | Done |
 | [WI-14-1](work-items/F14-deployment-automation/WI-14-1-docker-image.md) | Deployment — Dockerfile, /data layout, trusted proxies | Planned |
 | [WI-14-2](work-items/F14-deployment-automation/WI-14-2-pull-and-build.md) | Deployment — automation/ base, pull and build scripts | Planned |
 | [WI-14-3](work-items/F14-deployment-automation/WI-14-3-update-health-rollback.md) | Deployment — update, health check, rollback, deploy.py | Planned |

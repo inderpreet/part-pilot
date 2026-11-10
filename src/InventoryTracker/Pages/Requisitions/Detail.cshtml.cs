@@ -51,6 +51,17 @@ public class DetailModel(IRequisitionService requisitions, ICurrentUser currentU
         return await ActAsync(id, async () => await requisitions.CancelSubmittedAsync(id, rowVersion, reason, Actor, HttpContext.RequestAborted), "{0} cancelled.");
     }
 
+    /// <summary>F13 FR-10: cancel an approved requisition while none of it is on a purchase order. Approvers only.</summary>
+    public async Task<IActionResult> OnPostCancelApprovedAsync(int id, long rowVersion, string? reason)
+    {
+        if (!await this.CanApproveAsync())
+        {
+            return Forbid();
+        }
+
+        return await ActAsync(id, async () => await requisitions.CancelApprovedAsync(id, rowVersion, reason, Actor, HttpContext.RequestAborted), "{0} cancelled.");
+    }
+
     private async Task<IActionResult> ActAsync(int id, Func<Task<Result>> action, string success, bool toListOnSuccess = false)
     {
         var requisition = await requisitions.GetAsync(id, Actor, HttpContext.RequestAborted);

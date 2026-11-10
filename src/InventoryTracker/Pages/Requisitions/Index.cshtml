@@ -23,7 +23,7 @@
                 @foreach (var tab in Enum.GetValues<RequisitionTab>())
                 {
                     <li>
-                        <a asp-page="Index" asp-route-tab="@tab" asp-route-search="@Model.Query.Search" asp-route-status="@Model.Query.Status"
+                        <a asp-page="Index" asp-route-tab="@tab" asp-route-search="@Model.Query.Search" asp-route-status="@Model.Query.Status" asp-route-ordering="@Model.Query.Ordering"
                            asp-route-from="@date(Model.Query.From)" asp-route-to="@date(Model.Query.To)"
                            aria-current="@(Model.Query.Tab == tab ? "page" : null)">@RequisitionDisplay.TabLabel(tab)</a>
                     </li>
@@ -46,6 +46,15 @@
             @foreach (var status in Enum.GetValues<RequisitionStatus>())
             {
                 <option value="@status" selected="@(Model.Query.Status == status)">@RequisitionDisplay.StatusLabel(status)</option>
+            }
+        </select>
+
+        <select name="ordering" aria-label="Ordering"
+                hx-get="@Live" hx-trigger="change" hx-target="#results" hx-push-url="true" hx-include="closest form" hx-indicator=".load-bar">
+            <option value="">Any ordering</option>
+            @foreach (var state in Enum.GetValues<InventoryTracker.Services.RequisitionOrderState>())
+            {
+                <option value="@state" selected="@(Model.Query.Ordering == state)">Approved, @RequisitionDisplay.OrderStateLabel(state).ToLowerInvariant()</option>
             }
         </select>
 

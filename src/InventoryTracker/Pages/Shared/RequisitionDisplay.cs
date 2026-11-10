@@ -37,6 +37,20 @@ public static class RequisitionDisplay
         _ => "badge-draft",
     };
 
+    public static string OrderStateLabel(RequisitionOrderState state) => state switch
+    {
+        RequisitionOrderState.Ordered => "Ordered",
+        RequisitionOrderState.PartlyOrdered => "Partly ordered",
+        _ => "Not ordered",
+    };
+
+    public static string OrderStateCss(RequisitionOrderState state) => state switch
+    {
+        RequisitionOrderState.Ordered => "badge-received",
+        RequisitionOrderState.PartlyOrdered => "badge-partial",
+        _ => "badge-draft",
+    };
+
     public static string TabLabel(RequisitionTab tab) => tab switch
     {
         RequisitionTab.Mine => "Mine",
@@ -46,5 +60,5 @@ public static class RequisitionDisplay
 
     /// <summary>Admin, Manager and Staff read everyone's requisitions; only an Admin may change someone else's; Admin and Manager decide.</summary>
     public static RequisitionActor ToRequisitionActor(this ICurrentUser user)
-        => new(user.Id!, CanSeeAll: user.CanEdit, IsAdmin: user.IsAdmin, CanApprove: user.CanApprove);
+        => new(user.Id!, CanSeeAll: user.CanEdit, IsAdmin: user.IsAdmin, CanApprove: user.CanApprove, CanOrder: user.CanEdit);
 }

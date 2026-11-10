@@ -5,9 +5,9 @@ namespace InventoryTracker.Services;
 /// <summary>
 /// Who is acting on a requisition. <paramref name="CanSeeAll"/> widens reading to everyone's requisitions;
 /// <paramref name="IsAdmin"/> also allows changing someone else's; <paramref name="CanApprove"/> allows deciding and cancelling
-/// submitted ones (F12). Everyone else works only on their own.
+/// submitted ones (F12); <paramref name="CanOrder"/> allows sending approved lines to purchase orders (F13). Everyone else works only on their own.
 /// </summary>
-public sealed record RequisitionActor(string UserId, bool CanSeeAll = false, bool IsAdmin = false, bool CanApprove = false)
+public sealed record RequisitionActor(string UserId, bool CanSeeAll = false, bool IsAdmin = false, bool CanApprove = false, bool CanOrder = false)
 {
     public bool SeesEveryone => CanSeeAll || IsAdmin || CanApprove;
 }
@@ -30,6 +30,15 @@ public static class RequisitionRules
     public static bool CanWithdraw(RequisitionStatus status) => status == RequisitionStatus.Submitted;
 }
 
+/// <summary>Shared by list rows and the detail page.</summary>
+public static class RequisitionDisplayRules
+{
+    public static RequisitionOrderState OrderState(int approvedLines, int orderedLines)
+        => orderedLines == 0 ? RequisitionOrderState.NotOrdered
+            : orderedLines < approvedLines ? RequisitionOrderState.PartlyOrdered
+            : RequisitionOrderState.Ordered;
+}
+
 /// <summary>Which requisitions a list shows. Viewers only ever get <see cref="Mine"/>.</summary>
 public enum RequisitionTab
 {
@@ -45,6 +54,9 @@ public class RequisitionListQuery : ListQuery
 
     /// <summary>Only honoured on the <see cref="RequisitionTab.All"/> tab, for an actor who can see everyone's.</summary>
     public string? RequesterId { get; set; }
+
+    /// <summary>Approved requisitions only, by how far they have been ordered (F13).</summary>
+    public RequisitionOrderState? Ordering { get; set; }
 
     /// <summary>First day created, local calendar date, as picked in the filter.</summary>
     public DateOnly? From { get; set; }
@@ -71,7 +83,12 @@ public sealed record RequisitionListItem(
     DateOnly? NeededBy,
     int LineCount,
     DateTime CreatedAt,
-    DateTime? SubmittedAt);
+    DateTime? SubmittedAt,
+    int ApprovedLineCount = 0,
+    int OrderedLineCount = 0)
+{
+    public RequisitionOrderState? OrderState => Status == RequisitionStatus.Approved ? RequisitionDisplayRules.OrderState(ApprovedLineCount, OrderedLineCount) : null;
+}
 
 /// <summary>One line, with the availability the requester and approver look at. Reading these figures changes nothing.</summary>
 public sealed record RequisitionLineItem(
@@ -85,7 +102,8 @@ public sealed record RequisitionLineItem(
     string? Note,
     int OnHand,
     int OnOrder,
-    RequisitionLineOutcome? Outcome = null);
+    RequisitionLineOutcome? Outcome = null,
+    LineOrderInfo? OrderedOn = null);
 
 /// <summary>What was decided about a line (F12).</summary>
 public sealed record RequisitionLineOutcome(
@@ -139,6 +157,13 @@ public sealed record RequisitionDetail(
 
     public bool CanCancel => CanDecide;
 
+    /// <summary>F13 FR-10: an approver may cancel an approved requisition while none of its lines is on a purchase order.</summary>
+    public bool CanCancelApproved => CanApprove && Status == RequisitionStatus.Approved && Lines.All(l => l.OrderedOn is null);
+
+    public RequisitionOrderState? OrderState => Status == RequisitionStatus.Approved
+        ? RequisitionDisplayRules.OrderState(Lines.Count(l => l.Outcome?.Decision == RequisitionDecision.Approved), Lines.Count(l => l.OrderedOn is not null))
+        : null;
+
     public bool CanEdit => CanChange && RequisitionRules.CanEditContent(Status);
 
     public bool CanSubmit => CanEdit;
@@ -189,6 +214,7 @@ public enum RequisitionEventType
     Withdrawn,
     Decided,
     Cancelled,
+    Converted,
 }
 
 /// <summary>Something that happened to a requisition. Published only after the change is committed.</summary>

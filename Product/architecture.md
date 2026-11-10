@@ -118,7 +118,7 @@ Requisition(Id, Number UQ, Status, RequestedById→AspNetUsers, NeededBy?, Reaso
 RequisitionLine(Id, RequisitionId→Requisition Cascade, ProductId→Product Restrict, QuantityRequested, Note)  UQ (RequisitionId, ProductId)
 RequisitionLineDecision(Id, RequisitionLineId→RequisitionLine UQ Cascade, Decision, QuantityApproved, Reason, DecidedById→AspNetUsers Restrict, DecidedAt)   -- F12
 RequisitionCancellation(Id, RequisitionId→Requisition UQ Cascade, Reason, CancelledById→AspNetUsers Restrict, CancelledAt)   -- F12
-RequisitionLineOrder(Id, RequisitionLineId→RequisitionLine UQ Cascade, PurchaseOrderLineId→PurchaseOrderLine Cascade, QuantityOrdered, ConvertedById→AspNetUsers, ConvertedAt)   -- F13, planned
+RequisitionLineOrder(Id, RequisitionLineId→RequisitionLine UQ Cascade, PurchaseOrderLineId→PurchaseOrderLine Cascade, QuantityOrdered ≥ 1, ConvertedById→AspNetUsers Restrict, ConvertedAt)   -- F13
 
 AuditEntry(Id, OccurredAt, UserId?, UserName, Action, EntityType, EntityId, ChangesJson, IpAddress)
 ```
@@ -143,7 +143,10 @@ needed `QuantityPerUnit × remaining units` against on hand, on order and **in d
 5. (F10) A project build changes stock only by posting `Issue` movements through `StockService`, all lines in one
    call and in the same DB transaction as its `ProjectBuild` row; shortages reach purchase orders only through
    `PurchaseOrderService` and only onto a Draft.
-6. Optimistic concurrency on `Product`, `PurchaseOrder`, `Project` and `Requisition` via `RowVersion` (incremented in `SaveChanges`, since SQLite has no rowversion type). A requisition line change also moves its header's `RowVersion` (F11).
+6. (F13) Approved requisition lines reach purchase orders only through `RequisitionOrderService`, which goes through
+   `PurchaseOrderService` (new draft, or onto an existing Draft of that supplier) and links each line in the same transaction.
+   A line is linked at most once; removing its PO line, deleting the draft or cancelling the PO releases it.
+7. Optimistic concurrency on `Product`, `PurchaseOrder`, `Project` and `Requisition` via `RowVersion` (incremented in `SaveChanges`, since SQLite has no rowversion type). A requisition line change also moves its header's `RowVersion` (F11).
 
 ## 7. SQLite configuration
 

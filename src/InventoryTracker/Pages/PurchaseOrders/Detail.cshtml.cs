@@ -14,11 +14,14 @@ namespace InventoryTracker.Pages.PurchaseOrders;
 /// <c>hx-confirm</c>; either way it ends on the refreshed page (the message rides TempData, which an <c>HX-Redirect</c> can use).
 /// </summary>
 [Authorize(Policy = Policies.CanView)]
-public class DetailModel(IPurchaseOrderService orders, ICurrentUser currentUser, IClock clock) : PageModel
+public class DetailModel(IPurchaseOrderService orders, IRequisitionOrderService requisitionOrders, ICurrentUser currentUser, IClock clock) : PageModel
 {
     public PurchaseOrderDetail Order { get; private set; } = null!;
 
     public IReadOnlyList<PurchaseOrderReceiptItem> Receipts { get; private set; } = [];
+
+    /// <summary>Requisitions feeding each line (F13), by purchase order line id.</summary>
+    public ILookup<long, OrderLineSource> Sources { get; private set; } = Array.Empty<OrderLineSource>().ToLookup(s => s.PurchaseOrderLineId);
 
     /// <summary>Only used to hide edit actions; the handlers and the pages behind them enforce <c>CanEdit</c> themselves.</summary>
     public bool CanEdit => currentUser.CanEdit;
@@ -37,6 +40,7 @@ public class DetailModel(IPurchaseOrderService orders, ICurrentUser currentUser,
 
         Order = order;
         Receipts = await orders.GetReceiptsAsync(id, HttpContext.RequestAborted);
+        Sources = (await requisitionOrders.GetSourcesForOrderAsync(id, HttpContext.RequestAborted)).ToLookup(s => s.PurchaseOrderLineId);
         return Page();
     }
 

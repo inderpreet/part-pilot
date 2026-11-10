@@ -1,6 +1,6 @@
 # F13 — Requisition to purchase order
 
-- **Status:** Planned
+- **Status:** Done
 - **Depends on:** F05, F12
 - **Roles:** Admin, Manager and Staff convert. Requesters see the resulting PO number.
 
@@ -39,6 +39,10 @@ a **new draft PO** or an **existing draft PO** for the supplier. Each line remem
 - Archived parts and archived suppliers cannot be ordered: the row shows why and is excluded.
 - An approved quantity under the supplier's minimum order gets a warning, not a block.
 - Once received, lines stay linked. Receiving is unchanged.
+- A part whose preferred supplier is archived is listed under "Choose a supplier" with a note, so it can still be ordered from another supplier.
+- Lines with no usable supplier go to the supplier picked per line: onto the order chosen for that supplier's group on the same screen, otherwise a new draft.
+- Unlike BOM shortages (F10), conversion does not round up to the supplier's minimum order; the PO line quantity is the approved quantity.
+- Conversion lives in its own `RequisitionOrderService`; `RequisitionService` keeps the requisition's own rules, including cancel-approved.
 
 ## Data model
 
@@ -62,9 +66,9 @@ a **new draft PO** or an **existing draft PO** for the supplier. Each line remem
 
 | ID | Title | Status |
 |---|---|---|
-| [WI-13-1](../work-items/F13-requisition-to-po/WI-13-1-db-schema.md) | RequisitionLineOrder schema | Planned |
-| [WI-13-2](../work-items/F13-requisition-to-po/WI-13-2-api.md) | Conversion service, release on cancel | Planned |
-| [WI-13-3](../work-items/F13-requisition-to-po/WI-13-3-frontend.md) | To-order list, PO and requisition links | Planned |
+| [WI-13-1](../work-items/F13-requisition-to-po/WI-13-1-db-schema.md) | RequisitionLineOrder schema | Done |
+| [WI-13-2](../work-items/F13-requisition-to-po/WI-13-2-api.md) | Conversion service, release on cancel | Done |
+| [WI-13-3](../work-items/F13-requisition-to-po/WI-13-3-frontend.md) | To-order list, PO and requisition links | Done |
 
 ## Open questions
 

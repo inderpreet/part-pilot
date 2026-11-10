@@ -32,6 +32,11 @@
             <a role="button" class="secondary outline" asp-page="Edit" asp-route-id="@o.Id">@(o.CanEditLines ? "Edit order" : "Edit dates & notes")</a>
         }
 
+        @if (o.CanEditLines)
+        {
+            <a role="button" class="secondary outline" asp-page="/Requisitions/ToOrder" asp-route-purchaseOrderId="@o.Id">Add approved requisition lines</a>
+        }
+
         @if (o.CanReceive)
         {
             <a role="button" asp-page="Receive" asp-route-id="@o.Id">Receive goods</a>
@@ -136,6 +141,15 @@
                                         {
                                             <span class="badge badge-inactive">Archived</span>
                                         }</span>
+                                        @if (Model.Sources[line.Id].Any())
+                                        {
+                                            <small class="muted line-sources">For
+                                            @foreach (var source in Model.Sources[line.Id])
+                                            {
+                                                <a asp-page="/Requisitions/Detail" asp-route-id="@source.RequisitionId">@source.RequisitionNumber</a><span> (@source.QuantityOrdered)</span>
+                                            }
+                                            </small>
+                                        }
                                     </td>
                                     <td>@(line.SupplierSku ?? "—")</td>
                                     <td class="num">@line.QuantityOrdered @line.Unit</td>

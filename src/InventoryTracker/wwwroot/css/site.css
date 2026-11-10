@@ -712,6 +712,8 @@ details.menu[open] > summary { margin-bottom: 0; }
   position: absolute; right: 0; top: calc(100% + 0.35rem); z-index: 30; min-width: 12.5rem; padding: 0.35rem;
   border: 1px solid var(--it-line); border-radius: 10px; background: #fff; box-shadow: 0 12px 28px rgba(16, 24, 40, 0.16);
 }
+/* On a phone the actions start at the left edge, so a menu that is the first (or only) action opens rightward. */
+@media (max-width: 40rem) { .page-actions > details.menu:first-child .menu-pop { right: auto; left: 0; } }
 .menu-pop form { margin: 0; }
 .menu-pop hr { margin: 0.3rem 0; border: 0; border-top: 1px solid var(--it-line); }
 .menu-item {
@@ -913,3 +915,16 @@ td.check input, th.check input { margin: 0; }
   .decide-lines td[data-label]::before { content: attr(data-label); display: block; color: var(--pico-muted-color); font-size: var(--it-text-xs); }
   .decide-lines input[type="text"] { width: 100%; min-width: 0; }
 }
+
+/* F13 to-order list. */
+.to-order-group { margin-bottom: var(--pico-spacing); }
+.to-order-group td small { display: block; }
+.to-order-group td.num { white-space: nowrap; }
+.to-order-group td.num small { display: inline; }
+.to-order-group td:nth-child(2) { min-width: 14rem; }
+.to-order-group select { margin: 0; min-width: 10rem; }
+.to-order-target { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin: var(--pico-spacing); }
+.to-order-target select { width: auto; max-width: 100%; margin: 0; }
+.result-summary { margin-bottom: var(--pico-spacing); padding: var(--pico-spacing); }
+.result-summary ul { margin: 0.5rem 0; }
+.line-sources { display: block; }

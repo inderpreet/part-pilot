@@ -100,6 +100,35 @@ public class RequisitionLineDecisionConfiguration : IEntityTypeConfiguration<Req
     }
 }
 
+public class RequisitionLineOrderConfiguration : IEntityTypeConfiguration<RequisitionLineOrder>
+{
+    public void Configure(EntityTypeBuilder<RequisitionLineOrder> builder)
+    {
+        builder.ToTable("RequisitionLineOrders", t =>
+        {
+            t.HasCheckConstraint("CK_RequisitionLineOrders_QuantityOrdered", "\"QuantityOrdered\" >= 1");
+        });
+        builder.HasKey(o => o.Id);
+
+        // One link per requisition line (unique), which also stops two people ordering it at once.
+        builder.HasOne(o => o.RequisitionLine)
+            .WithOne(l => l.Order)
+            .HasForeignKey<RequisitionLineOrder>(o => o.RequisitionLineId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        // Removing the PO line, or deleting its draft, releases the requisition line (D25).
+        builder.HasOne(o => o.PurchaseOrderLine)
+            .WithMany()
+            .HasForeignKey(o => o.PurchaseOrderLineId)
+            .OnDelete(DeleteBehavior.Cascade);
+
+        builder.HasOne(o => o.ConvertedBy)
+            .WithMany()
+            .HasForeignKey(o => o.ConvertedById)
+            .OnDelete(DeleteBehavior.Restrict);
+    }
+}
+
 public class RequisitionCancellationConfiguration : IEntityTypeConfiguration<RequisitionCancellation>
 {
     public void Configure(EntityTypeBuilder<RequisitionCancellation> builder)

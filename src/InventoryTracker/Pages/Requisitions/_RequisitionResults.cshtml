@@ -32,7 +32,13 @@ else
                 {
                     <tr>
                         <td><a asp-page="Detail" asp-route-id="@item.Id">@item.Number</a></td>
-                        <td><partial name="_RequisitionStatusBadge" model="item.Status" /></td>
+                        <td>
+                            <partial name="_RequisitionStatusBadge" model="item.Status" />
+                            @if (item.OrderState is { } orderState && orderState != InventoryTracker.Services.RequisitionOrderState.NotOrdered)
+                            {
+                                <span class="badge @RequisitionDisplay.OrderStateCss(orderState)">@RequisitionDisplay.OrderStateLabel(orderState)</span>
+                            }
+                        </td>
                         @if (Model.ShowsEveryone)
                         {
                             <td>@item.RequestedByName</td>

@@ -16,6 +16,10 @@
 
 @section Badges {
     <partial name="_RequisitionStatusBadge" model="r.Status" />
+    @if (r.OrderState is { } orderState && orderState != InventoryTracker.Services.RequisitionOrderState.NotOrdered)
+    {
+        <span class="badge @RequisitionDisplay.OrderStateCss(orderState)">@RequisitionDisplay.OrderStateLabel(orderState)</span>
+    }
 }
 
 @section Actions {
@@ -61,6 +65,24 @@
                     </label>
                     <button type="submit" class="menu-item danger" hx-post="@Action("Cancel")"
                             hx-confirm="Cancel @r.Number? It cannot be decided after this.">Cancel requisition</button>
+                </form>
+            </div>
+        </details>
+    }
+
+    @if (r.CanCancelApproved)
+    {
+        <details class="menu">
+            <summary class="menu-toggle" aria-label="More actions"><svg class="ico" aria-hidden="true"><use href="#i-dots"/></svg></summary>
+            <div class="menu-pop">
+                <form method="post" asp-page-handler="CancelApproved" asp-route-id="@r.Id" class="menu-form">
+                    <input type="hidden" name="rowVersion" value="@r.RowVersion" />
+                    <label>
+                        Reason for cancelling
+                        <textarea name="reason" rows="2" maxlength="@RequisitionCancellation.ReasonMaxLength" required></textarea>
+                    </label>
+                    <button type="submit" class="menu-item danger" hx-post="@Action("CancelApproved")"
+                            hx-confirm="Cancel @r.Number? Its approved parts will no longer be ordered.">Cancel requisition</button>
                 </form>
             </div>
         </details>
@@ -112,6 +134,7 @@
                                     <th scope="col">Decision</th>
                                     <th scope="col" class="num">Approved</th>
                                     <th scope="col">Why</th>
+                                    <th scope="col">Ordered on</th>
                                 }
                             </tr>
                         </thead>
@@ -135,6 +158,16 @@
                                         <td><span class="badge @RequisitionDisplay.OutcomeCss(line)">@RequisitionDisplay.OutcomeLabel(line)</span></td>
                                         <td class="num">@(line.Outcome?.QuantityApproved ?? 0)</td>
                                         <td>@(line.Outcome?.Reason ?? "—")</td>
+                                        <td>
+                                            @if (line.OrderedOn is { } po)
+                                            {
+                                                <a asp-page="/PurchaseOrders/Detail" asp-route-id="@po.PurchaseOrderId">@po.Number</a>
+                                            }
+                                            else
+                                            {
+                                                @("—")
+                                            }
+                                        </td>
                                     }
                                 </tr>
                             }

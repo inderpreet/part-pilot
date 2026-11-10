@@ -869,6 +869,43 @@ namespace InventoryTracker.Data.Migrations
                         });
                 });
 
+            modelBuilder.Entity("InventoryTracker.Data.Entities.RequisitionLineOrder", b =>
+                {
+                    b.Property<long>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("INTEGER");
+
+                    b.Property<DateTime>("ConvertedAt")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("ConvertedById")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<long>("PurchaseOrderLineId")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<int>("QuantityOrdered")
+                        .HasColumnType("INTEGER");
+
+                    b.Property<long>("RequisitionLineId")
+                        .HasColumnType("INTEGER");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ConvertedById");
+
+                    b.HasIndex("PurchaseOrderLineId");
+
+                    b.HasIndex("RequisitionLineId")
+                        .IsUnique();
+
+                    b.ToTable("RequisitionLineOrders", null, t =>
+                        {
+                            t.HasCheckConstraint("CK_RequisitionLineOrders_QuantityOrdered", "\"QuantityOrdered\" >= 1");
+                        });
+                });
+
             modelBuilder.Entity("InventoryTracker.Data.Entities.StockTransaction", b =>
                 {
                     b.Property<long>("Id")
@@ -1361,6 +1398,33 @@ namespace InventoryTracker.Data.Migrations
                     b.Navigation("RequisitionLine");
                 });
 
+            modelBuilder.Entity("InventoryTracker.Data.Entities.RequisitionLineOrder", b =>
+                {
+                    b.HasOne("InventoryTracker.Data.Entities.ApplicationUser", "ConvertedBy")
+                        .WithMany()
+                        .HasForeignKey("ConvertedById")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("InventoryTracker.Data.Entities.PurchaseOrderLine", "PurchaseOrderLine")
+                        .WithMany()
+                        .HasForeignKey("PurchaseOrderLineId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.HasOne("InventoryTracker.Data.Entities.RequisitionLine", "RequisitionLine")
+                        .WithOne("Order")
+                        .HasForeignKey("InventoryTracker.Data.Entities.RequisitionLineOrder", "RequisitionLineId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("ConvertedBy");
+
+                    b.Navigation("PurchaseOrderLine");
+
+                    b.Navigation("RequisitionLine");
+                });
+
             modelBuilder.Entity("InventoryTracker.Data.Entities.StockTransaction", b =>
                 {
                     b.HasOne("InventoryTracker.Data.Entities.ImportBatch", "ImportBatch")
@@ -1491,6 +1555,8 @@ namespace InventoryTracker.Data.Migrations
             modelBuilder.Entity("InventoryTracker.Data.Entities.RequisitionLine", b =>
                 {
                     b.Navigation("Decision");
+
+                    b.Navigation("Order");
                 });
 
             modelBuilder.Entity("InventoryTracker.Data.Entities.Supplier", b =>

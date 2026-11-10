@@ -101,4 +101,7 @@ public class RequisitionLine : IHasTimestamps
 
     /// <summary>The approval decision (F12); <c>null</c> until one is made.</summary>
     public RequisitionLineDecision? Decision { get; set; }
+
+    /// <summary>The purchase order line it was sent to (F13); <c>null</c> until ordered, or after the PO line went away.</summary>
+    public RequisitionLineOrder? Order { get; set; }
 }

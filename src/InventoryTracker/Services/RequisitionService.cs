@@ -48,6 +48,9 @@ public interface IRequisitionService
     /// <summary>Decides every line in one transaction. Approved when at least one line is approved, otherwise Rejected. Final.</summary>
     Task<Result<RequisitionDetail>> DecideAsync(int id, long rowVersion, IReadOnlyList<RequisitionLineDecisionInput> decisions, RequisitionActor actor, CancellationToken cancellationToken = default);
 
+    /// <summary>Cancels an approved requisition while none of its lines is on a purchase order (F13 FR-10). Needs a reason.</summary>
+    Task<Result<RequisitionDetail>> CancelApprovedAsync(int id, long rowVersion, string? reason, RequisitionActor actor, CancellationToken cancellationToken = default);
+
     /// <summary>Cancels a submitted requisition instead of deciding it. Needs a reason.</summary>
     Task<Result<RequisitionDetail>> CancelSubmittedAsync(int id, long rowVersion, string? reason, RequisitionActor actor, CancellationToken cancellationToken = default);
 }
@@ -85,6 +88,17 @@ public sealed class RequisitionService(
         if (query.Status is { } status)
         {
             requisitions = requisitions.Where(r => r.Status == status);
+        }
+
+        if (query.Ordering is { } ordering)
+        {
+            var approved = requisitions.Where(r => r.Status == RequisitionStatus.Approved);
+            requisitions = ordering switch
+            {
+                RequisitionOrderState.NotOrdered => approved.Where(r => !r.Lines.Any(l => l.Order != null)),
+                RequisitionOrderState.PartlyOrdered => approved.Where(r => r.Lines.Any(l => l.Order != null) && r.Lines.Any(l => l.Order == null && l.Decision != null && l.Decision.Decision == RequisitionDecision.Approved)),
+                _ => approved.Where(r => r.Lines.Any(l => l.Order != null) && !r.Lines.Any(l => l.Order == null && l.Decision != null && l.Decision.Decision == RequisitionDecision.Approved)),
+            };
         }
 
         if (query.FromUtc is { } from)
@@ -130,7 +144,9 @@ public sealed class RequisitionService(
                 r.NeededBy,
                 r.Lines.Count,
                 r.CreatedAt,
-                r.SubmittedAt)),
+                r.SubmittedAt,
+                r.Lines.Count(l => l.Decision != null && l.Decision.Decision == RequisitionDecision.Approved),
+                r.Lines.Count(l => l.Order != null))),
             query,
             cancellationToken);
     }
@@ -178,6 +194,15 @@ public sealed class RequisitionService(
                 .ToDictionaryAsync(d => d.RequisitionLineId, d => d.Outcome, cancellationToken);
         }
 
+        Dictionary<long, LineOrderInfo> orders = [];
+        if (header.DecidedAt is not null)
+        {
+            orders = await db.RequisitionLineOrders.AsNoTracking()
+                .Where(o => o.RequisitionLine!.RequisitionId == id)
+                .Select(o => new { o.RequisitionLineId, Info = new LineOrderInfo(o.PurchaseOrderLine!.PurchaseOrderId, o.PurchaseOrderLine.PurchaseOrder!.Number, o.QuantityOrdered) })
+                .ToDictionaryAsync(o => o.RequisitionLineId, o => o.Info, cancellationToken);
+        }
+
         var cancellation = header.Status != RequisitionStatus.Cancelled
             ? null
             : await db.RequisitionCancellations.AsNoTracking()
@@ -188,7 +213,7 @@ public sealed class RequisitionService(
         return new RequisitionDetail(
             header.Id, header.Number, header.Status, header.RequestedById, header.RequestedByName, header.NeededBy, header.Reason,
             header.SubmittedAt, header.SubmittedByName, header.DecidedAt, header.RowVersion, header.CreatedAt, header.UpdatedAt,
-            [.. lines.Select(l => l.ToItem(onOrder.GetValueOrDefault(l.ProductId)) with { Outcome = outcomes.GetValueOrDefault(l.Id) })],
+            [.. lines.Select(l => l.ToItem(onOrder.GetValueOrDefault(l.ProductId)) with { Outcome = outcomes.GetValueOrDefault(l.Id), OrderedOn = orders.GetValueOrDefault(l.Id) })],
             RequisitionRules.CanChange(actor, header.RequestedById),
             actor.CanApprove,
             outcomes.Values.FirstOrDefault()?.DecidedByName,
@@ -620,7 +645,7 @@ public sealed class RequisitionService(
         var result = await InTransactionAsync<Result>(
             async () =>
             {
-                var (requisition, error) = await LoadSubmittedAsync(id, rowVersion, "decided", cancellationToken);
+                var (requisition, error) = await LoadInStatusAsync(id, rowVersion, RequisitionStatus.Submitted, "decided", cancellationToken);
                 if (error is not null)
                 {
                     return Result.Failure(error);
@@ -659,7 +684,13 @@ public sealed class RequisitionService(
         return await TransitionedAsync(result, RequisitionEventType.Decided, id, actor, cancellationToken);
     }
 
-    public async Task<Result<RequisitionDetail>> CancelSubmittedAsync(int id, long rowVersion, string? reason, RequisitionActor actor, CancellationToken cancellationToken = default)
+    public Task<Result<RequisitionDetail>> CancelSubmittedAsync(int id, long rowVersion, string? reason, RequisitionActor actor, CancellationToken cancellationToken = default)
+        => CancelAsync(id, rowVersion, reason, RequisitionStatus.Submitted, actor, cancellationToken);
+
+    public Task<Result<RequisitionDetail>> CancelApprovedAsync(int id, long rowVersion, string? reason, RequisitionActor actor, CancellationToken cancellationToken = default)
+        => CancelAsync(id, rowVersion, reason, RequisitionStatus.Approved, actor, cancellationToken);
+
+    private async Task<Result<RequisitionDetail>> CancelAsync(int id, long rowVersion, string? reason, RequisitionStatus from, RequisitionActor actor, CancellationToken cancellationToken)
     {
         RequireActor(actor);
         if (!actor.CanApprove)
@@ -681,10 +712,15 @@ public sealed class RequisitionService(
         var result = await InTransactionAsync<Result>(
             async () =>
             {
-                var (requisition, error) = await LoadSubmittedAsync(id, rowVersion, "cancelled", cancellationToken);
+                var (requisition, error) = await LoadInStatusAsync(id, rowVersion, from, "cancelled", cancellationToken);
                 if (error is not null)
                 {
                     return Result.Failure(error);
+                }
+
+                if (from == RequisitionStatus.Approved && await db.RequisitionLineOrders.AnyAsync(o => o.RequisitionLine!.RequisitionId == id, cancellationToken))
+                {
+                    return Result.Failure(new Error("requisition.has_orders", $"Some of {requisition!.Number} is already on a purchase order. Remove those lines from the order first."));
                 }
 
                 db.RequisitionCancellations.Add(new RequisitionCancellation { RequisitionId = id, Reason = cleaned, CancelledById = actor.UserId, CancelledAt = clock.UtcNow });
@@ -700,8 +736,8 @@ public sealed class RequisitionService(
 
     private sealed record DecidableLine(long Id, int QuantityRequested, string Sku);
 
-    /// <summary>Loads inside the write transaction, so of two approvers only the first finds it still submitted at its version.</summary>
-    private async Task<(Requisition? Requisition, Error? Error)> LoadSubmittedAsync(int id, long rowVersion, string verb, CancellationToken cancellationToken)
+    /// <summary>Loads inside the write transaction, so of two approvers only the first finds it still in that status at its version.</summary>
+    private async Task<(Requisition? Requisition, Error? Error)> LoadInStatusAsync(int id, long rowVersion, RequisitionStatus status, string verb, CancellationToken cancellationToken)
     {
         var requisition = await db.Requisitions.FirstOrDefaultAsync(r => r.Id == id, cancellationToken);
         if (requisition is null)
@@ -714,9 +750,9 @@ public sealed class RequisitionService(
             return (null, ConflictError());
         }
 
-        return RequisitionRules.CanDecide(requisition.Status)
+        return requisition.Status == status
             ? (requisition, null)
-            : (null, new Error("requisition.not_submitted", $"{requisition.Number} is {StatusText(requisition.Status)}, so it cannot be {verb}."));
+            : (null, new Error(status == RequisitionStatus.Submitted ? "requisition.not_submitted" : "requisition.not_approved", $"{requisition.Number} is {StatusText(requisition.Status)}, so it cannot be {verb}."));
     }
 
     private static List<Error> ValidateDecisions(List<DecidableLine> lines, IReadOnlyList<RequisitionLineDecisionInput> decisions)

@@ -25,7 +25,7 @@ public class IndexModel(IRequisitionService requisitions, ICurrentUser currentUs
     public bool ShowsEveryone => Query.Tab == RequisitionTab.All;
 
     /// <summary>True when a search, status, requester or date filter is applied (the tab alone is not a filter).</summary>
-    public bool IsFiltered => Query.SearchTerm is not null || Query.Status is not null || !string.IsNullOrEmpty(Query.RequesterId) || Query.From is not null || Query.To is not null;
+    public bool IsFiltered => Query.SearchTerm is not null || Query.Status is not null || Query.Ordering is not null || !string.IsNullOrEmpty(Query.RequesterId) || Query.From is not null || Query.To is not null;
 
     /// <summary>Full page normally; the table block (<c>#results</c>) for htmx filter / sort / paging requests.</summary>
     public async Task<IActionResult> OnGetAsync([FromQuery] RequisitionListQuery query)
