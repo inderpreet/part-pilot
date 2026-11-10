@@ -108,7 +108,7 @@ Logs are written to a `logs/` folder next to the database file.
 ## Building and running the single executable
 
 ```powershell
-.\scripts\publish.ps1                       # this machine's platform, e.g. publish\win-x64\InventoryTracker.exe
+.\scripts\publish.ps1                       # this machine's platform, e.g. publish\win-x64\PartPilot.exe
 .\scripts\publish.ps1 -Runtime linux-x64    # also: linux-arm64, osx-arm64
 .\scripts\publish.ps1 -All                  # every platform
 .\scripts\publish.ps1 -Smoke                # also start the exe in an empty folder and check it works
@@ -119,8 +119,8 @@ the .NET runtime, SQLite and all web assets inside; the script fails if the outp
 Copy it anywhere and run it:
 
 ```powershell
-.\InventoryTracker.exe                          # http://localhost:5080, inventory.db next to the exe
-.\InventoryTracker.exe --bind all --port 8080 --db D:\data\inventory.db
+.\PartPilot.exe                          # http://localhost:5080, inventory.db next to the exe
+.\PartPilot.exe --bind all --port 8080 --db D:\data\inventory.db
 ```
 
 Settings are the same as in [Configuration](#configuration). On first run it creates `inventory.db`, `logs/` and `keys/`
@@ -130,13 +130,15 @@ Settings are the same as in [Configuration](#configuration). On first run it cre
 > and the `.sh` scripts have not been executed. The exe has not been tried on a machine without .NET installed (it is
 > self-contained, so it should work).
 
+> Upgrading from a build named `InventoryTracker`: replace the file with `PartPilot` and point any service at the new name. The database, sign-ins and settings carry over.
+
 ### Running as a service
 
 The host supports both; these are starting points, not yet tested end to end.
 
 ```powershell
 # Windows Service (run from an elevated prompt)
-sc.exe create InventoryTracker binPath= "C:\InventoryTracker\InventoryTracker.exe --db C:\InventoryTracker\data\inventory.db" start= auto
+sc.exe create InventoryTracker binPath= "C:\InventoryTracker\PartPilot.exe --db C:\InventoryTracker\data\inventory.db" start= auto
 sc.exe start InventoryTracker
 ```
 
@@ -147,7 +149,7 @@ Description=Inventory Tracker
 After=network.target
 
 [Service]
-ExecStart=/opt/inventory-tracker/InventoryTracker --db /var/lib/inventory-tracker/inventory.db
+ExecStart=/opt/inventory-tracker/PartPilot --db /var/lib/inventory-tracker/inventory.db
 User=inventory
 Restart=on-failure
 

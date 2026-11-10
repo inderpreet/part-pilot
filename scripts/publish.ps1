@@ -3,7 +3,7 @@
   Publish Inventory Tracker as a single self-contained executable.
 
 .DESCRIPTION
-  Produces publish\<rid>\InventoryTracker[.exe]: one file, no .NET install needed, static assets embedded.
+  Produces publish\<rid>\PartPilot[.exe]: one file, no .NET install needed, static assets embedded.
   Supported runtime identifiers: win-x64, linux-x64, linux-arm64, osx-arm64.
 
 .PARAMETER Runtime
@@ -61,7 +61,7 @@ $targets = if ($All) { $AllRuntimes } elseif ($Runtime) { @($Runtime) } elseif (
 $results = @()
 foreach ($rid in $targets) {
     $out = Join-Path $Root "publish\$rid"
-    $exeName = if ($rid -like 'win-*') { 'InventoryTracker.exe' } else { 'InventoryTracker' }
+    $exeName = if ($rid -like 'win-*') { 'PartPilot.exe' } else { 'PartPilot' }
     $exe = Join-Path $out $exeName
 
     Write-Host "==> Publishing $rid" -ForegroundColor Cyan

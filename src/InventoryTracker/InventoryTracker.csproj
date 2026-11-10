@@ -1,6 +1,9 @@
 <Project Sdk="Microsoft.NET.Sdk.Web">
 
   <PropertyGroup>
+    <!-- Output is PartPilot.dll / PartPilot.exe. The namespace, project folder, cookie and database file keep their names (D19). -->
+    <AssemblyName>PartPilot</AssemblyName>
+    <RootNamespace>InventoryTracker</RootNamespace>
     <!-- Static assets ship inside the executable and are served via ManifestEmbeddedFileProvider. -->
     <GenerateEmbeddedFilesManifest>true</GenerateEmbeddedFilesManifest>
     <!-- web.config is only for IIS; it would be an extra loose file next to the executable. -->

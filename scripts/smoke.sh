@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Smoke-test a published Inventory Tracker executable.
 #
-#   ./scripts/smoke.sh path/to/InventoryTracker [timeout-seconds]
+#   ./scripts/smoke.sh path/to/PartPilot [timeout-seconds]
 #
 # Copies the executable ALONE into a fresh temp dir (proving it needs no other files), starts it on a free port with
 # a temp database, checks /health, embedded assets and the first-run redirect, then stops it and cleans up.

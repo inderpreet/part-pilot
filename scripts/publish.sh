@@ -3,7 +3,7 @@
 #
 #   ./scripts/publish.sh [--runtime <rid>] [--all] [--smoke] [--configuration Release]
 #
-# Produces publish/<rid>/InventoryTracker (one file, no .NET install needed, static assets embedded).
+# Produces publish/<rid>/PartPilot (one file, no .NET install needed, static assets embedded).
 # Supported RIDs: win-x64, linux-x64, linux-arm64, osx-arm64. Defaults to the machine you are on.
 set -euo pipefail
 
@@ -49,7 +49,7 @@ fi
 for rid in "${targets[@]}"; do
   [[ " ${all_rids[*]} " == *" $rid "* ]] || { echo "Unsupported runtime: $rid" >&2; exit 2; }
   out="$root/publish/$rid"
-  exe_name="InventoryTracker"; [[ "$rid" == win-* ]] && exe_name="InventoryTracker.exe"
+  exe_name="PartPilot"; [[ "$rid" == win-* ]] && exe_name="PartPilot.exe"
 
   echo "==> Publishing $rid"
   rm -rf "$out"
